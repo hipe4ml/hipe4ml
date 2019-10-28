@@ -31,8 +31,8 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        pytest
-        
+        pytest tests
+
   build-macos-latest:
 
     runs-on: macOS-latest
@@ -61,4 +61,4 @@ jobs:
     - name: Test with pytest
       run: |
         pip install pytest
-        pytest
+        pytest tests
