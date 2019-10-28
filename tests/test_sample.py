@@ -1,4 +1,4 @@
-# content of test_sample.py
+# tests suite
 def inc(x):
     return x + 1
 
