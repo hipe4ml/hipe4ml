@@ -1,0 +1,17 @@
+[FORMAT]
+indent-string='    '
+max-line-length=120
+
+[BASIC]
+function-naming-style=camelCase
+argument-naming-style=camelCase
+variable-naming-style=camelCase
+method-naming-style=camelCase
+attr-naming-style=camelCase
+
+[MESSAGES CONTROL]
+disable=useless-object-inheritance
+
+[DESIGN]
+max-args=10
+max-locals=40

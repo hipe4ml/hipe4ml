@@ -1,7 +1,13 @@
-# content of test_sample.py
-def inc(x):
-    return x + 1
+""" Test suite to be run wit h pytest """
 
 
-def test_answer():
+def inc(xVar):
+    """ Dummy function decl, thanks for asking
+    """
+    return xVar + 1
+
+
+def testAnswer():
+    """ This tests tests the testing function
+    """
     assert inc(3) == 4
