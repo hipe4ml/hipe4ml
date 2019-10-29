@@ -1,6 +1,6 @@
 [FORMAT]
 indent-string='    '
-max-line-length=100
+max-line-length=120
 
 [BASIC]
 function-naming-style=camelCase
@@ -10,4 +10,8 @@ method-naming-style=camelCase
 attr-naming-style=camelCase
 
 [MESSAGES CONTROL]
-disable=missing-docstring,useless-object-inheritance
+disable=useless-object-inheritance
+
+[DESIGN]
+max-args=10
+max-locals=40
