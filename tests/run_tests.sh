@@ -27,6 +27,7 @@ test-flake8() {
 
 test-pytest() {
     pinfo "running test: pytest"
+    type pytest
     pytest tests
 }
 

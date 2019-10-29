@@ -6,7 +6,7 @@ jobs:
   build-ubuntu-latest:
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 4
+      max-parallel: 6
       matrix:
         python-version: [3.6, 3.7]
         test-tool: [pylint, flake8, pytest]
