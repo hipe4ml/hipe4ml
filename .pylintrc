@@ -3,11 +3,11 @@ indent-string='    '
 max-line-length=120
 
 [BASIC]
-function-naming-style=camelCase
-argument-naming-style=camelCase
-variable-naming-style=camelCase
-method-naming-style=camelCase
-attr-naming-style=camelCase
+function-naming-style=snake_case
+argument-naming-style=snake_case
+variable-naming-style=snake_case
+method-naming-style=snake_case
+attr-naming-style=snake_case
 
 [MESSAGES CONTROL]
 disable=useless-object-inheritance
