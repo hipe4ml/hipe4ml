@@ -14,3 +14,8 @@ If you have [Pylint](https://www.pylint.org/#install) and [Flake8](http://flake8
 tests/run_tests.sh
 ```
 in the repository base directory.
+## Install in-development package
+To install the in-development package, from the repository base directoy:
+```bash
+pip install -e .
+```
