@@ -1,45 +1,61 @@
 """ Module containing the plot utils. Each function returns a matplotlib object
     """
-from inspect import signature
-import numpy as np
-from mpl_toolkits.axes_grid1 import ImageGrid
 import matplotlib.pyplot as plt
-from pandas.core.index import Index
+import numpy as np
 import pandas as pd
+from pandas.core.index import Index
+import shap
+from mpl_toolkits.axes_grid1 import ImageGrid
 from sklearn.metrics import (auc, average_precision_score,
                              precision_recall_curve, roc_curve)
-
-import shap
 
 
 # plot the BDT score distribution in the train and in the test set for both signal and background
 def plot_output_train_test(
-        clf, x_train, y_train, x_test, y_test, model='xgb', features=None, bins=80):
-    '''
-    Plot the BDT output for the signal and bckground distributions
+        clf, data, model='xgb', features=None, bins=80, raw=True, **kwds):
+    """
+    Plot the BDT output for the signal and background distributions
     both for training and test set.
 
     Input
     ----------------------------------------
-    x_train: training set
-    y_train: training label
-    x_test: test set
-    y_test: test label
+    x_train: Pandas dataframe
+    Training set
+
+    y_train: list or array
+    Training set labels
+
+    x_test: Pandas dataframe
+    Test set
+
+    y_test: list or np.array
+    Test set labels
+
+    data: list
+    Contains respectively: training
+    set dataframe, training label array,
+    test set dataframe, test label array
+
     model: Could be 'xgb' or 'sklearn'
-    features: training columns
+
+    features: list
+    Contains the name of the features used for the training.
+    Example: ['dEdx', 'pT', 'ct']
+
+    **kwds: extra arguments are passed on to plt.hist()
 
     Output
     ----------------------------------------
     res: matplotlib object with the BDT output
 
 
-    '''
+    """
 
     prediction = []
-    for xxx, yyy in ((x_train, y_train), (x_test, y_test)):
+    for xxx, yyy in ((data[0], data[1]), (data[2], data[3])):
         if model == 'xgb':
-            df1 = clf.predict(xxx[yyy > 0.5][features], output_margin=True)
-            df2 = clf.predict(xxx[yyy < 0.5][features], output_margin=True)
+            df1 = clf.predict(xxx[yyy > 0.5][features], output_margin=raw)
+            df2 = clf.predict(xxx[yyy < 0.5][features], output_margin=raw)
         elif model == 'sklearn':
             df1 = clf.decision_function(xxx[yyy > 0.5]).ravel()
             df2 = clf.decision_function(xxx[yyy < 0.5]).ravel()
@@ -55,9 +71,9 @@ def plot_output_train_test(
     res = plt.figure()
 
     plt.hist(prediction[1], color='b', alpha=0.5, range=low_high, bins=bins,
-             histtype='stepfilled', density=True, log=True, label='Background pdf Training Set')
+             histtype='stepfilled', label='Background pdf Training Set', **kwds)
     plt.hist(prediction[0], color='r', alpha=0.5, range=low_high, bins=bins,
-             histtype='stepfilled', density=True, log=True, label='Signal pdf Training Set')
+             histtype='stepfilled', label='Signal pdf Training Set', **kwds)
 
     hist, bins = np.histogram(
         prediction[2], bins=bins, range=low_high, density=True)
@@ -74,7 +90,6 @@ def plot_output_train_test(
     plt.errorbar(center, hist, yerr=err, fmt='o',
                  c='b', label='Signal pdf Test Set')
 
-    # plt.gcf().subplots_adjust(left=0.14)
     plt.xlabel('BDT output', fontsize=13, ha='right', position=(1, 20))
     plt.ylabel(r'                                Counts (arb. units)', fontsize=13)
     plt.legend(frameon=False, fontsize=12)
@@ -85,14 +100,22 @@ def plot_distr(sig_df, bkg_df, column=None, figsize=None, bins=50, log=False):
     """Build a DataFrame and create two dataset for signal and bkg
 
     Draw histogram of the DataFrame's series comparing the distribution
-    in `data1` to `data2`.
+    in `bkg_df` to `sig_df`.
 
     Input
     -----------------------------------------
-    sig_df: signal candidates dataframe
-    bkg_df: background candidates dataframe
-    column: training columns
-    log: log scale plot
+    sig_df: Pandas dataframe
+    Signal candidates dataframe
+
+    bkg_df: Pandas dataframe
+    background candidates dataframe
+
+    column: list
+    Contains the name of the features you want to plot
+    Example: ['dEdx', 'pT', 'ct']
+
+    log: Bool
+    If True enable log scale plot
 
     Output
     -----------------------------------------
@@ -101,38 +124,40 @@ def plot_distr(sig_df, bkg_df, column=None, figsize=None, bins=50, log=False):
 
     """
 
-    data1 = bkg_df
-    data2 = sig_df
-
     if column is not None:
         if not isinstance(column, (list, np.ndarray, Index)):
             column = [column]
-        data1 = data1[column]
-        data2 = data2[column]
+        bkg_df = bkg_df[column]
+        sig_df = sig_df[column]
 
     if figsize is None:
         figsize = [20, 15]
 
     res = plt.figure()
-    axes = data1.hist(column=column, color='tab:blue', alpha=0.5, bins=bins, figsize=figsize,
-                      label='Background', density=True, grid=False, log=log)
+    axes = bkg_df.hist(column=column, color='tab:blue', alpha=0.5, bins=bins, figsize=figsize,
+                       label='Background', density=True, grid=False, log=log)
     axes = axes.flatten()
     axes = axes[:len(column)]
-    data2.hist(ax=axes, column=column, color='tab:orange', alpha=0.5, bins=bins, label='Signal',
-               density=True, grid=False, log=log)[0].legend()
+    sig_df.hist(ax=axes, column=column, color='tab:orange', alpha=0.5, bins=bins, label='Signal',
+                density=True, grid=False, log=log)[0].legend()
     for axs in axes:
         axs.set_ylabel('Counts (arb. units)')
     return res
 
 
 def plot_corr(sig_df, bkg_df, columns, **kwds):
-    """Calculate pairwise correlation between features.
+    """Calculate pairwise correlation between features for
+    two classes (ex: signal and background)
 
     Input
     -----------------------------------------------
     sig_df: signal candidates dataframe
     bkg_df: background candidates dataframe
-    column: training columns
+
+    columns: list
+    Contains the name of the features you want to plot
+    Example: ['dEdx', 'pT', 'ct']
+
     **kwds: extra arguments are passed on to DataFrame.corr()
 
     Output
@@ -148,10 +173,8 @@ def plot_corr(sig_df, bkg_df, columns, **kwds):
     corrmat_sig = data_sig.corr(**kwds)
     corrmat_bkg = data_bkg.corr(**kwds)
 
-    tit = r'$\mathrm{\ \ \ ALICE \ Simulation}$ Pb-Pb $\sqrt{s_{\mathrm{NN}}}$ = 5.02 TeV'
     fig = plt.figure(figsize=(20, 10))
     # plt.title(t,y=1.08,fontsize=16)
-    plt.suptitle(tit, fontsize=18, ha='center')
     grid = ImageGrid(fig, 111, nrows_ncols=(1, 2), axes_pad=0.15, share_all=True,
                      cbar_location='right', cbar_mode='single', cbar_size='7%', cbar_pad=0.15)
 
@@ -199,16 +222,21 @@ def plot_corr(sig_df, bkg_df, columns, **kwds):
 
 
 def plot_bdt_eff(threshold, eff_sig):
-    """Plot the BDT efficiency calculated with the function bdt_efficiency_array() in training_utils.py
+    """Plot the BDT efficiency calculated with the function bdt_efficiency_array()
+    in training_utils.py
 
     Input
     -----------------------------------
-    threshold: score threscold array
-    eff_sig: bdt efficiency array
+    threshold: list or np.array
+    Score threshold array
+
+    eff_sig: list or array
+    bdt efficiency array
 
     Output
     -----------------------------------
-    res: matplotlib object of the bdt efficiency as a function of the threshold score
+    res: matplotlib object of the bdt efficiency as a function of the
+    threshold score
 
     """
     res = plt.figure()
@@ -226,8 +254,18 @@ def plot_roc(y_truth, model_decision):
 
     Input
     -------------------------------------
-    y_truth: test set label
-    model decision: predicted score
+
+    y_true : array
+    True binary labels. If labels are not either
+    {-1, 1} or {0, 1}, then pos_label should be
+    explicitly given.
+
+    y_score : array
+    Target scores, can either be probability estimates
+    of the positive class, confidence values, or
+    non-thresholded measure of decisions (as returned
+    by “decision_function” on some classifiers).
+
 
     Output
     -------------------------------------
@@ -250,23 +288,30 @@ def plot_roc(y_truth, model_decision):
     return res
 
 
-def plot_feature_imp(df_in, y_lab, model):
+def plot_feature_imp(df_in, y_lab, model, n_sample=10000):
     """Calculate the feature importance using the shap violin plot for each feature. The calculation
     is performed on a subsample of the input training/test set. The model could be sklearn or xgboost
 
     Input
     -------------------------------------------
-    df_in: test set dataframe
-    y_lab: test set label
+    df_in: Pandas dataframe
+    Training or test set dataframe
+
+    y_lab: list or np.array
+    Training or test set label
     model: trained model
+
+    n_sample: int
+    Number of candidates employed to fill
+    the shap violin plots.
 
     Output
     -------------------------------------------
     res: matplotlib object with shap feature importance
 
     """
-    subs_bkg = df_in[y_lab == 0].sample(10000)
-    subs_sig = df_in[y_lab == 1].sample(10000)
+    subs_bkg = df_in[y_lab == 0].sample(n_sample)
+    subs_sig = df_in[y_lab == 1].sample(n_sample)
     df_subs = pd.concat([subs_bkg, subs_sig]).sample(frac=1.)
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(df_subs)
@@ -280,24 +325,26 @@ def plot_precision_recall(y_test, y_score):
 
     Input
     -------------------------------------
-    y_test: test set label
-    y_score: predicted score
+    y_test: array
+    True binary labels. If labels are not either
+    {-1, 1} or {0, 1}, then pos_label should be
+    explicitly given.
+
+    y_score: array
+    Estimated probabilities or decision function.
+
 
     Output
     -------------------------------------
-    res: matplotlib object with the precision recall curve
+    res: matplotlib object with the precision
+    recall curve
 
     """
     precision, recall, _ = precision_recall_curve(y_test, y_score)
-
-    # In matplotlib < 1.5, plt.fill_between does not have a 'step' argument
     res = plt.figure()
-    step_kwargs = ({'step': 'post'}
-                   if 'step' in signature(plt.fill_between).parameters
-                   else {})
     plt.step(recall, precision, color='b', alpha=0.2,
              where='post')
-    plt.fill_between(recall, precision, alpha=0.2, color='b', **step_kwargs)
+    plt.fill_between(recall, precision, alpha=0.2, color='b', step='post')
 
     plt.xlabel('Recall')
     plt.ylabel('Precision')
