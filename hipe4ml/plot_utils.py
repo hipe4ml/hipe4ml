@@ -9,8 +9,6 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 from sklearn.metrics import (auc, average_precision_score,
                              precision_recall_curve, roc_curve)
 
-
-# plot the BDT score distribution in the train and in the test set for both signal and background
 def plot_output_train_test(
         clf, data, model='xgb', features=None, bins=80, raw=True, **kwds):
     """
@@ -19,17 +17,7 @@ def plot_output_train_test(
 
     Input
     ----------------------------------------
-    x_train: Pandas dataframe
-    Training set
-
-    y_train: list or array
-    Training set labels
-
-    x_test: Pandas dataframe
-    Test set
-
-    y_test: list or np.array
-    Test set labels
+    clf: xgboost or sklearn model
 
     data: list
     Contains respectively: training
@@ -41,6 +29,15 @@ def plot_output_train_test(
     features: list
     Contains the name of the features used for the training.
     Example: ['dEdx', 'pT', 'ct']
+
+    bins: int or sequence of scalars or str
+    If bins is an int, it defines the number of equal-width
+    bins in the given range (10, by default). If bins is a
+    sequence, it defines a monotonically increasing array of
+    bin edges, including the rightmost edge, allowing for
+    non-uniform bin widths.
+
+    raw: If true enables the raw untransformed margin value
 
     **kwds: extra arguments are passed on to plt.hist()
 
@@ -114,6 +111,16 @@ def plot_distr(sig_df, bkg_df, column=None, figsize=None, bins=50, log=False):
     Contains the name of the features you want to plot
     Example: ['dEdx', 'pT', 'ct']
 
+    figsize: list
+    The size in inches of the figure to create. Uses the value in matplotlib.rcParams by default.
+
+    bins: int or sequence of scalars or str
+    If bins is an int, it defines the number of equal-width
+    bins in the given range (10, by default). If bins is a
+    sequence, it defines a monotonically increasing array of
+    bin edges, including the rightmost edge, allowing for
+    non-uniform bin widths.
+
     log: Bool
     If True enable log scale plot
 
@@ -174,7 +181,6 @@ def plot_corr(sig_df, bkg_df, columns, **kwds):
     corrmat_bkg = data_bkg.corr(**kwds)
 
     fig = plt.figure(figsize=(20, 10))
-    # plt.title(t,y=1.08,fontsize=16)
     grid = ImageGrid(fig, 111, nrows_ncols=(1, 2), axes_pad=0.15, share_all=True,
                      cbar_location='right', cbar_mode='single', cbar_size='7%', cbar_pad=0.15)
 
@@ -249,22 +255,28 @@ def plot_bdt_eff(threshold, eff_sig):
     return res
 
 
-def plot_roc(y_truth, model_decision):
+def plot_roc(y_truth, model_decision, pos_label=None):
     """Calculate and plot the roc curve
 
     Input
     -------------------------------------
 
-    y_true : array
+    y_truth : array
     True binary labels. If labels are not either
     {-1, 1} or {0, 1}, then pos_label should be
     explicitly given.
 
-    y_score : array
+    model_decision : array
     Target scores, can either be probability estimates
     of the positive class, confidence values, or
     non-thresholded measure of decisions (as returned
     by “decision_function” on some classifiers).
+
+    pos_label : int or str
+    The label of the positive class. When pos_label=None,
+    if y_true is in {-1, 1} or {0, 1}, pos_label is set to 1,
+    otherwise an error will be raised.
+
 
 
     Output
@@ -272,8 +284,8 @@ def plot_roc(y_truth, model_decision):
     res: matplotlib object with the roc curve
 
     """
-    # Compute ROC curve and area under the curve
-    fpr, tpr, _ = roc_curve(y_truth, model_decision)
+
+    fpr, tpr, _ = roc_curve(y_truth, model_decision, pos_label=pos_label)
     roc_auc = auc(fpr, tpr)
     res = plt.figure()
     plt.plot(fpr, tpr, lw=1, label='ROC (area = %0.4f)' % (roc_auc))
@@ -320,7 +332,7 @@ def plot_feature_imp(df_in, y_lab, model, n_sample=10000):
     return res
 
 
-def plot_precision_recall(y_test, y_score):
+def plot_precision_recall(y_test, y_score, pos_label=None):
     """ Plot precision recall curve
 
     Input
@@ -333,6 +345,11 @@ def plot_precision_recall(y_test, y_score):
     y_score: array
     Estimated probabilities or decision function.
 
+    pos_label : int or str
+    The label of the positive class. When pos_label=None,
+    if y_true is in {-1, 1} or {0, 1}, pos_label is set to 1,
+    otherwise an error will be raised.
+
 
     Output
     -------------------------------------
@@ -340,7 +357,7 @@ def plot_precision_recall(y_test, y_score):
     recall curve
 
     """
-    precision, recall, _ = precision_recall_curve(y_test, y_score)
+    precision, recall, _ = precision_recall_curve(y_test, y_score, pos_label=pos_label)
     res = plt.figure()
     plt.step(recall, precision, color='b', alpha=0.2,
              where='post')

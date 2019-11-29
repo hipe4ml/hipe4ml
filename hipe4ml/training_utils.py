@@ -18,6 +18,11 @@ def evaluate_hyperparams(data, training_columns, reg_params, hyp_params, metrics
     set dataframe, training label array,
     test set dataframe, test label array
 
+    training_columns: list
+    Contains the name of the features used
+    for the training.
+    Example: ['dEdx', 'pT', 'ct']
+
     reg_params: dictionary
     Xgboost regularization parameter values.
     These parameters will be NOT optimized.
@@ -35,9 +40,12 @@ def evaluate_hyperparams(data, training_columns, reg_params, hyp_params, metrics
     validation error
 
     metrics: string, callable or None
-    A string (see model evaluation documentation) or a
-    scorer callable object / function with signature
-    scorer(estimator, X, y) which should return only a
+    A string (see sklearn model evaluation
+    documentation:
+    https://scikit-learn.org/stable/modules/model_evaluation.html)
+    or a scorer callable object / function
+    with signature scorer(estimator, X, y)
+    which should return only a
     single value.
 
     Output
@@ -48,10 +56,10 @@ def evaluate_hyperparams(data, training_columns, reg_params, hyp_params, metrics
 
 
     """
-
+    model = xgb.XGBClassifier()
+    hyp_params = cast_model_params(model, hyp_params)
     params = {**reg_params, **hyp_params}
-
-    model = xgb.XGBClassifier(**params)
+    model.set_params(**params)
     return np.mean(cross_val_score(model, data[0][training_columns], data[1], cv=nfold, scoring=metrics))
 
 
@@ -67,6 +75,10 @@ def optimize_params_bayes(data, training_columns, reg_params, hyperparams_ranges
     Contains respectively: training
     set dataframe, training label array,
     test set dataframe, test label array
+
+    training_columns: list
+    Contains the name of the features used for the training.
+    Example: ['dEdx', 'pT', 'ct']
 
     reg_params: dictionary
     Xgboost regularization parameter values.
@@ -117,8 +129,7 @@ def optimize_params_bayes(data, training_columns, reg_params, hyperparams_ranges
     # extract and show the results of the optimization
     max_params = {key: None for key in hyperparams_ranges.keys()}
     for key in max_params.keys():
-        max_params[key] = int(optimizer.max['params'][key])
-
+        max_params[key] = optimizer.max['params'][key]
     print('Best target: {0:.6f}'.format(optimizer.max['target']))
     print('Best parameters: {}'.format(max_params))
 
@@ -192,7 +203,9 @@ def train_test_model(data, training_columns, reg_params, hyp_params=0,
 
     # final training with the optimized hyperparams
     print('Training the final model: ...', end='\r')
-    model = xgb.XGBClassifier(**best_params)
+    model = xgb.XGBClassifier()
+    best_params = cast_model_params(model, best_params)
+    model.set_params(**best_params)
     model.fit(data[0][training_columns], data[1])
     print('{}'.format(model.get_params()))
     print('Training the final model: Done!\n')
@@ -241,3 +254,29 @@ def bdt_efficiency_array(df_in, n_points=50):
         efficiency.append(sig_selected / n_sig)
 
     return efficiency, threshold
+
+
+def cast_model_params(model, params):
+    """ Check if each model parameter is defined as integer
+        and change the parameter dictionary consequently
+
+        Input
+        -----------------------------------------------------
+        model: xgboost or sklearn model
+
+        params: dictionary
+        Xgboost parameters values. For
+        example: max_depth, learning_rate,
+        n_estimators, gamma, min_child_weight,
+        subsample, colsample_bytree
+
+        Output:
+        -----------------------------------------------------
+        params: dictionary
+        XGBoost hyperparameter values updated
+
+    """
+    for key in params.keys():
+        if isinstance(model.get_params()[key], int):
+            params[key] = round(params[key])
+    return params
