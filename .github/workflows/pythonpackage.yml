@@ -25,14 +25,6 @@ jobs:
         run: |
           pip install ${{ matrix.test-tool }}
           tests/run_tests.sh ${{ matrix.test-tool }}
-      # - name: Lint with flake8
-      #   run: |
-      #     pip install flake8
-      #     tests/run_tests.sh flake8
-      # - name: Test with pytest
-      #   run: |
-      #     pip install pytest
-      #     tests/run_tests.sh pytest
 
   build-macos-latest:
     runs-on: macOS-latest
@@ -56,11 +48,3 @@ jobs:
         run: |
           pip install ${{ matrix.test-tool }}
           tests/run_tests.sh ${{ matrix.test-tool }}
-      # - name: Lint with flake8
-      #   run: |
-      #     pip install flake8
-      #     tests/run_tests.sh flake8
-      # - name: Test with pytest
-      #   run: |
-      #     pip install pytest
-      #     tests/run_tests.sh pytest
