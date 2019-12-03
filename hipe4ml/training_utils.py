@@ -1,10 +1,12 @@
 """ Module containing the training utils.
     """
+from copy import deepcopy
+
 import numpy as np
 import xgboost as xgb
+from bayes_opt import BayesianOptimization
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
-from bayes_opt import BayesianOptimization
 
 
 def evaluate_hyperparams(data, training_columns, reg_params, hyp_params, metrics, nfold=5):
@@ -57,7 +59,7 @@ def evaluate_hyperparams(data, training_columns, reg_params, hyp_params, metrics
 
     """
     model = xgb.XGBClassifier()
-    hyp_copy = hyp_params.copy()
+    hyp_copy = deepcopy(hyp_params)
     hyp_copy = cast_model_params(model, hyp_copy)
     params = {**reg_params, **hyp_copy}
     model.set_params(**params)
@@ -235,9 +237,6 @@ def bdt_efficiency_array(y_truth, y_score, n_points=50):
 
     Input
     ------------------------------------------------
-    df_in: Pandas dataframe
-    Training or test set dataframe
-
     y_truth: array
     Training or test set labels. Background candidates should
     be labeled with 0, signal candidates with 1
@@ -250,10 +249,10 @@ def bdt_efficiency_array(y_truth, y_score, n_points=50):
 
     Output
     ------------------------------------------------
-    efficiency: array
+    efficiency: numpy array
     Efficiency array as a function of the threshold value
 
-    threshold:array
+    threshold: numpy array
     Threshold values array
 
 
@@ -263,15 +262,15 @@ def bdt_efficiency_array(y_truth, y_score, n_points=50):
 
     threshold = np.linspace(min_score, max_score, n_points)
 
-    efficiency = []
-
     n_sig = np.sum(y_truth)
+
+    efficiency = np.empty((0, n_points))
 
     for thr in threshold:
         n_sig_selected = np.sum(y_truth[y_score > thr])
-        efficiency.append(n_sig_selected / n_sig)
+        efficiency = np.append(efficiency, [n_sig_selected/n_sig])
 
-    return np.array(efficiency), threshold
+    return efficiency, threshold
 
 
 def cast_model_params(model, params):
