@@ -9,6 +9,7 @@ from mpl_toolkits.axes_grid1 import ImageGrid
 from sklearn.metrics import (auc, average_precision_score,
                              precision_recall_curve, roc_curve)
 
+
 def plot_output_train_test(
         clf, data, model='xgb', features=None, bins=80, raw=True, **kwds):
     """
@@ -36,6 +37,11 @@ def plot_output_train_test(
     sequence, it defines a monotonically increasing array of
     bin edges, including the rightmost edge, allowing for
     non-uniform bin widths.
+    If bins is a string, it defines the method used to
+    calculate the optimal bin width, as defined by
+    np.histogram_bin_edges:
+    https://docs.scipy.org/doc/numpy/reference/generated
+    /numpy.histogram_bin_edges.html#numpy.histogram_bin_edges
 
     raw: If true enables the raw untransformed margin value
 
@@ -73,15 +79,16 @@ def plot_output_train_test(
              histtype='stepfilled', label='Signal pdf Training Set', **kwds)
 
     hist, bins = np.histogram(
-        prediction[2], bins=bins, range=low_high, density=True)
+        prediction[2], bins=bins, range=low_high, **kwds)
     scale = len(prediction[2]) / sum(hist)
     err = np.sqrt(hist * scale) / scale
     center = (bins[:-1] + bins[1:]) / 2
+
     plt.errorbar(center, hist, yerr=err, fmt='o',
                  c='r', label='Background pdf Test Set')
 
     hist, bins = np.histogram(
-        prediction[3], bins=bins, range=low_high, density=True)
+        prediction[3], bins=bins, range=low_high, **kwds)
     scale = len(prediction[2]) / sum(hist)
     err = np.sqrt(hist * scale) / scale
     plt.errorbar(center, hist, yerr=err, fmt='o',
@@ -233,10 +240,10 @@ def plot_bdt_eff(threshold, eff_sig):
 
     Input
     -----------------------------------
-    threshold: list or np.array
+    threshold: array
     Score threshold array
 
-    eff_sig: list or array
+    eff_sig: array
     bdt efficiency array
 
     Output
@@ -255,7 +262,7 @@ def plot_bdt_eff(threshold, eff_sig):
     return res
 
 
-def plot_roc(y_truth, model_decision, pos_label=None):
+def plot_roc(y_truth, y_score, pos_label=None):
     """Calculate and plot the roc curve
 
     Input
@@ -266,7 +273,7 @@ def plot_roc(y_truth, model_decision, pos_label=None):
     {-1, 1} or {0, 1}, then pos_label should be
     explicitly given.
 
-    model_decision : array
+    y_score : array
     Target scores, can either be probability estimates
     of the positive class, confidence values, or
     non-thresholded measure of decisions (as returned
@@ -285,7 +292,7 @@ def plot_roc(y_truth, model_decision, pos_label=None):
 
     """
 
-    fpr, tpr, _ = roc_curve(y_truth, model_decision, pos_label=pos_label)
+    fpr, tpr, _ = roc_curve(y_truth, y_score, pos_label=pos_label)
     roc_auc = auc(fpr, tpr)
     res = plt.figure()
     plt.plot(fpr, tpr, lw=1, label='ROC (area = %0.4f)' % (roc_auc))
@@ -296,11 +303,10 @@ def plot_roc(y_truth, model_decision, pos_label=None):
     plt.ylabel('True Positive Rate', fontsize=12)
     plt.legend(loc="lower right")
     plt.grid()
-    plt.close()
     return res
 
 
-def plot_feature_imp(df_in, y_lab, model, n_sample=10000):
+def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
     """Calculate the feature importance using the shap violin plot for each feature. The calculation
     is performed on a subsample of the input training/test set. The model could be sklearn or xgboost
 
@@ -309,7 +315,7 @@ def plot_feature_imp(df_in, y_lab, model, n_sample=10000):
     df_in: Pandas dataframe
     Training or test set dataframe
 
-    y_lab: list or np.array
+    y_truth: array
     Training or test set label
     model: trained model
 
@@ -322,8 +328,8 @@ def plot_feature_imp(df_in, y_lab, model, n_sample=10000):
     res: matplotlib object with shap feature importance
 
     """
-    subs_bkg = df_in[y_lab == 0].sample(n_sample)
-    subs_sig = df_in[y_lab == 1].sample(n_sample)
+    subs_bkg = df_in[y_truth == 0].sample(n_sample)
+    subs_sig = df_in[y_truth == 1].sample(n_sample)
     df_subs = pd.concat([subs_bkg, subs_sig]).sample(frac=1.)
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(df_subs)
@@ -332,12 +338,12 @@ def plot_feature_imp(df_in, y_lab, model, n_sample=10000):
     return res
 
 
-def plot_precision_recall(y_test, y_score, pos_label=None):
+def plot_precision_recall(y_truth, y_score, pos_label=None):
     """ Plot precision recall curve
 
     Input
     -------------------------------------
-    y_test: array
+    y_truth: array
     True binary labels. If labels are not either
     {-1, 1} or {0, 1}, then pos_label should be
     explicitly given.
@@ -357,7 +363,8 @@ def plot_precision_recall(y_test, y_score, pos_label=None):
     recall curve
 
     """
-    precision, recall, _ = precision_recall_curve(y_test, y_score, pos_label=pos_label)
+    precision, recall, _ = precision_recall_curve(
+        y_truth, y_score, pos_label=pos_label)
     res = plt.figure()
     plt.step(recall, precision, color='b', alpha=0.2,
              where='post')
@@ -367,7 +374,7 @@ def plot_precision_recall(y_test, y_score, pos_label=None):
     plt.ylabel('Precision')
     plt.ylim([0.0, 1.05])
     plt.xlim([0.0, 1.0])
-    average_precision = average_precision_score(y_test, y_score)
+    average_precision = average_precision_score(y_truth, y_score)
     plt.title('2-class Precision-Recall curve: AP={0:0.2f}'.format(
         average_precision))
 

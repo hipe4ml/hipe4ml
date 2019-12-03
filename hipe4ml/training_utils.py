@@ -57,8 +57,9 @@ def evaluate_hyperparams(data, training_columns, reg_params, hyp_params, metrics
 
     """
     model = xgb.XGBClassifier()
-    hyp_params = cast_model_params(model, hyp_params)
-    params = {**reg_params, **hyp_params}
+    hyp_copy = hyp_params.copy()
+    hyp_copy = cast_model_params(model, hyp_copy)
+    params = {**reg_params, **hyp_copy}
     model.set_params(**params)
     return np.mean(cross_val_score(model, data[0][training_columns], data[1], cv=nfold, scoring=metrics))
 
@@ -115,9 +116,9 @@ def optimize_params_bayes(data, training_columns, reg_params, hyperparams_ranges
     """
 
     # just an helper function
-    def hyperparams_crossvalidation(hyp_params):
+    def hyperparams_crossvalidation(**kwargs):
         return evaluate_hyperparams(
-            data, training_columns, reg_params, hyp_params, metrics, nfold)
+            data, training_columns, reg_params, kwargs, metrics, nfold)
 
     print('')
 
@@ -136,8 +137,8 @@ def optimize_params_bayes(data, training_columns, reg_params, hyperparams_ranges
     return max_params
 
 
-def train_test_model(data, training_columns, reg_params, hyp_params=0,
-                     optimize=False, hyperparams_ranges=0, metrics='roc_auc'):
+def train_test_model(data, training_columns, reg_params=None, hyp_params=None,
+                     optimize=False, hyperparams_ranges=None, metrics='roc_auc'):
     """
     Perform the training and the testing of the model
 
@@ -189,8 +190,14 @@ def train_test_model(data, training_columns, reg_params, hyp_params=0,
 
     data_train = [data[0], data[1]]
 
+    if not reg_params:
+        reg_params = {}
+    if not hyp_params:
+        hyp_params = {}
+
     # manage the optimization process
     if optimize:
+        assert hyperparams_ranges is not None, "Hyperparameters ranges not given"
         print('Hyperparameters optimization: ...', end='\r')
         max_params = optimize_params_bayes(
             data_train, training_columns, reg_params, hyperparams_ranges, init_points=10, n_iter=10, metrics=metrics)
@@ -220,40 +227,51 @@ def train_test_model(data, training_columns, reg_params, hyp_params=0,
     return model
 
 
-def bdt_efficiency_array(df_in, n_points=50):
+def bdt_efficiency_array(y_truth, y_score, n_points=50):
     """
-    Calculate the BDT efficiency as a function of a score
+    Calculate the BDT efficiency as a function of the score
     threshold. The signal and the background candidates
     should be labeled respectively with 1 and 0
 
     Input
     ------------------------------------------------
-    df_in: labeled test set dataframe
-    n_points: length of the efficiency array
+    df_in: Pandas dataframe
+    Training or test set dataframe
+
+    y_truth: array
+    Training or test set labels. Background candidates should
+    be labeled with 0, signal candidates with 1
+
+    y_score: array
+    Estimated probabilities or decision function.
+
+    n_points: int
+    Number of points to be sampled
 
     Output
     ------------------------------------------------
-    efficiency: efficiency array as a function of the
-    threshold value
-    threshold: threshold values array
+    efficiency: array
+    Efficiency array as a function of the threshold value
+
+    threshold:array
+    Threshold values array
 
 
     """
-    min_score = df_in['Score'].min()
-    max_score = df_in['Score'].max()
+    min_score = np.min(y_score)
+    max_score = np.max(y_score)
 
     threshold = np.linspace(min_score, max_score, n_points)
 
     efficiency = []
 
-    n_sig = sum(df_in['y'])
+    n_sig = np.sum(y_truth)
 
-    for thr in threshold:  # pylint: disable=unused-variable
-        df_selected = df_in.query('Score>@thr')['y']
-        sig_selected = np.sum(df_selected)
-        efficiency.append(sig_selected / n_sig)
+    for thr in threshold:
+        n_sig_selected = np.sum(y_truth[y_score > thr])
+        efficiency.append(n_sig_selected / n_sig)
 
-    return efficiency, threshold
+    return np.array(efficiency), threshold
 
 
 def cast_model_params(model, params):
@@ -278,5 +296,5 @@ def cast_model_params(model, params):
     """
     for key in params.keys():
         if isinstance(model.get_params()[key], int):
-            params[key] = round(params[key])
+            params[key] = int(round(params[key]))
     return params
