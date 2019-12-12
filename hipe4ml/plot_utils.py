@@ -11,21 +11,19 @@ from sklearn.metrics import (auc, average_precision_score,
 
 
 def plot_output_train_test(
-        clf, data, model='xgb', features=None, bins=80, raw=True, **kwds):
+        model, data, features=None, bins=80, raw=True, **kwds):
     """
     Plot the BDT output for the signal and background distributions
     both for training and test set.
 
     Input
     ----------------------------------------
-    clf: xgboost or sklearn model
+    model: xgboost or sklearn model
 
     data: list
     Contains respectively: training
     set dataframe, training label array,
     test set dataframe, test label array
-
-    model: Could be 'xgb' or 'sklearn'
 
     features: list
     Contains the name of the features used for the training.
@@ -49,22 +47,15 @@ def plot_output_train_test(
 
     Output
     ----------------------------------------
-    res: matplotlib object with the BDT output
+    matplotlib object with the BDT output
 
 
     """
 
     prediction = []
     for xxx, yyy in ((data[0], data[1]), (data[2], data[3])):
-        if model == 'xgb':
-            df1 = clf.predict(xxx[yyy > 0.5][features], output_margin=raw)
-            df2 = clf.predict(xxx[yyy < 0.5][features], output_margin=raw)
-        elif model == 'sklearn':
-            df1 = clf.decision_function(xxx[yyy > 0.5]).ravel()
-            df2 = clf.decision_function(xxx[yyy < 0.5]).ravel()
-        else:
-            print('Error: wrong model type used')
-            return None
+        df1 = model.predict(xxx[yyy > 0.5][features], output_margin=raw)
+        df2 = model.predict(xxx[yyy < 0.5][features], output_margin=raw)
         prediction += [df1, df2]
 
     low = min(np.min(d) for d in prediction)
@@ -101,10 +92,11 @@ def plot_output_train_test(
 
 
 def plot_distr(sig_df, bkg_df, column=None, figsize=None, bins=50, log=False):
-    """Build a DataFrame and create two dataset for signal and bkg
+    """
+    Build a DataFrame and create two dataset for signal and bkg
 
-    Draw histogram of the DataFrame's series comparing the distribution
-    in `bkg_df` to `sig_df`.
+    Draw histogram of the DataFrame's series comparing the
+    distribution in `bkg_df` to `sig_df`.
 
     Input
     -----------------------------------------
@@ -133,7 +125,7 @@ def plot_distr(sig_df, bkg_df, column=None, figsize=None, bins=50, log=False):
 
     Output
     -----------------------------------------
-    res: matplotlib object with the distributions of the features for
+    matplotlib object with the distributions of the features for
     signal and background
 
     """
@@ -160,7 +152,8 @@ def plot_distr(sig_df, bkg_df, column=None, figsize=None, bins=50, log=False):
 
 
 def plot_corr(sig_df, bkg_df, columns, **kwds):
-    """Calculate pairwise correlation between features for
+    """
+    Calculate pairwise correlation between features for
     two classes (ex: signal and background)
 
     Input
@@ -176,7 +169,7 @@ def plot_corr(sig_df, bkg_df, columns, **kwds):
 
     Output
     ------------------------------------------------
-    fig: matplotlib object with the correlations between the
+    matplotlib object with the correlations between the
     features for signal and background
 
     """
@@ -235,8 +228,9 @@ def plot_corr(sig_df, bkg_df, columns, **kwds):
 
 
 def plot_bdt_eff(threshold, eff_sig):
-    """Plot the BDT efficiency calculated with the function bdt_efficiency_array()
-    in training_utils.py
+    """
+    Plot the BDT efficiency calculated with the function
+    bdt_efficiency_array() in analysis_utils
 
     Input
     -----------------------------------
@@ -248,8 +242,8 @@ def plot_bdt_eff(threshold, eff_sig):
 
     Output
     -----------------------------------
-    res: matplotlib object of the bdt efficiency as a function of the
-    threshold score
+    matplotlib object of the bdt efficiency as a
+    function of the threshold score
 
     """
     res = plt.figure()
@@ -263,7 +257,8 @@ def plot_bdt_eff(threshold, eff_sig):
 
 
 def plot_roc(y_truth, y_score, pos_label=None):
-    """Calculate and plot the roc curve
+    """
+    Calculate and plot the roc curve
 
     Input
     -------------------------------------
@@ -288,7 +283,7 @@ def plot_roc(y_truth, y_score, pos_label=None):
 
     Output
     -------------------------------------
-    res: matplotlib object with the roc curve
+    matplotlib object with the roc curve
 
     """
 
@@ -307,8 +302,10 @@ def plot_roc(y_truth, y_score, pos_label=None):
 
 
 def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
-    """Calculate the feature importance using the shap violin plot for each feature. The calculation
-    is performed on a subsample of the input training/test set. The model could be sklearn or xgboost
+    """
+    Calculate the feature importance using the shap violin plot for
+    each feature. The calculation is performed on a subsample of the
+    input training/test set
 
     Input
     -------------------------------------------
@@ -325,13 +322,13 @@ def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
 
     Output
     -------------------------------------------
-    res: matplotlib object with shap feature importance
+    matplotlib object with shap feature importance
 
     """
     subs_bkg = df_in[y_truth == 0].sample(n_sample)
     subs_sig = df_in[y_truth == 1].sample(n_sample)
     df_subs = pd.concat([subs_bkg, subs_sig]).sample(frac=1.)
-    explainer = shap.TreeExplainer(model)
+    explainer = shap.TreeExplainer(model.get_original_model())
     shap_values = explainer.shap_values(df_subs)
     res = plt.figure()
     shap.summary_plot(shap_values, df_subs, show=False)
@@ -359,7 +356,7 @@ def plot_precision_recall(y_truth, y_score, pos_label=None):
 
     Output
     -------------------------------------
-    res: matplotlib object with the precision
+    matplotlib object with the precision
     recall curve
 
     """
