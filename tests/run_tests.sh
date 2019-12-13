@@ -9,6 +9,11 @@ function pinfo() { echo -e "\033[32m${1}\033[m" >&2; }
 function pwarn() { echo -e "\033[33m${1}\033[m" >&2; }
 function perr() { echo -e "\033[31m${1}\033[m" >&2; }
 
+setup-hipe4ml() {
+    pinfo "installing: hipe4ml"
+    pip3 install --upgrade --force-reinstall --no-deps -e .
+}
+
 test-pylint() {
     pinfo "running test: pylint"
     type pylint
@@ -26,19 +31,20 @@ test-flake8() {
 }
 
 test-pytest() {
+    setup-hipe4ml
     pinfo "running test: pytest"
     type pytest
     pytest tests
 }
 
 test-all() {
-        test-pylint
-        test-flake8
-        test-pytest
+    test-pylint
+    test-flake8
+    test-pytest
 }
 
 # Check parameters
-[[ $# == 0 ]] && test-all;
+[[ $# == 0 ]] && test-all
 while [[ $# -gt 0 ]]; do
     case "$1" in
 
@@ -60,6 +66,7 @@ while [[ $# -gt 0 ]]; do
         pwarn "Specific tests:"
         pwarn "    run_tests.sh pylint                    # test with pylint"
         pwarn "    run_tests.sh flake8                    # test with flake8"
+        pwarn "    run_tests.sh test-pytest               # test with pytest"
         pwarn ""
         pwarn "Parameters:"
         pwarn "    --help                                 # print this help"
@@ -69,6 +76,7 @@ while [[ $# -gt 0 ]]; do
     *)
         perr "Unknown option: $1"
         exit 2
+        ;;
     esac
     shift
 done

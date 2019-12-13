@@ -8,6 +8,7 @@ argument-naming-style=snake_case
 variable-naming-style=snake_case
 method-naming-style=snake_case
 attr-naming-style=snake_case
+class-naming-style=PascalCase
 
 [MESSAGES CONTROL]
 disable=useless-object-inheritance
