@@ -5,8 +5,9 @@ ML libraries to build a new model with common methods
 import inspect
 import numpy as np
 from bayes_opt import BayesianOptimization
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, roc_curve, auc
 from sklearn.model_selection import cross_val_score
+from sklearn.preprocessing import label_binarize
 
 
 class ModelHandler:
@@ -194,14 +195,29 @@ class ModelHandler:
         sklearn or xgboost trained model
         """
 
+        # get number of classes
+        n_classes = len(np.unique(data[1]))
+        print('Number of detected classes:', n_classes)
+
         # final training with the optimized hyperparams
         print('Training the final model: ...', end='\r')
         self.fit(data[0], data[1])
         print('{}'.format(self.get_model_params()))
         print('Training the final model: Done!\n')
         print('Testing the model: ...', end='\r')
-        y_pred = self.predict(data[2], output_margin=False)
-        roc_score = roc_auc_score(data[3], y_pred)
+
+        y_pred = self.predict(data[2], output_margin=True)
+        if n_classes <= 2:
+            roc_score = roc_auc_score(data[3], y_pred)
+        else:
+            # convert multi-class labels to multi-labels to obtain roc curves
+            y_test_multi = label_binarize(data[3], classes=range(n_classes))
+            fpr, tpr = {}, {}
+            for clas in range(n_classes):
+                fpr[clas], tpr[clas], _ = roc_curve(y_test_multi[:, clas], y_pred[:, clas])
+            fpr['micro'], tpr['micro'], _ = roc_curve(y_test_multi.ravel(), y_pred.ravel())
+            roc_score = auc(fpr['micro'], tpr['micro'])
+
         print('Testing the model: Done!\n')
 
         print('ROC_AUC_score: {}\n'.format(roc_score))
@@ -299,6 +315,13 @@ class ModelHandler:
         Contains the optimized parameters
 
         """
+
+        # get number of classes
+        n_classes = len(np.unique(data[1]))
+        if n_classes > 2 and 'roc_auc' in metrics:
+            metrics = None
+            print('Warning: Bayesian optimization of hyperparameters with metric roc_auc_score'
+                  ' not supported for multi-class classification, setting metrics to None')
 
         # just an helper function
         def hyperparams_crossvalidation(**kwargs):

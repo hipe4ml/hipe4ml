@@ -5,6 +5,7 @@ Module used to test the plot functions
 import matplotlib
 import pandas as pd
 import xgboost as xgb
+import numpy as np
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 from hipe4ml import analysis_utils
@@ -36,7 +37,7 @@ def test_plot_distr():
     Test the feature distribution plot
     """
     assert isinstance(plot_utils.plot_distr(
-        SIG_DF, BKG_DF, SIG_DF.columns), matplotlib.figure.Figure)
+        [SIG_DF, BKG_DF], SIG_DF.columns), np.ndarray)
 
 
 def test_plot_corr():
@@ -44,7 +45,7 @@ def test_plot_corr():
     Test the correlation matrix plot
     """
     assert isinstance(plot_utils.plot_corr(
-        SIG_DF, BKG_DF, SIG_DF.columns), matplotlib.figure.Figure)
+        [SIG_DF, BKG_DF], SIG_DF.columns), list)
 
 
 def test_plot_roc():
@@ -67,15 +68,15 @@ def test_plot_feature_imp():
     Test the feature importance plot
     """
     assert isinstance(plot_utils.plot_feature_imp(
-        DATA[0], DATA[1], MODEL, 50), matplotlib.figure.Figure)
+        DATA[0], DATA[1], MODEL, 50), list)
 
 
 def test_plot_bdt_output():
     """
-    Test the feature importance plot
+    Test the test-training bdt output plot
     """
     assert isinstance(plot_utils.plot_output_train_test(
-        MODEL, DATA), matplotlib.figure.Figure)
+        MODEL, DATA), list)
 
 
 def test_plot_bdt_efficiency():
