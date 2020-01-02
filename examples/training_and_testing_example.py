@@ -5,6 +5,7 @@ import pandas as pd
 import xgboost as xgb
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
+import matplotlib.pyplot as plt
 
 from hipe4ml import analysis_utils, plot_utils
 from hipe4ml.model_handler import ModelHandler
@@ -49,10 +50,12 @@ EFFICIENCY, THRESHOLD = analysis_utils.bdt_efficiency_array(
 # PLOTTING
 # --------------------------------------------
 FEATURES_DISTRIBUTIONS_PLOT = plot_utils.plot_distr(
-    SIG_DF, BKG_DF, SIG_DF.columns)
-CORRELATION_MATRIX_PLOT = plot_utils.plot_corr(SIG_DF, BKG_DF, SIG_DF.columns)
+    [SIG_DF, BKG_DF], SIG_DF.columns)
+CORRELATION_MATRIX_PLOT = plot_utils.plot_corr([SIG_DF, BKG_DF], SIG_DF.columns)
 BDT_OUTPUT_PLOT = plot_utils.plot_output_train_test(MODEL, DATA)
 ROC_CURVE_PLOT = plot_utils.plot_roc(DATA[3], Y_PRED)
 PRECISION_RECALL_PLOT = plot_utils.precision_recall_curve(DATA[3], Y_PRED)
 BDT_EFFICIENCY_PLOT = plot_utils.plot_bdt_eff(THRESHOLD, EFFICIENCY)
+FEATURES_IMPORTANCE = plot_utils.plot_feature_imp(TEST_SET, Y_TEST, MODEL)
+plt.show()
 # ---------------------------------------------
