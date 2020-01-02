@@ -210,7 +210,7 @@ class ModelHandler:
             y_pred = self.predict(data[2], output_margin=False)
             roc_score = roc_auc_score(data[3], y_pred)
         else:
-            # only probability supported with multi-classification
+            # raw untransformed margin value needed for multi-classification
             y_pred = self.predict(data[2], output_margin=True)
             # convert multi-class labels to multi-labels to obtain roc curves
             y_test_multi = label_binarize(data[3], classes=range(n_classes))
