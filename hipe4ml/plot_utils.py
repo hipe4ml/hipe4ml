@@ -87,20 +87,17 @@ def plot_output_train_test(
     return res
 
 
-def plot_distr(sig_df, bkg_df, column=None, figsize=None, bins=50, log=False):
+def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels=None):
     """
-    Build a DataFrame and create two dataset for signal and bkg
+    Build a DataFrame and create a dataset for each class
 
     Draw histogram of the DataFrame's series comparing the
-    distribution in `bkg_df` to `sig_df`.
+    distribution of each class.
 
     Input
     -----------------------------------------
-    sig_df: Pandas dataframe
-    Signal candidates dataframe
-
-    bkg_df: Pandas dataframe
-    background candidates dataframe
+    list_of_df: list
+    Contains a dataframe for each class
 
     column: list
     Contains the name of the features you want to plot
@@ -119,6 +116,10 @@ def plot_distr(sig_df, bkg_df, column=None, figsize=None, bins=50, log=False):
     log: Bool
     If True enable log scale plot
 
+    labels: list
+    Contains the labels to be displayed in the legend
+    If None the labels are class1, class2, ..., classN
+
     Output
     -----------------------------------------
     matplotlib object with the distributions of the features for
@@ -129,21 +130,28 @@ def plot_distr(sig_df, bkg_df, column=None, figsize=None, bins=50, log=False):
     if column is not None:
         if not isinstance(column, (list, np.ndarray, Index)):
             column = [column]
-        bkg_df = bkg_df[column]
-        sig_df = sig_df[column]
+        for dfm in list_of_df:
+            dfm = dfm[column]
 
     if figsize is None:
         figsize = [20, 15]
 
+    if labels is None:
+        labels = ['class{}'.format(i_class) for i_class, _ in enumerate(list_of_df)]
+
     res = plt.figure()
-    axes = bkg_df.hist(column=column, color='tab:blue', alpha=0.5, bins=bins, figsize=figsize,
-                       label='Background', density=True, grid=False, log=log)
-    axes = axes.flatten()
-    axes = axes[:len(column)]
-    sig_df.hist(ax=axes, column=column, color='tab:orange', alpha=0.5, bins=bins, label='Signal',
-                density=True, grid=False, log=log)[0].legend()
+    for i_class, (dfm, lab) in enumerate(zip(list_of_df, labels)):
+        if i_class == 0:
+            axes = dfm.hist(column=column, alpha=0.5, bins=bins, figsize=figsize, label=lab,
+                            density=True, grid=False, log=log)
+            axes = axes.flatten()
+            axes = axes[:len(column)]
+        else:
+            dfm.hist(ax=axes, column=column, alpha=0.5, bins=bins, figsize=figsize, label=lab,
+                     density=True, grid=False, log=log)
     for axs in axes:
         axs.set_ylabel('Counts (arb. units)')
+    plt.legend(loc='best')
     return res
 
 
