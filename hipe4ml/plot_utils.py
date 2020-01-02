@@ -11,7 +11,7 @@ from sklearn.metrics import (auc, average_precision_score,
 
 
 def plot_output_train_test(
-        model, data, bins=80, raw=True, **kwds):
+        model, data, bins=80, raw=True, labels=None, **kwds):
     """
     Plot the BDT output for the signal and background distributions
     both for training and test set.
@@ -37,7 +37,12 @@ def plot_output_train_test(
     https://docs.scipy.org/doc/numpy/reference/generated
     /numpy.histogram_bin_edges.html#numpy.histogram_bin_edges
 
-    raw: If true enables the raw untransformed margin value
+    raw: Bool
+    If true enables the raw untransformed margin value
+
+    labels: list
+    Contains the labels to be displayed in the legend
+    If None the labels are class1, class2, ..., classN
 
     **kwds: extra arguments are passed on to plt.hist()
 
@@ -47,43 +52,78 @@ def plot_output_train_test(
 
 
     """
+    class_labels = np.unique(data[1])
+    n_classes = len(class_labels)
+    if not raw and n_classes > 2:
+        print('Warning: only raw or probability predictions supported with multi-classification')
+        raw = True
+
+    if labels is None:
+        if n_classes > 2:
+            labels = ['class{}'.format(i_class) for i_class, _ in enumerate(class_labels)]
+        else:
+            labels = ['Signal', 'Background']
 
     prediction = []
     for xxx, yyy in ((data[0], data[1]), (data[2], data[3])):
-        df1 = model.predict(xxx[yyy > 0.5], output_margin=raw)
-        df2 = model.predict(xxx[yyy < 0.5], output_margin=raw)
-        prediction += [df1, df2]
+        for class_lab in class_labels:
+            prediction.append(model.predict(xxx[yyy == class_lab], output_margin=raw))
 
     low = min(np.min(d) for d in prediction)
     high = max(np.max(d) for d in prediction)
     low_high = (low, high)
 
-    res = plt.figure()
+    res = []
+    # only one figure in case of binary classification
+    if n_classes <= 2:
+        res.append(plt.figure())
+        plt.hist(prediction[1], color='b', alpha=0.5, range=low_high, bins=bins,
+                 histtype='stepfilled', label='{} pdf Training Set'.format(labels[1]), **kwds)
+        plt.hist(prediction[0], color='r', alpha=0.5, range=low_high, bins=bins,
+                 histtype='stepfilled', label='{} pdf Training Set'.format(labels[0]), **kwds)
 
-    plt.hist(prediction[1], color='b', alpha=0.5, range=low_high, bins=bins,
-             histtype='stepfilled', label='Background pdf Training Set', **kwds)
-    plt.hist(prediction[0], color='r', alpha=0.5, range=low_high, bins=bins,
-             histtype='stepfilled', label='Signal pdf Training Set', **kwds)
+        hist, bins = np.histogram(
+            prediction[3], bins=bins, range=low_high, **kwds)
+        scale = len(prediction[1]) / sum(hist)
+        err = np.sqrt(hist) * scale
+        center = (bins[:-1] + bins[1:]) / 2
+        plt.errorbar(center, hist * scale, yerr=err, fmt='o',
+                     c='b', label='{} pdf Test Set'.format(labels[1]))
 
-    hist, bins = np.histogram(
-        prediction[2], bins=bins, range=low_high, **kwds)
-    scale = len(prediction[2]) / sum(hist)
-    err = np.sqrt(hist * scale) / scale
-    center = (bins[:-1] + bins[1:]) / 2
+        hist, bins = np.histogram(
+            prediction[2], bins=bins, range=low_high, **kwds)
+        scale = len(prediction[0]) / sum(hist)
+        err = np.sqrt(hist) * scale
+        plt.errorbar(center, hist * scale, yerr=err, fmt='o',
+                     c='r', label='{} pdf Test Set'.format(labels[0]))
 
-    plt.errorbar(center, hist, yerr=err, fmt='o',
-                 c='r', label='Background pdf Test Set')
+        plt.xlabel('BDT output', fontsize=13, ha='right', position=(1, 20))
+        plt.ylabel(r'                                Counts (arb. units)', fontsize=13)
+        plt.legend(frameon=False, fontsize=12)
+    # n figures in case of multi-classification with n classes
+    else:
+        cmap = plt.cm.get_cmap('tab10')
+        for i_output, _ in enumerate(class_labels):
+            res.append(plt.figure())
+            for i_class, lab in enumerate(labels):
+                plt.hist(prediction[i_class][:, i_output], alpha=0.5, range=low_high, bins=bins,
+                         color=cmap(i_class), histtype='stepfilled',
+                         label='{} pdf Training Set'.format(lab), **kwds)
 
-    hist, bins = np.histogram(
-        prediction[3], bins=bins, range=low_high, **kwds)
-    scale = len(prediction[2]) / sum(hist)
-    err = np.sqrt(hist * scale) / scale
-    plt.errorbar(center, hist, yerr=err, fmt='o',
-                 c='b', label='Signal pdf Test Set')
+                hist, bins = np.histogram(
+                    prediction[i_class+n_classes][:, i_output], bins=bins, range=low_high, **kwds)
+                scale = len(prediction[i_class][:, i_output]) / sum(hist)
+                err = np.sqrt(hist) * scale
+                center = (bins[:-1] + bins[1:]) / 2
 
-    plt.xlabel('BDT output', fontsize=13, ha='right', position=(1, 20))
-    plt.ylabel(r'                                Counts (arb. units)', fontsize=13)
-    plt.legend(frameon=False, fontsize=12)
+                plt.errorbar(center, hist * scale, yerr=err, fmt='o',
+                             c=cmap(i_class), label='{} pdf Test Set'.format(lab))
+
+            plt.xlabel('BDT output for {}'.format(labels[i_output]), fontsize=13, ha='right',
+                       position=(1, 20))
+            plt.ylabel(r'                                Counts (arb. units)', fontsize=13)
+            plt.legend(frameon=False, fontsize=12)
+
     return res
 
 
