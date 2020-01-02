@@ -11,7 +11,7 @@ from sklearn.metrics import (auc, average_precision_score,
 
 
 def plot_output_train_test(
-        model, data, features=None, bins=80, raw=True, **kwds):
+        model, data, bins=80, raw=True, **kwds):
     """
     Plot the BDT output for the signal and background distributions
     both for training and test set.
@@ -24,10 +24,6 @@ def plot_output_train_test(
     Contains respectively: training
     set dataframe, training label array,
     test set dataframe, test label array
-
-    features: list
-    Contains the name of the features used for the training.
-    Example: ['dEdx', 'pT', 'ct']
 
     bins: int or sequence of scalars or str
     If bins is an int, it defines the number of equal-width
@@ -54,8 +50,8 @@ def plot_output_train_test(
 
     prediction = []
     for xxx, yyy in ((data[0], data[1]), (data[2], data[3])):
-        df1 = model.predict(xxx[yyy > 0.5][features], output_margin=raw)
-        df2 = model.predict(xxx[yyy < 0.5][features], output_margin=raw)
+        df1 = model.predict(xxx[yyy > 0.5], output_margin=raw)
+        df2 = model.predict(xxx[yyy < 0.5], output_margin=raw)
         prediction += [df1, df2]
 
     low = min(np.min(d) for d in prediction)
