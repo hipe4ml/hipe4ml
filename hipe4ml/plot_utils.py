@@ -195,19 +195,24 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
     return res
 
 
-def plot_corr(sig_df, bkg_df, columns, **kwds):
+def plot_corr(list_of_df, columns, labels=None, **kwds):
     """
     Calculate pairwise correlation between features for
-    two classes (ex: signal and background)
+    each class (ex: signal and background in case of binary
+    classification)
 
     Input
     -----------------------------------------------
-    sig_df: signal candidates dataframe
-    bkg_df: background candidates dataframe
+    list_of_df: list
+    Contains dataframes for each class
 
     columns: list
     Contains the name of the features you want to plot
     Example: ['dEdx', 'pT', 'ct']
+
+    labels: list
+    Contains the labels to be displayed in the legend
+    If None the labels are class1, class2, ..., classN
 
     **kwds: extra arguments are passed on to DataFrame.corr()
 
@@ -218,33 +223,39 @@ def plot_corr(sig_df, bkg_df, columns, **kwds):
 
     """
 
-    data_sig = sig_df[columns]
-    data_bkg = bkg_df[columns]
+    corr_mat = []
+    for dfm in list_of_df:
+        dfm = dfm[columns]
+        corr_mat.append(dfm.corr(**kwds))
 
-    corrmat_sig = data_sig.corr(**kwds)
-    corrmat_bkg = data_bkg.corr(**kwds)
+    if labels is None:
+        labels = []
+        if len(corr_mat) > 2:
+            for i_mat, _ in enumerate(corr_mat):
+                labels.append('class{}'.format(i_mat))
+        else:
+            labels.append('Signal')
+            labels.append('Background')
 
-    fig = plt.figure(figsize=(20, 10))
-    grid = ImageGrid(fig, 111, nrows_ncols=(1, 2), axes_pad=0.15, share_all=True,
-                     cbar_location='right', cbar_mode='single', cbar_size='7%', cbar_pad=0.15)
+    fig = []
+    for mat, lab in zip(corr_mat, labels):
+        fig.append(plt.figure(figsize=(20, 10)))
+        grid = ImageGrid(fig[-1], 111, axes_pad=0.15, nrows_ncols=(1, 1), share_all=True,
+                         cbar_location='right', cbar_mode='single', cbar_size='7%', cbar_pad=0.15)
 
-    opts = {'cmap': plt.get_cmap(
-        'coolwarm'), 'vmin': -1, 'vmax': +1, 'snap': True}
+        opts = {'cmap': plt.get_cmap(
+            'coolwarm'), 'vmin': -1, 'vmax': +1, 'snap': True}
 
-    ax1 = grid[0]
-    ax2 = grid[1]
-    heatmap1 = ax1.pcolor(corrmat_sig, **opts)
-    heatmap2 = ax2.pcolor(corrmat_bkg, **opts)
-    ax1.set_title('Signal', fontsize=14, fontweight='bold')
-    ax2.set_title('Background', fontsize=14, fontweight='bold')
+        axs = grid[0]
+        heatmap = axs.pcolor(mat, **opts)
+        axs.set_title(lab, fontsize=14, fontweight='bold')
 
-    lab = corrmat_sig.columns.values
-    for axs in (ax1,):
+        lab = mat.columns.values
+
         # shift location of ticks to center of the bins
         axs.set_xticks(np.arange(len(lab)), minor=False)
         axs.set_yticks(np.arange(len(lab)), minor=False)
-        axs.set_xticklabels(lab, minor=False, ha='left',
-                            rotation=90, fontsize=10)
+        axs.set_xticklabels(lab, minor=False, ha='left', rotation=90, fontsize=10)
         axs.set_yticklabels(lab, minor=False, va='bottom', fontsize=10)
         axs.tick_params(axis='both', which='both', direction="in")
 
@@ -253,21 +264,8 @@ def plot_corr(sig_df, bkg_df, columns, **kwds):
             tick.tick2line.set_markersize(0)
             tick.label1.set_horizontalalignment('center')
 
-    for axs in (ax2,):
-        # shift location of ticks to center of the bins
-        axs.set_xticks(np.arange(len(lab)), minor=False)
-        axs.set_yticks(np.arange(len(lab)), minor=False)
-        axs.set_xticklabels(lab, minor=False, ha='left',
-                            rotation=90, fontsize=10)
-        axs.tick_params(axis='both', which='both', direction="in")
-        for tick in axs.xaxis.get_minor_ticks():
-            tick.tick1line.set_markersize(0)
-            tick.tick2line.set_markersize(0)
-            tick.label1.set_horizontalalignment('center')
+        axs.cax.colorbar(heatmap)
 
-    ax1.cax.colorbar(heatmap1)
-    ax2.cax.colorbar(heatmap2)
-    ax1.cax.toggle_label(True)
     return fig
 
 
