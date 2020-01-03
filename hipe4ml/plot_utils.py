@@ -14,7 +14,7 @@ from sklearn.preprocessing import label_binarize
 def plot_output_train_test(
         model, data, bins=80, raw=True, labels=None, **kwds):
     """
-    Plot the BDT output for the signal and background distributions
+    Plot the BDT output distributions for each class and output
     both for training and test set.
 
     Input
@@ -49,7 +49,8 @@ def plot_output_train_test(
 
     Output
     ----------------------------------------
-    matplotlib object with the BDT output
+    list of matplotlib objects with the BDT output
+    distributions for each class
 
 
     """
@@ -164,7 +165,7 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
     Output
     -----------------------------------------
     matplotlib object with the distributions of the features for
-    signal and background
+    each class
 
     """
 
@@ -199,7 +200,7 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
 def plot_corr(list_of_df, columns, labels=None, **kwds):
     """
     Calculate pairwise correlation between features for
-    each class (ex: signal and background in case of binary
+    each class (e.g. signal and background in case of binary
     classification)
 
     Input
@@ -219,8 +220,8 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
 
     Output
     ------------------------------------------------
-    matplotlib object with the correlations between the
-    features for signal and background
+    list of matplotlib objects with the correlations 
+    between the features for each class
 
     """
 
@@ -329,7 +330,7 @@ def plot_roc(y_truth, y_score, labels=None, pos_label=None):
 
     Output
     -------------------------------------
-    matplotlib object with the roc curve
+    matplotlib object with the roc curves
 
     """
     # get number of classes
@@ -395,7 +396,7 @@ def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
 
     Output
     -------------------------------------------
-    matplotlib object with shap feature importance
+    list of matplotlib objects with shap feature importance
 
     """
     class_labels, class_counts = np.unique(y_truth, return_counts=True)
@@ -447,7 +448,7 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
     Output
     -------------------------------------
     matplotlib object with the precision
-    recall curve
+    recall curves
 
     """
     # get number of classes
