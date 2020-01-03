@@ -316,6 +316,13 @@ class ModelHandler:
 
         """
 
+        # get number of classes
+        n_classes = len(np.unique(data[1]))
+        if n_classes > 2 and 'roc_auc' in metrics:
+            metrics = None
+            print('Warning: Bayesian optimization of hyperparameters with metric roc_auc_score'
+                  ' not supported for multi-class classification, setting metrics to None')
+
         # just an helper function
         def hyperparams_crossvalidation(**kwargs):
             return self.evaluate_hyperparams(data, kwargs, metrics, nfold)
