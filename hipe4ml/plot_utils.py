@@ -389,19 +389,38 @@ def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
     n_sample: int
     Number of candidates employed to fill
     the shap violin plots.
+    If larger than the number of candidates
+    in each class, minimum number of candidates
+    in a given class used instead
 
     Output
     -------------------------------------------
     matplotlib object with shap feature importance
 
     """
-    subs_bkg = df_in[y_truth == 0].sample(n_sample)
-    subs_sig = df_in[y_truth == 1].sample(n_sample)
-    df_subs = pd.concat([subs_bkg, subs_sig]).sample(frac=1.)
+    class_labels, class_counts = np.unique(y_truth, return_counts=True)
+    n_classes = len(class_labels)
+    for class_count in class_counts:
+        if n_sample > class_count:
+            n_sample = class_count
+
+    subs = []
+    for i_class, class_lab in enumerate(class_labels):
+        subs.append(df_in[y_truth == class_lab].sample(n_sample))
+
+    df_subs = pd.concat(subs).sample(frac=1.)
     explainer = shap.TreeExplainer(model.get_original_model())
     shap_values = explainer.shap_values(df_subs)
-    res = plt.figure()
-    shap.summary_plot(shap_values, df_subs, show=False)
+
+    res = []
+    if n_classes <= 2:
+        res.append(plt.figure())
+        shap.summary_plot(shap_values, df_subs, show=False)
+    else:
+        for i_class in range(n_classes):
+            res.append(plt.figure())
+            shap.summary_plot(shap_values[i_class], df_subs, show=False)
+
     return res
 
 
@@ -411,16 +430,15 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
     Input
     -------------------------------------
     y_truth: array
-    True binary labels. If labels are not either
-    {-1, 1} or {0, 1}, then pos_label should be
-    explicitly given.
+    True labels for the belonging class. If labels are not
+    {0, 1, ..., N}, then pos_label should be explicitly given.
 
     y_score: array
     Estimated probabilities or decision function.
 
     pos_label : int or str
     The label of the positive class. When pos_label=None,
-    if y_true is in {-1, 1} or {0, 1}, pos_label is set to 1,
+    if y_true is in {0, 1, ..., N}, pos_label is set to 1,
     otherwise an error will be raised.
 
 
