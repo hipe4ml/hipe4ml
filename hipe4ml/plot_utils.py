@@ -410,7 +410,7 @@ def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
 
     df_subs = pd.concat(subs).sample(frac=1.)
     explainer = shap.TreeExplainer(model.get_original_model())
-    shap_values = explainer.shap_values(df_subs)
+    shap_values = explainer.shap_values(df_subs, approximate=True)
 
     res = []
     if n_classes <= 2:
@@ -420,6 +420,8 @@ def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
         for i_class in range(n_classes):
             res.append(plt.figure())
             shap.summary_plot(shap_values[i_class], df_subs, show=False)
+        res.append(plt.figure())
+        shap.summary_plot(shap_values, df_subs, plot_type='bar')
 
     return res
 
