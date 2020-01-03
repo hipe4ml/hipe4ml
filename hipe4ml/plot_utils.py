@@ -8,6 +8,7 @@ import shap
 from mpl_toolkits.axes_grid1 import ImageGrid
 from sklearn.metrics import (auc, average_precision_score,
                              precision_recall_curve, roc_curve)
+from sklearn.preprocessing import label_binarize
 
 
 def plot_output_train_test(
@@ -298,7 +299,7 @@ def plot_bdt_eff(threshold, eff_sig):
     return res
 
 
-def plot_roc(y_truth, y_score, pos_label=None):
+def plot_roc(y_truth, y_score, labels=None, pos_label=None):
     """
     Calculate and plot the roc curve
 
@@ -306,9 +307,8 @@ def plot_roc(y_truth, y_score, pos_label=None):
     -------------------------------------
 
     y_truth : array
-    True binary labels. If labels are not either
-    {-1, 1} or {0, 1}, then pos_label should be
-    explicitly given.
+    True labels for the belonging class. If labels are not
+    {0, 1, ..., N}, then pos_label should be explicitly given.
 
     y_score : array
     Target scores, can either be probability estimates
@@ -316,9 +316,13 @@ def plot_roc(y_truth, y_score, pos_label=None):
     non-thresholded measure of decisions (as returned
     by “decision_function” on some classifiers).
 
+    labels: list
+    Contains the labels to be displayed in the legend
+    If None the labels are class1, class2, ..., classN
+
     pos_label : int or str
     The label of the positive class. When pos_label=None,
-    if y_true is in {-1, 1} or {0, 1}, pos_label is set to 1,
+    if y_true is in {0, 1, ..., N}, pos_label is set to 1,
     otherwise an error will be raised.
 
 
@@ -328,12 +332,36 @@ def plot_roc(y_truth, y_score, pos_label=None):
     matplotlib object with the roc curve
 
     """
+    # get number of classes
+    n_classes = len(np.unique(y_truth))
 
-    fpr, tpr, _ = roc_curve(y_truth, y_score, pos_label=pos_label)
-    roc_auc = auc(fpr, tpr)
+    if (labels is None and n_classes > 2) or (labels and len(labels) != n_classes):
+        labels = []
+        for i_class in range(n_classes):
+            labels.append('class{}'.format(i_class))
+
     res = plt.figure()
-    plt.plot(fpr, tpr, lw=1, label='ROC (area = %0.4f)' % (roc_auc))
-    plt.plot([0, 1], [0, 1], '--', color=(0.6, 0.6, 0.6), label='Luck')
+    if n_classes <= 2:
+        fpr, tpr, _ = roc_curve(y_truth, y_score, pos_label=pos_label)
+        roc_auc = auc(fpr, tpr)
+        plt.plot(fpr, tpr, lw=1, label='ROC (area = %0.4f)' % (roc_auc))
+    else:
+        cmap = plt.cm.get_cmap('tab10')
+        fpr, tpr, roc_auc = (dict() for i_dict in range(3))
+        # convert multi-class labels to multi-labels to obtain roc curves
+        y_truth_multi = label_binarize(y_truth, classes=range(n_classes))
+        for clas, lab in enumerate(labels):
+            fpr[clas], tpr[clas], _ = roc_curve(y_truth_multi[:, clas], y_score[:, clas])
+            roc_auc[clas] = auc(fpr[clas], tpr[clas])
+            plt.plot(fpr[clas], tpr[clas], lw=1, c=cmap(clas),
+                     label='{0} (AUC = {1:.4f})'.format(lab, roc_auc[clas]))
+        #compute also micro average
+        fpr['micro'], tpr['micro'], _ = roc_curve(y_truth_multi.ravel(), y_score.ravel())
+        roc_auc['micro'] = auc(fpr['micro'], tpr['micro'])
+        plt.plot(fpr['micro'], tpr['micro'], lw=1, linestyle='--', c='black',
+                 label='average (AUC = {:.4f})'.format(roc_auc['micro']))
+
+    plt.plot([0, 1], [0, 1], '-.', color=(0.6, 0.6, 0.6), label='Luck')
     plt.xlim([-0.05, 1.05])
     plt.ylim([-0.05, 1.05])
     plt.xlabel('False Positive Rate', fontsize=12)
