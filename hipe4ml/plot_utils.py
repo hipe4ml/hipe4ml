@@ -220,7 +220,7 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
 
     Output
     ------------------------------------------------
-    list of matplotlib objects with the correlations 
+    list of matplotlib objects with the correlations
     between the features for each class
 
     """
