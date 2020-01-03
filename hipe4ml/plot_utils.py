@@ -355,7 +355,7 @@ def plot_roc(y_truth, y_score, labels=None, pos_label=None):
             roc_auc[clas] = auc(fpr[clas], tpr[clas])
             plt.plot(fpr[clas], tpr[clas], lw=1, c=cmap(clas),
                      label='{0} (AUC = {1:.4f})'.format(lab, roc_auc[clas]))
-        #compute also micro average
+        # compute also micro average
         fpr['micro'], tpr['micro'], _ = roc_curve(y_truth_multi.ravel(), y_score.ravel())
         roc_auc['micro'] = auc(fpr['micro'], tpr['micro'])
         plt.plot(fpr['micro'], tpr['micro'], lw=1, linestyle='--', c='black',
@@ -405,7 +405,7 @@ def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
     return res
 
 
-def plot_precision_recall(y_truth, y_score, pos_label=None):
+def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
     """ Plot precision recall curve
 
     Input
@@ -430,19 +430,43 @@ def plot_precision_recall(y_truth, y_score, pos_label=None):
     recall curve
 
     """
-    precision, recall, _ = precision_recall_curve(
-        y_truth, y_score, pos_label=pos_label)
+    # get number of classes
+    n_classes = len(np.unique(y_truth))
+
+    if (labels is None and n_classes > 2) or (labels and len(labels) != n_classes):
+        labels = []
+        for i_class in range(n_classes):
+            labels.append('class{}'.format(i_class))
+
     res = plt.figure()
-    plt.step(recall, precision, color='b', alpha=0.2,
-             where='post')
-    plt.fill_between(recall, precision, alpha=0.2, color='b', step='post')
+    if n_classes <= 2:
+        precision, recall, _ = precision_recall_curve(y_truth, y_score, pos_label=pos_label)
+        plt.step(recall, precision, color='b', alpha=0.2, where='post')
+        plt.fill_between(recall, precision, alpha=0.2, color='b', step='post')
+        average_precision = average_precision_score(y_truth, y_score)
+        plt.title('2-class Precision-Recall curve: AP={0:0.2f}'.format(average_precision))
+    else:
+        cmap = plt.cm.get_cmap('tab10')
+        precision, recall = (dict() for i_dict in range(2))
+        # convert multi-class labels to multi-labels to obtain a curve for each class
+        y_truth_multi = label_binarize(y_truth, classes=range(n_classes))
+        for clas, lab in enumerate(labels):
+            precision[clas], recall[clas], _ = precision_recall_curve(
+                y_truth_multi[:, clas], y_score[:, clas], pos_label=pos_label)
+            plt.step(recall[clas], precision[clas], color=cmap(clas), lw=1, where='post',
+                     label=lab)
+        # compute also micro average
+        precision['micro'], recall['micro'], _ = precision_recall_curve(
+            y_truth_multi.ravel(), y_score.ravel())
+        plt.step(recall['micro'], precision['micro'], color='black', where='post',
+                 linestyle='--', lw=1, label='average')
+        average_precision = average_precision_score(y_truth_multi, y_score, average='micro')
+        plt.title('Average precision score, micro-averaged over all classes: {0:0.2f}'
+                  .format(average_precision))
 
     plt.xlabel('Recall')
     plt.ylabel('Precision')
     plt.ylim([0.0, 1.05])
     plt.xlim([0.0, 1.0])
-    average_precision = average_precision_score(y_truth, y_score)
-    plt.title('2-class Precision-Recall curve: AP={0:0.2f}'.format(
-        average_precision))
 
     return res
