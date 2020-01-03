@@ -206,12 +206,10 @@ class ModelHandler:
         print('Training the final model: Done!\n')
         print('Testing the model: ...', end='\r')
 
+        y_pred = self.predict(data[2], output_margin=True)
         if n_classes <= 2:
-            y_pred = self.predict(data[2], output_margin=False)
             roc_score = roc_auc_score(data[3], y_pred)
         else:
-            # raw untransformed margin value needed for multi-classification
-            y_pred = self.predict(data[2], output_margin=True)
             # convert multi-class labels to multi-labels to obtain roc curves
             y_test_multi = label_binarize(data[3], classes=range(n_classes))
             fpr, tpr = {}, {}
