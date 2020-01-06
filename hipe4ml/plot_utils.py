@@ -164,8 +164,8 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
 
     Output
     -----------------------------------------
-    matplotlib object with the distributions of the features for
-    each class
+    array of matplotlib axes with the distributions
+    of the features for each class
 
     """
 
@@ -181,7 +181,6 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
     if labels is None:
         labels = ['class{}'.format(i_class) for i_class, _ in enumerate(list_of_df)]
 
-    res = plt.figure()
     for i_class, (dfm, lab) in enumerate(zip(list_of_df, labels)):
         if i_class == 0:
             axes = dfm.hist(column=column, alpha=0.5, bins=bins, figsize=figsize, label=lab,
@@ -194,7 +193,7 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
     for axs in axes:
         axs.set_ylabel('Counts (arb. units)')
     plt.legend(loc='best')
-    return res
+    return axes
 
 
 def plot_corr(list_of_df, columns, labels=None, **kwds):
@@ -241,7 +240,7 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
 
     fig = []
     for mat, lab in zip(corr_mat, labels):
-        fig.append(plt.figure(figsize=(20, 10)))
+        fig.append(plt.figure(figsize=(8, 7)))
         grid = ImageGrid(fig[-1], 111, axes_pad=0.15, nrows_ncols=(1, 1), share_all=True,
                          cbar_location='right', cbar_mode='single', cbar_size='7%', cbar_pad=0.15)
 
@@ -367,7 +366,7 @@ def plot_roc(y_truth, y_score, labels=None, pos_label=None):
     plt.ylim([-0.05, 1.05])
     plt.xlabel('False Positive Rate', fontsize=12)
     plt.ylabel('True Positive Rate', fontsize=12)
-    plt.legend(loc="lower right")
+    plt.legend(loc='lower right')
     plt.grid()
     return res
 
@@ -415,14 +414,14 @@ def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
 
     res = []
     if n_classes <= 2:
-        res.append(plt.figure())
-        shap.summary_plot(shap_values, df_subs, show=False)
+        res.append(plt.figure(figsize=(18, 9)))
+        shap.summary_plot(shap_values, df_subs, plot_size=(18, 9), show=False)
     else:
         for i_class in range(n_classes):
-            res.append(plt.figure())
-            shap.summary_plot(shap_values[i_class], df_subs, show=False)
-        res.append(plt.figure())
-        shap.summary_plot(shap_values, df_subs, plot_type='bar')
+            res.append(plt.figure(figsize=(18, 9)))
+            shap.summary_plot(shap_values[i_class], df_subs, plot_size=(18, 9), show=False)
+        res.append(plt.figure(figsize=(18, 9)))
+        shap.summary_plot(shap_values, df_subs, plot_type='bar', plot_size=(18, 9), show=False)
 
     return res
 
@@ -489,5 +488,7 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
     plt.ylabel('Precision')
     plt.ylim([0.0, 1.05])
     plt.xlim([0.0, 1.0])
-
+    plt.legend(loc='lower left')
+    if n_classes > 2:
+        plt.grid()
     return res

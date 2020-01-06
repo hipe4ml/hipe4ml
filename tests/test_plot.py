@@ -5,6 +5,7 @@ Module used to test the plot functions
 import matplotlib
 import pandas as pd
 import xgboost as xgb
+import numpy as np
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
 from hipe4ml import analysis_utils
@@ -36,7 +37,7 @@ def test_plot_distr():
     Test the feature distribution plot
     """
     assert isinstance(plot_utils.plot_distr(
-        [SIG_DF, BKG_DF], SIG_DF.columns), matplotlib.figure.Figure)
+        [SIG_DF, BKG_DF], SIG_DF.columns), np.ndarray)
 
 
 def test_plot_corr():
