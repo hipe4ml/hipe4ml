@@ -8,6 +8,7 @@ from bayes_opt import BayesianOptimization
 from sklearn.metrics import roc_auc_score, roc_curve, auc
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import label_binarize
+import hipe4ml.analysis_utils as au
 
 
 class ModelHandler:
@@ -169,7 +170,10 @@ class ModelHandler:
             x_test = x_test[self.training_columns]
 
         if self.model_string == 'xgboost':
-            pred = self.model.predict(x_test, output_margin=output_margin)
+            if output_margin:
+                pred = self.model.predict(x_test, output_margin=output_margin)
+            else:
+                pred = self.model.predict_proba(x_test)[:, 1]
         if self.model_string == 'sklearn':
             if output_margin:
                 pred = self.model.decision_function(x_test).ravel()
@@ -214,8 +218,10 @@ class ModelHandler:
             y_test_multi = label_binarize(data[3], classes=range(n_classes))
             fpr, tpr = {}, {}
             for clas in range(n_classes):
-                fpr[clas], tpr[clas], _ = roc_curve(y_test_multi[:, clas], y_pred[:, clas])
-            fpr['micro'], tpr['micro'], _ = roc_curve(y_test_multi.ravel(), y_pred.ravel())
+                fpr[clas], tpr[clas], _ = roc_curve(
+                    y_test_multi[:, clas], y_pred[:, clas])
+            fpr['micro'], tpr['micro'], _ = roc_curve(
+                y_test_multi.ravel(), y_pred.ravel())
             roc_score = auc(fpr['micro'], tpr['micro'])
 
         print('Testing the model: Done!\n')
@@ -223,7 +229,7 @@ class ModelHandler:
         print('ROC_AUC_score: {}\n'.format(roc_score))
         print('==============================\n')
 
-    def evaluate_hyperparams(self, data, opt_params, metrics, nfold=5):
+    def evaluate_hyperparams(self, data, opt_params, metrics, n_classes, nfold=5):
         """
         Calculate for a set of hyperparams the cross val score
 
@@ -265,10 +271,15 @@ class ModelHandler:
         opt_params = self.cast_model_params(opt_params)
         params = {**self.model_params, **opt_params}
         self.model.set_params(**params)
+        if n_classes > 2 and metrics == 'roc_auc':
+            if self.training_columns is not None:
+                return np.mean(au.cross_val_roc_score_multiclass(self.model, data[0][self.training_columns],
+                                                                 data[1], n_classes=n_classes, n_fold=nfold))
+            return np.mean(au.cross_val_roc_score_multiclass(self.model, data[0], data[1],
+                                                             n_classes=n_classes, n_fold=nfold))
         if self.training_columns is not None:
             return np.mean(cross_val_score(self.model, data[0][self.training_columns], data[1],
                                            cv=nfold, scoring=metrics))
-
         return np.mean(cross_val_score(self.model, data[0], data[1], cv=nfold, scoring=metrics))
 
     def optimize_params_bayes(self, data, hyperparams_ranges, metrics, nfold=5, init_points=5,
@@ -318,14 +329,10 @@ class ModelHandler:
 
         # get number of classes
         n_classes = len(np.unique(data[1]))
-        if n_classes > 2 and 'roc_auc' in metrics:
-            metrics = None
-            print('Warning: Bayesian optimization of hyperparameters with metric roc_auc_score'
-                  ' not supported for multi-class classification, setting metrics to None')
 
         # just an helper function
         def hyperparams_crossvalidation(**kwargs):
-            return self.evaluate_hyperparams(data, kwargs, metrics, nfold)
+            return self.evaluate_hyperparams(data, kwargs, metrics, n_classes, nfold)
         print('')
 
         optimizer = BayesianOptimization(f=hyperparams_crossvalidation,
