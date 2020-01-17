@@ -3,11 +3,14 @@ Module containing the class used for wrapping the models from different
 ML libraries to build a new model with common methods
 """
 import inspect
+import pickle
+
 import numpy as np
 from bayes_opt import BayesianOptimization
-from sklearn.metrics import roc_auc_score, roc_curve, auc
+from sklearn.metrics import auc, roc_auc_score, roc_curve
 from sklearn.model_selection import cross_val_score
 from sklearn.preprocessing import label_binarize
+
 import hipe4ml.analysis_utils as au
 
 
@@ -34,16 +37,14 @@ class ModelHandler:
 
     """
 
-    def __init__(self, input_model, training_columns=None, model_params=None):
+    def __init__(self, input_model=None, training_columns=None, model_params=None):
         self.model = input_model
-        self.model_string = inspect.getmodule(
-            self.model).__name__.partition('.')[0]
-        self.training_columns = training_columns
         self.model_params = model_params
-        if model_params is not None:
-            self.model_params = model_params
-        else:
-            self.model_params = self.model.get_params()
+        self.training_columns = training_columns
+        if self.model is not None:
+            self.model_string = inspect.getmodule(self.model).__name__.partition('.')[0]
+            if self.model_params is None:
+                self.model_params = self.model.get_params()
 
     def set_model_params(self, model_params):
         """
@@ -373,3 +374,53 @@ class ModelHandler:
             if isinstance(self.model.get_params()[key], int):
                 params[key] = int(round(params[key]))
         return params
+
+    def dump_original_model(self, filename, xgb_format=False):
+        """
+        Save the trained model into a pickle
+        file. Only for xgboost models it is also given
+        the possibility to save them into a .model file
+
+        Input
+        -----------------------------------------------------
+        filename: str
+        Name of the file in which the model is saved
+
+        xgb_format : bool
+        If True saves the xgboost model into a .model file
+        """
+        if xgb_format is False:
+            pickle.dump(self.model, open(filename, "wb"))
+        else:
+            if self.model_string == 'xgboost':
+                self.model.save_model(filename)
+            else:
+                print("File not saved: only xgboost models support the .model extension")
+
+    def dump_model_handler(self, filename):
+        """
+        Save the model handler into a pickle file
+
+        Input
+        -----------------------------------------------------
+        filename: str
+        Name of the file in which the model is saved
+
+        """
+
+        pickle.dump(self, open(filename, "wb"))
+
+    def load_model_handler(self, filename):
+        """
+        Load a model handler saved into a pickle file
+
+        Input
+        -----------------------------------------------------
+        filename: str
+        Name of the file in which the model is saved
+        """
+        loaded_model = pickle.load(open(filename, 'rb'))
+        self.model = loaded_model.get_original_model()
+        self.training_columns = loaded_model.get_training_columns()
+        self.model_params = loaded_model.get_model_params()
+        self.model_string = loaded_model.get_model_module()
