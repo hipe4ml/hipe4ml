@@ -8,21 +8,32 @@
 
 Minimal heavy ion physics environment for Machine Learning
 
-# Contribute
-## Run tests
-If you have [Pylint](https://www.pylint.org/#install) and [Flake8](http://flake8.pycqa.org/en/latest/) on your development machine, you can run tests locally by using:
-```bash
-tests/run_tests.sh
-```
-in the repository base directory.
-## Install package
-To install the package, from the repository base directoy:
+To install:
+
 ```bash
 pip install hipe4ml
 ```
-To install the in-development package, from the repository base directoy:
-```bash
-pip install -e .
-```
-## Documentation
+
+# Documentation
+
 https://hipe4ml.github.io/
+
+# Contribute
+
+## Install in-development package
+
+To install the in-development package, from the repository base directoy:
+
+```bash
+pip install -e .[dev]
+```
+
+## Run tests
+
+If you have [Pylint](https://www.pylint.org/#install) and [Flake8](http://flake8.pycqa.org/en/latest/) on your development machine, you can run tests locally by using:
+
+```bash
+tests/run_tests.sh
+```
+
+in the repository base directory.
