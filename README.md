@@ -1,4 +1,4 @@
-![hipe4ml](./logo.svg)
+å![hipe4ml](./logo.svg)
 
 ![](https://github.com/hipe4ml/hipe4ml/workflows/Test%20package/badge.svg)
 ![](https://sonarcloud.io/api/project_badges/measure?project=hipe4ml_hipe4ml&metric=alert_status) 
@@ -15,8 +15,14 @@ If you have [Pylint](https://www.pylint.org/#install) and [Flake8](http://flake8
 tests/run_tests.sh
 ```
 in the repository base directory.
-## Install in-development package
+## Install package
+To install the package, from the repository base directoy:
+```bash
+pip install hipe4ml
+```
 To install the in-development package, from the repository base directoy:
 ```bash
 pip install -e .
 ```
+## Documentation
+https://hipe4ml.github.io/
