@@ -92,7 +92,8 @@ SETUP = Setup(
     # these using the following syntax, for example:
     # $ pip install -e .[dev,test]
     extras_require={
-        "dev": ["pylint<=2.3.1", "twine>=1.11.0", "setuptools>=38.6.0", "wheel>=0.31.0"]
+        "dev": ["pylint>=2.4.4", "flake8>=3.7.9", "pytest>=5.3.4", "twine>=1.11.0", "setuptools>=38.6.0",
+                "wheel>=0.31.0"]
     },
 
     # Although 'package_data' is the preferred approach, in some case you may need to place data
