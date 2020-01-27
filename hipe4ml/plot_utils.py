@@ -192,7 +192,7 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
                      density=True, grid=False, log=log)
     for axs in axes:
         axs.set_ylabel('Counts (arb. units)')
-    plt.legend(loc='best')
+    axes[-1].legend(loc='best')
     return axes
 
 
@@ -488,7 +488,7 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
     plt.ylabel('Precision')
     plt.ylim([0.0, 1.05])
     plt.xlim([0.0, 1.0])
-    plt.legend(loc='lower left')
     if n_classes > 2:
+        plt.legend(loc='lower left')
         plt.grid()
     return res
