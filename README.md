@@ -1,4 +1,4 @@
-å![hipe4ml](./logo.svg)
+![hipe4ml](./logo.svg)
 
 ![](https://github.com/hipe4ml/hipe4ml/workflows/Test%20package/badge.svg)
 ![](https://sonarcloud.io/api/project_badges/measure?project=hipe4ml_hipe4ml&metric=alert_status) 
