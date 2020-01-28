@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 # standing on the shoulders of [giants](https://github.com/alidock/alidock/blob/master/alidock-installer.sh)
 
 DOC_REPO=hipe4ml.github.io.git
@@ -16,7 +16,7 @@ function run-clone-doc() {
     type git
     run-clean
     mkdir -p $TMP_DIR
-    git clone git@github.com:hipe4ml/$DOC_REPO $TMP_DIR/$DOC_REPO
+    git clone https://github.com/hipe4ml/$DOC_REPO $TMP_DIR/$DOC_REPO
 }
 
 function run-pdoc() {
@@ -38,7 +38,7 @@ function run-push-doc() {
 
 function run-clean() {
     pwarn "cleaning $DOC_REPO"
-    [[ -d $TMP_DIR ]] && rm -rf $TMP_DIR
+    [[ -d $TMP_DIR ]] && rm -rf $TMP_DIR || true
 }
 
 function run-all() {
