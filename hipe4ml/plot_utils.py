@@ -7,7 +7,7 @@ from pandas.core.index import Index
 import shap
 from mpl_toolkits.axes_grid1 import ImageGrid
 from sklearn.metrics import (auc, average_precision_score,
-                             precision_recall_curve, roc_curve)
+                             precision_recall_curve, roc_curve, mean_squared_error)
 from sklearn.preprocessing import label_binarize
 
 
@@ -484,4 +484,49 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
     if n_classes > 2:
         plt.legend(loc='lower left')
         plt.grid()
+    return res
+
+
+def plot_learning_curves(model, data, n_points=10):
+    """ Plot learning curves
+
+    Input
+    -------------------------------------
+    model: xgboost or sklearn model
+
+    data: list
+    Contains respectively: training
+    set dataframe, training label array,
+    test set dataframe, test label array
+
+    n_points: int
+    Number of points used to sample the learning curves
+
+
+    Output
+    -------------------------------------
+    matplotlib object with learning curves
+
+    """
+
+    res = plt.figure()
+    train_errors, test_errors = [], []
+    min_cand = 100
+    max_cand = len(data[0])
+    step = int((max_cand-min_cand)/n_points)
+    array_n_cand = np.arange(start=min_cand, stop=max_cand, step=step)
+    for n_cand in array_n_cand:
+        model.fit(data[0][:n_cand], data[1][:n_cand])
+        y_train_predict = model.predict(data[0][:n_cand], output_margin=False)
+        y_test_predict = model.predict(data[2], output_margin=False)
+        train_errors.append(mean_squared_error(y_train_predict, data[1][:n_cand], multioutput='uniform_average'))
+        test_errors.append(mean_squared_error(y_test_predict, data[3], multioutput='uniform_average'))
+    plt.plot(array_n_cand, np.sqrt(train_errors), 'r', lw=1, label='Train')
+    plt.plot(array_n_cand, np.sqrt(test_errors), 'b', lw=1, label='Test')
+    plt.ylim([0, np.amax(np.sqrt(test_errors))*2])
+    plt.xlabel('Training set size')
+    plt.ylabel('RMSE')
+    plt.grid()
+    plt.legend(loc='best')
+
     return res
