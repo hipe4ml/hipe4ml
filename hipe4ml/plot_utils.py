@@ -60,7 +60,8 @@ def plot_output_train_test(
     prediction = []
     for xxx, yyy in ((data[0], data[1]), (data[2], data[3])):
         for class_lab in class_labels:
-            prediction.append(model.predict(xxx[yyy == class_lab], output_margin=raw))
+            prediction.append(model.predict(
+                xxx[yyy == class_lab], output_margin=raw))
 
     low = min(np.min(d) for d in prediction)
     high = max(np.max(d) for d in prediction)
@@ -75,31 +76,35 @@ def plot_output_train_test(
         res.append(plt.figure())
         for i_class in range(n_classes):
             plt.hist(prediction[i_class], color=colors[i_class], alpha=0.5, range=low_high, bins=bins,
-                     histtype='stepfilled', label='{} pdf Training Set'.format(labels[i_class]), **kwds)
+                     histtype='stepfilled', label=f'{labels[i_class]} pdf Training Set', **kwds)
 
-            hist, bins = np.histogram(prediction[i_class+2], bins=bins, range=low_high, **kwds)
+            hist, bins = np.histogram(
+                prediction[i_class+2], bins=bins, range=low_high, **kwds)
             if 'density' in kwds and kwds['density']:
-                err = np.sqrt(hist * len(prediction[i_class])) / len(prediction[i_class+2])
+                err = np.sqrt(
+                    hist * len(prediction[i_class])) / len(prediction[i_class+2])
             else:
                 scale = len(prediction[i_class]) / sum(hist)
                 err = np.sqrt(hist) * scale
             center = (bins[:-1] + bins[1:]) / 2
             plt.errorbar(center, hist * scale, yerr=err, fmt='o',
-                         c=colors[i_class], label='{} pdf Test Set'.format(labels[i_class]))
+                         c=colors[i_class], label=f'{labels[i_class]} pdf Test Set')
 
         plt.xlabel('BDT output', fontsize=13, ha='right', position=(1, 20))
-        plt.ylabel(r'                                Counts (arb. units)', fontsize=13)
+        plt.ylabel(
+            r'                                Counts (arb. units)', fontsize=13)
         plt.legend(frameon=False, fontsize=12)
     # n figures in case of multi-classification with n classes
     else:
-        labels = ['class{}'.format(i_class) for i_class, _ in enumerate(class_labels)] if labels is None else labels
+        labels = [f'class{i_class}' for i_class, _ in enumerate(
+            class_labels)] if labels is None else labels
         cmap = plt.cm.get_cmap('tab10')
         for i_output, _ in enumerate(class_labels):
             res.append(plt.figure())
             for i_class, lab in enumerate(labels):
                 plt.hist(prediction[i_class][:, i_output], alpha=0.5, range=low_high, bins=bins,
                          color=cmap(i_class), histtype='stepfilled',
-                         label='{} pdf Training Set'.format(lab), **kwds)
+                         label=f'{lab} pdf Training Set', **kwds)
 
                 hist, bins = np.histogram(
                     prediction[i_class+n_classes][:, i_output], bins=bins, range=low_high, **kwds)
@@ -112,11 +117,12 @@ def plot_output_train_test(
                 center = (bins[:-1] + bins[1:]) / 2
 
                 plt.errorbar(center, hist * scale, yerr=err, fmt='o',
-                             c=cmap(i_class), label='{} pdf Test Set'.format(lab))
+                             c=cmap(i_class), label=f'{lab} pdf Test Set')
 
-            plt.xlabel('BDT output for {}'.format(labels[i_output]), fontsize=13, ha='right',
+            plt.xlabel(f'BDT output for {labels[i_output]}', fontsize=13, ha='right',
                        position=(1, 20))
-            plt.ylabel(r'                                Counts (arb. units)', fontsize=13)
+            plt.ylabel(
+                r'                                Counts (arb. units)', fontsize=13)
             plt.legend(frameon=False, fontsize=12)
 
     return res
@@ -172,7 +178,7 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
         figsize = [20, 15]
 
     if labels is None:
-        labels = ['class{}'.format(i_class) for i_class, _ in enumerate(list_of_df)]
+        labels = [f'class{i_class}' for i_class, _ in enumerate(list_of_df)]
 
     for i_class, (dfm, lab) in enumerate(zip(list_of_df, labels)):
         if i_class == 0:
@@ -226,7 +232,7 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
         labels = []
         if len(corr_mat) > 2:
             for i_mat, _ in enumerate(corr_mat):
-                labels.append('class{}'.format(i_mat))
+                labels.append(f'class{i_mat}')
         else:
             labels.append('Signal')
             labels.append('Background')
@@ -249,7 +255,8 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
         # shift location of ticks to center of the bins
         axs.set_xticks(np.arange(len(lab)), minor=False)
         axs.set_yticks(np.arange(len(lab)), minor=False)
-        axs.set_xticklabels(lab, minor=False, ha='left', rotation=90, fontsize=10)
+        axs.set_xticklabels(lab, minor=False, ha='left',
+                            rotation=90, fontsize=10)
         axs.set_yticklabels(lab, minor=False, va='bottom', fontsize=10)
         axs.tick_params(axis='both', which='both', direction="in")
 
@@ -331,7 +338,7 @@ def plot_roc(y_truth, y_score, labels=None, pos_label=None):
     if (labels is None and n_classes > 2) or (labels and len(labels) != n_classes):
         labels = []
         for i_class in range(n_classes):
-            labels.append('class{}'.format(i_class))
+            labels.append(f'class{i_class}')
 
     res = plt.figure()
     if n_classes <= 2:
@@ -344,15 +351,17 @@ def plot_roc(y_truth, y_score, labels=None, pos_label=None):
         # convert multi-class labels to multi-labels to obtain roc curves
         y_truth_multi = label_binarize(y_truth, classes=range(n_classes))
         for clas, lab in enumerate(labels):
-            fpr[clas], tpr[clas], _ = roc_curve(y_truth_multi[:, clas], y_score[:, clas])
+            fpr[clas], tpr[clas], _ = roc_curve(
+                y_truth_multi[:, clas], y_score[:, clas])
             roc_auc[clas] = auc(fpr[clas], tpr[clas])
             plt.plot(fpr[clas], tpr[clas], lw=1, c=cmap(clas),
-                     label='{0} (AUC = {1:.4f})'.format(lab, roc_auc[clas]))
+                     label=f'{lab} (AUC = {roc_auc[clas]:.4f})')
         # compute also micro average
-        fpr['micro'], tpr['micro'], _ = roc_curve(y_truth_multi.ravel(), y_score.ravel())
+        fpr['micro'], tpr['micro'], _ = roc_curve(
+            y_truth_multi.ravel(), y_score.ravel())
         roc_auc['micro'] = auc(fpr['micro'], tpr['micro'])
         plt.plot(fpr['micro'], tpr['micro'], lw=1, linestyle='--', c='black',
-                 label='average (AUC = {:.4f})'.format(roc_auc['micro']))
+                 label=f"average (AUC = {roc_auc['micro']:.4f})")
 
     plt.plot([0, 1], [0, 1], '-.', color=(0.6, 0.6, 0.6), label='Luck')
     plt.xlim([-0.05, 1.05])
@@ -415,7 +424,7 @@ def plot_roc_train_test(y_truth_test, y_score_test, y_truth_train, y_score_train
     if (labels is None and n_classes > 2) or (labels and len(labels) != n_classes):
         labels = []
         for i_class in range(n_classes):
-            labels.append('class{}'.format(i_class))
+            labels.append(f'class{i_class}')
     elif labels is None and n_classes <= 2:
         labels = ['']
 
@@ -435,9 +444,9 @@ def plot_roc_train_test(y_truth_test, y_score_test, y_truth_train, y_score_train
             roc_auc_test = auc(roc_test.get_xdata(), roc_test.get_ydata())
             roc_auc_train = auc(roc_train.get_xdata(), roc_train.get_ydata())
             plt.plot(roc_train.get_xdata(), roc_train.get_ydata(), c=cmap(
-                i_roc), alpha=0.3, lw=1, label='Train {0} (AUC = {1:.4f})'.format(labels[i_roc], roc_auc_test))
+                i_roc), alpha=0.3, lw=1, label=f'Train {labels[i_roc]} (AUC = {roc_auc_test:.4f})')
             plt.plot(roc_test.get_xdata(), roc_test.get_ydata(), c=cmap(
-                i_roc), lw=1, label='Test {0} (AUC = {1:.4f})'.format(labels[i_roc], roc_auc_train))
+                i_roc), lw=1, label=f'Test {labels[i_roc]} (AUC = {roc_auc_train:.4f})')
     plt.xlabel('False Positive Rate', fontsize=12)
     plt.ylabel('True Positive Rate', fontsize=12)
     plt.legend(loc='lower right')
@@ -498,9 +507,11 @@ def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
     else:
         for i_class in range(n_classes):
             res.append(plt.figure(figsize=(18, 9)))
-            shap.summary_plot(shap_values[i_class], df_subs, plot_size=(18, 9), show=False)
+            shap.summary_plot(shap_values[i_class],
+                              df_subs, plot_size=(18, 9), show=False)
         res.append(plt.figure(figsize=(18, 9)))
-        shap.summary_plot(shap_values, df_subs, plot_type='bar', plot_size=(18, 9), show=False)
+        shap.summary_plot(shap_values, df_subs, plot_type='bar',
+                          plot_size=(18, 9), show=False)
 
     return res
 
@@ -535,15 +546,17 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
     if (labels is None and n_classes > 2) or (labels and len(labels) != n_classes):
         labels = []
         for i_class in range(n_classes):
-            labels.append('class{}'.format(i_class))
+            labels.append(f'class{i_class}')
 
     res = plt.figure()
     if n_classes <= 2:
-        precision, recall, _ = precision_recall_curve(y_truth, y_score, pos_label=pos_label)
+        precision, recall, _ = precision_recall_curve(
+            y_truth, y_score, pos_label=pos_label)
         plt.step(recall, precision, color='b', alpha=0.2, where='post')
         plt.fill_between(recall, precision, alpha=0.2, color='b', step='post')
         average_precision = average_precision_score(y_truth, y_score)
-        plt.title('2-class Precision-Recall curve: AP={0:0.2f}'.format(average_precision))
+        plt.title(
+            f'2-class Precision-Recall curve: AP={average_precision:0.2f}')
     else:
         cmap = plt.cm.get_cmap('tab10')
         precision, recall = (dict() for i_dict in range(2))
@@ -559,9 +572,10 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
             y_truth_multi.ravel(), y_score.ravel())
         plt.step(recall['micro'], precision['micro'], color='black', where='post',
                  linestyle='--', lw=1, label='average')
-        average_precision = average_precision_score(y_truth_multi, y_score, average='micro')
-        plt.title('Average precision score, micro-averaged over all classes: {0:0.2f}'
-                  .format(average_precision))
+        average_precision = average_precision_score(
+            y_truth_multi, y_score, average='micro')
+        plt.title(
+            f'Average precision score, micro-averaged over all classes: {average_precision:0.2f}')
 
     plt.xlabel('Recall')
     plt.ylabel('Precision')
@@ -605,8 +619,10 @@ def plot_learning_curves(model, data, n_points=10):
         model.fit(data[0][:n_cand], data[1][:n_cand])
         y_train_predict = model.predict(data[0][:n_cand], output_margin=False)
         y_test_predict = model.predict(data[2], output_margin=False)
-        train_errors.append(mean_squared_error(y_train_predict, data[1][:n_cand], multioutput='uniform_average'))
-        test_errors.append(mean_squared_error(y_test_predict, data[3], multioutput='uniform_average'))
+        train_errors.append(mean_squared_error(
+            y_train_predict, data[1][:n_cand], multioutput='uniform_average'))
+        test_errors.append(mean_squared_error(
+            y_test_predict, data[3], multioutput='uniform_average'))
     plt.plot(array_n_cand, np.sqrt(train_errors), 'r', lw=1, label='Train')
     plt.plot(array_n_cand, np.sqrt(test_errors), 'b', lw=1, label='Test')
     plt.ylim([0, np.amax(np.sqrt(test_errors))*2])
