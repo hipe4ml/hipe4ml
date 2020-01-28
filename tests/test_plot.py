@@ -85,3 +85,10 @@ def test_plot_bdt_efficiency():
     """
     assert isinstance(plot_utils.plot_bdt_eff(THRESHOLD, EFFICIENCY),
                       matplotlib.figure.Figure)
+
+def test_plot_learning_curves():
+    """
+    Test the learning cutve plot
+    """
+    assert isinstance(plot_utils.plot_learning_curves(
+        MODEL, DATA, 2), matplotlib.figure.Figure)
