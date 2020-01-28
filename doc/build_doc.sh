@@ -22,20 +22,23 @@ function run-clone-doc() {
 function run-pdoc() {
     pinfo "producing documentation: pdoc3"
     type pdoc3 || pip3 install pdoc3
-    pdoc3 --html ../hipe4ml -o $TMP_DIR/$DOC_REPO
+    pdoc3 --html --force ../hipe4ml -o $TMP_DIR/$DOC_REPO
 }
 
 function run-push-doc() {
     pinfo "pushing documentation to $DOC_REPO"
+    [[ $BOT_TOKEN ]] || exit 1
     cd $TMP_DIR/$DOC_REPO
+    git config user.name 'hipe4ml-bot'
+    git config user.email 'hipe4ml.developers@cern.ch'
     git add -A
     git commit -m "Update documentation $DATE"
-    git push -f
+    git push -f https://$BOT_TOKEN@github.com/hipe4ml/hipe4ml.github.io HEAD:master
 }
 
 function run-clean() {
     pwarn "cleaning $DOC_REPO"
-    [[ -d $TMP_DIR ]] && rm -rf $TMP_DIR || true
+    [[ -d $TMP_DIR ]] && rm -rf $TMP_DIR
 }
 
 function run-all() {
