@@ -56,15 +56,6 @@ def plot_output_train_test(
     """
     class_labels = np.unique(data[1])
     n_classes = len(class_labels)
-    if not raw and n_classes > 2:
-        print('Warning: only raw or probability predictions supported with multi-classification')
-        raw = True
-
-    if labels is None:
-        if n_classes > 2:
-            labels = ['class{}'.format(i_class) for i_class, _ in enumerate(class_labels)]
-        else:
-            labels = ['Signal', 'Background']
 
     prediction = []
     for xxx, yyy in ((data[0], data[1]), (data[2], data[3])):
@@ -76,34 +67,32 @@ def plot_output_train_test(
     low_high = (low, high)
 
     res = []
+    scale = 1.
     # only one figure in case of binary classification
     if n_classes <= 2:
+        labels = ['Signal', 'Background'] if labels is None else labels
+        colors = ['b', 'r']
         res.append(plt.figure())
-        plt.hist(prediction[1], color='b', alpha=0.5, range=low_high, bins=bins,
-                 histtype='stepfilled', label='{} pdf Training Set'.format(labels[1]), **kwds)
-        plt.hist(prediction[0], color='r', alpha=0.5, range=low_high, bins=bins,
-                 histtype='stepfilled', label='{} pdf Training Set'.format(labels[0]), **kwds)
+        for i_class in range(n_classes):
+            plt.hist(prediction[i_class], color=colors[i_class], alpha=0.5, range=low_high, bins=bins,
+                     histtype='stepfilled', label='{} pdf Training Set'.format(labels[i_class]), **kwds)
 
-        hist, bins = np.histogram(
-            prediction[3], bins=bins, range=low_high, **kwds)
-        scale = len(prediction[1]) / sum(hist)
-        err = np.sqrt(hist) * scale
-        center = (bins[:-1] + bins[1:]) / 2
-        plt.errorbar(center, hist * scale, yerr=err, fmt='o',
-                     c='b', label='{} pdf Test Set'.format(labels[1]))
-
-        hist, bins = np.histogram(
-            prediction[2], bins=bins, range=low_high, **kwds)
-        scale = len(prediction[0]) / sum(hist)
-        err = np.sqrt(hist) * scale
-        plt.errorbar(center, hist * scale, yerr=err, fmt='o',
-                     c='r', label='{} pdf Test Set'.format(labels[0]))
+            hist, bins = np.histogram(prediction[i_class+2], bins=bins, range=low_high, **kwds)
+            if 'density' in kwds and kwds['density']:
+                err = np.sqrt(hist * len(prediction[i_class])) / len(prediction[i_class+2])
+            else:
+                scale = len(prediction[i_class]) / sum(hist)
+                err = np.sqrt(hist) * scale
+            center = (bins[:-1] + bins[1:]) / 2
+            plt.errorbar(center, hist * scale, yerr=err, fmt='o',
+                         c=colors[i_class], label='{} pdf Test Set'.format(labels[i_class]))
 
         plt.xlabel('BDT output', fontsize=13, ha='right', position=(1, 20))
         plt.ylabel(r'                                Counts (arb. units)', fontsize=13)
         plt.legend(frameon=False, fontsize=12)
     # n figures in case of multi-classification with n classes
     else:
+        labels = ['class{}'.format(i_class) for i_class, _ in enumerate(class_labels)] if labels is None else labels
         cmap = plt.cm.get_cmap('tab10')
         for i_output, _ in enumerate(class_labels):
             res.append(plt.figure())
@@ -114,8 +103,12 @@ def plot_output_train_test(
 
                 hist, bins = np.histogram(
                     prediction[i_class+n_classes][:, i_output], bins=bins, range=low_high, **kwds)
-                scale = len(prediction[i_class][:, i_output]) / sum(hist)
-                err = np.sqrt(hist) * scale
+                if 'density' in kwds and kwds['density']:
+                    err = np.sqrt(hist * len(prediction[i_class][:, i_output])) / len(
+                        prediction[i_class+n_classes][:, i_output])
+                else:
+                    scale = len(prediction[i_class][:, i_output]) / sum(hist)
+                    err = np.sqrt(hist) * scale
                 center = (bins[:-1] + bins[1:]) / 2
 
                 plt.errorbar(center, hist * scale, yerr=err, fmt='o',
