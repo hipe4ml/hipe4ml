@@ -364,6 +364,92 @@ def plot_roc(y_truth, y_score, labels=None, pos_label=None):
     return res
 
 
+def plot_roc_train_test(y_truth_test, y_score_test, y_truth_train, y_score_train, labels=None, pos_label=None):
+    """
+    Calculate and plot the roc curve for test and train sets
+
+    Input
+    -------------------------------------
+
+    y_truth_test : array
+    True labels for the belonging class of the test set.
+    If labels are not {0, 1, ..., N}, then pos_label
+    should be explicitly given.
+
+    y_score_test : array
+    Target scores for the test set, can either be probability
+    estimates of the positive class, confidence values, or
+    non-thresholded measure of decisions (as returned
+    by “decision_function” on some classifiers).
+
+    y_truth_train : array
+    True labels for the belonging class of the train set.
+    If labels are not {0, 1, ..., N}, then pos_label
+    should be explicitly given.
+
+    y_score_train : array
+    Target scores for the train set, can either be probability
+    estimates of the positive class, confidence values, or
+    non-thresholded measure of decisions (as returned
+    by “decision_function” on some classifiers).
+
+    labels: list
+    Contains the labels to be displayed in the legend
+    If None the labels are class1, class2, ..., classN
+
+    pos_label : int or str
+    The label of the positive class. When pos_label=None,
+    if y_true_ is in {0, 1, ..., N}, pos_label is set to 1,
+    otherwise an error will be raised.
+
+
+
+    Output
+    -------------------------------------
+    matplotlib object with the roc curves
+
+    """
+    # get number of classes
+    n_classes = len(np.unique(y_truth_test))
+
+    if (labels is None and n_classes > 2) or (labels and len(labels) != n_classes):
+        labels = []
+        for i_class in range(n_classes):
+            labels.append('class{}'.format(i_class))
+    elif labels is None and n_classes <= 2:
+        labels = ['']
+
+    # call plot_roc function for both train and test sets
+    fig_test = plot_roc(y_truth_test, y_score_test, labels, pos_label)
+    fig_train = plot_roc(y_truth_train, y_score_train, labels, pos_label)
+    axes_test = fig_test.get_axes()[0]
+    axes_train = fig_train.get_axes()[0]
+
+    # plot results together
+    cmap = plt.cm.get_cmap('tab10')
+    res = plt.figure()
+    for i_roc, (roc_test, roc_train) in enumerate(zip(axes_test.lines, axes_train.lines)):
+        if i_roc < n_classes:
+            if i_roc > 0 and n_classes <= 2:
+                continue
+            roc_auc_test = auc(roc_test.get_xdata(), roc_test.get_ydata())
+            roc_auc_train = auc(roc_train.get_xdata(), roc_train.get_ydata())
+            plt.plot(roc_train.get_xdata(), roc_train.get_ydata(), c=cmap(
+                i_roc), alpha=0.3, lw=1, label='Train {0} (AUC = {1:.4f})'.format(labels[i_roc], roc_auc_test))
+            plt.plot(roc_test.get_xdata(), roc_test.get_ydata(), c=cmap(
+                i_roc), lw=1, label='Test {0} (AUC = {1:.4f})'.format(labels[i_roc], roc_auc_train))
+    plt.xlabel('False Positive Rate', fontsize=12)
+    plt.ylabel('True Positive Rate', fontsize=12)
+    plt.legend(loc='lower right')
+    plt.grid()
+
+    plt.close(fig_test)
+    plt.close(fig_train)
+    del fig_test, fig_train, axes_test, axes_train
+
+    return res
+
+
 def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
     """
     Calculate the feature importance using the shap violin plot for
