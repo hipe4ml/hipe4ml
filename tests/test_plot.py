@@ -28,6 +28,7 @@ INPUT_MODEL = xgb.XGBClassifier()
 MODEL = ModelHandler(INPUT_MODEL)
 MODEL.train_test_model(DATA)
 Y_PRED = MODEL.predict(DATA[2])
+Y_PRED_TRAIN = MODEL.predict(DATA[0])
 EFFICIENCY, THRESHOLD = analysis_utils.bdt_efficiency_array(DATA[3], Y_PRED, n_points=10)
 # --------------------------------------------
 
@@ -53,6 +54,14 @@ def test_plot_roc():
     Test the roc curve plot
     """
     assert isinstance(plot_utils.plot_roc(DATA[3], Y_PRED), matplotlib.figure.Figure)
+
+
+def test_plot_roc_train_test():
+    """
+    Test the test and train roc curve plot
+    """
+    assert isinstance(plot_utils.plot_roc_train_test(
+        DATA[3], Y_PRED, DATA[1], Y_PRED_TRAIN), matplotlib.figure.Figure)
 
 
 def test_plot_precision_recall():
@@ -85,6 +94,7 @@ def test_plot_bdt_efficiency():
     """
     assert isinstance(plot_utils.plot_bdt_eff(THRESHOLD, EFFICIENCY),
                       matplotlib.figure.Figure)
+
 
 def test_plot_learning_curves():
     """
