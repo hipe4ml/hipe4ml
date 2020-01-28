@@ -207,7 +207,7 @@ class ModelHandler:
         # final training with the optimized hyperparams
         print('Training the final model: ...', end='\r')
         self.fit(data[0], data[1])
-        print('{}'.format(self.get_model_params()))
+        print(f'{self.get_model_params}')
         print('Training the final model: Done!\n')
         print('Testing the model: ...', end='\r')
 
@@ -227,7 +227,7 @@ class ModelHandler:
 
         print('Testing the model: Done!\n')
 
-        print('ROC_AUC_score: {}\n'.format(roc_score))
+        print(f'ROC_AUC_score: {roc_score}\n')
         print('==============================\n')
 
     def evaluate_hyperparams(self, data, opt_params, metrics, n_classes, nfold=5):
@@ -345,8 +345,8 @@ class ModelHandler:
         max_params = {key: None for key in hyperparams_ranges.keys()}
         for key in max_params.keys():
             max_params[key] = optimizer.max['params'][key]
-        print('Best target: {0:.6f}'.format(optimizer.max['target']))
-        print('Best parameters: {}'.format(max_params))
+        print(f"Best target: {optimizer.max['target']:.6f}")
+        print(f'Best parameters: {max_params}')
         self.set_model_params(
             {**self.model_params, **self.cast_model_params(max_params)})
 
