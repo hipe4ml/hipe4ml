@@ -24,16 +24,16 @@ class ModelHandler:
     input_model: xgboost or sklearn model
 
     training_columns: list
-    Contains the name of the features used for the training.
-    Example: ['dEdx', 'pT', 'ct']
+        Contains the name of the features used for the training.
+        Example: ['dEdx', 'pT', 'ct']
 
     model_params: dict
-    Model (hyper-)parameter values. For
-    example: silent, n_jobs, objective,
-    random_state, eval_metric, tree_method,
-    max_depth, learning_rate,
-    n_estimators, gamma, min_child_weight,
-    subsample, colsample_bytree
+        Model (hyper-)parameter values. For
+        example: silent, n_jobs, objective,
+        random_state, eval_metric, tree_method,
+        max_depth, learning_rate,
+        n_estimators, gamma, min_child_weight,
+        subsample, colsample_bytree
 
     """
 
@@ -53,12 +53,12 @@ class ModelHandler:
         Input
         ------------------------------------
         model_params: dict
-        Model (hyper-)parameter values. For
-        example: silent, n_jobs, objective,
-        random_state, eval_metric, tree_method,
-        max_depth, learning_rate,
-        n_estimators, gamma, min_child_weight,
-        subsample, colsample_bytree
+            Model (hyper-)parameter values. For
+            example: silent, n_jobs, objective,
+            random_state, eval_metric, tree_method,
+            max_depth, learning_rate,
+            n_estimators, gamma, min_child_weight,
+            subsample, colsample_bytree
 
         """
         self.model_params = model_params
@@ -71,12 +71,12 @@ class ModelHandler:
         Output
         ------------------------------------
         dict
-        Model (hyper-)parameter values. For
-        example: silent, n_jobs, objective,
-        random_state, eval_metric, tree_method,
-        max_depth, learning_rate,
-        n_estimators, gamma, min_child_weight,
-        subsample, colsample_bytree
+            Model (hyper-)parameter values. For
+            example: silent, n_jobs, objective,
+            random_state, eval_metric, tree_method,
+            max_depth, learning_rate,
+            n_estimators, gamma, min_child_weight,
+            subsample, colsample_bytree
 
         """
         return self.model.get_params()
@@ -84,11 +84,12 @@ class ModelHandler:
     def set_training_columns(self, training_columns):
         """
         Set the features used for the training process
+
         Input
         ------------------------------------
         training_columns: list
-        Contains the name of the features used for the training.
-        Example: ['dEdx', 'pT', 'ct']
+            Contains the name of the features used for the training.
+            Example: ['dEdx', 'pT', 'ct']
 
         """
         self.training_columns = training_columns
@@ -96,11 +97,12 @@ class ModelHandler:
     def get_training_columns(self):
         """
         Get the features used for the training process
+
         Output
         ------------------------------------
         list
-        Contains the name of the features used for the training.
-        Example: ['dEdx', 'pT', 'ct']
+            Contains the name of the features used for the training.
+            Example: ['dEdx', 'pT', 'ct']
 
         """
 
@@ -112,7 +114,7 @@ class ModelHandler:
 
         Output
         ---------------------------
-        sklearn or xgboost model
+        sklearn_or_xgboost_model
         """
         return self.model
 
@@ -124,7 +126,7 @@ class ModelHandler:
         Output
         ---------------------------
         str
-        Name of the model module
+            Name of the model module
         """
         return self.model_string
 
@@ -135,10 +137,10 @@ class ModelHandler:
         Input
         ---------------------------
         x_train: array-like, sparse matrix
-        Training data
+            Training data
 
-        y_train:array-like, sparse matrix
-        Target data
+        y_train: array-like, sparse matrix
+            Target data
 
         """
         if self.training_columns is not None:
@@ -153,18 +155,18 @@ class ModelHandler:
         Input
         --------------------------------------
         x_test: array-like, sparse matrix
-        The input samples. Internally, its dtype
-        will be converted to dtype=np.float32. If a
-        sparse matrix is provided, it will be converted
-        to a sparse csr_matrix.
+            The input samples. Internally, its dtype
+            will be converted to dtype=np.float32. If a
+            sparse matrix is provided, it will be converted
+            to a sparse csr_matrix.
 
         output_margin: bool
-        Whether to output the raw untransformed margin value.
+            Whether to output the raw untransformed margin value.
 
         Output
         ---------------------------------------
-        numpy array
-        Model prediction
+        numpy_array
+            Model prediction
 
         """
         if self.training_columns is not None:
@@ -191,13 +193,9 @@ class ModelHandler:
         ----------------------------------------------
 
         data: list
-        Contains respectively: training
-        set dataframe, training label array,
-        test set dataframe, test label array
-
-        Output
-        ---------------------------------------------
-        sklearn or xgboost trained model
+            Contains respectively: training
+            set dataframe, training label array,
+            test set dataframe, test label array
         """
 
         # get number of classes
@@ -238,34 +236,34 @@ class ModelHandler:
         ------------------------------------------
 
         data: list
-        Contains respectively: training
-        set dataframe, training label array,
-        test set dataframe, test label array
+            Contains respectively: training
+            set dataframe, training label array,
+            test set dataframe, test label array
 
         opt_params: dict
-        Hyperparameters to be optimized. For
-        example: max_depth, learning_rate,
-        n_estimators, gamma, min_child_weight,
-        subsample, colsample_bytree
+            Hyperparameters to be optimized. For
+            example: max_depth, learning_rate,
+            n_estimators, gamma, min_child_weight,
+            subsample, colsample_bytree
 
         metrics: string, callable or None
-        A string (see sklearn model evaluation
-        documentation:
-        https://scikit-learn.org/stable/modules/model_evaluation.html)
-        or a scorer callable object / function
-        with signature scorer(estimator, X, y)
-        which should return only a
-        single value.
+            A string (see sklearn model evaluation
+            documentation:
+            https://scikit-learn.org/stable/modules/model_evaluation.html)
+            or a scorer callable object / function
+            with signature scorer(estimator, X, y)
+            which should return only a
+            single value.
 
         nfold: int
-        Number of folds to calculate the cross
-        validation error
+            Number of folds to calculate the cross
+            validation error
 
         Output
         ---------------------------------------------------------
         float
-        Cross validation score evaluated using
-        the ROC AUC metrics
+            Cross validation score evaluated using
+            the ROC AUC metrics
 
 
         """
@@ -292,39 +290,39 @@ class ModelHandler:
         ------------------------------------------------------
 
         data: list
-        Contains respectively: training
-        set dataframe, training label array,
-        test set dataframe, test label array
+            Contains respectively: training
+            set dataframe, training label array,
+            test set dataframe, test label array
 
         hyperparams_ranges: dict
-        Xgboost hyperparameter ranges(in tuples).
-        For example:
-        dict={
-            'max_depth':(10,100)
-            'learning_rate': (0.01,0.03)
-        }
+            Xgboost hyperparameter ranges(in tuples).
+            For example:
+            dict={
+                'max_depth':(10,100)
+                'learning_rate': (0.01,0.03)
+            }
 
         metrics: string, callable or None
-        A string (see sklearn model evaluation
-        documentation:
-        https://scikit-learn.org/stable/modules/model_evaluation.html)
-        or a scorer callable object / function
-        with signature scorer(estimator, X, y)
-        which should return only a
-        single value.
+            A string (see sklearn model evaluation
+            documentation:
+            https://scikit-learn.org/stable/modules/model_evaluation.html)
+            or a scorer callable object / function
+            with signature scorer(estimator, X, y)
+            which should return only a
+            single value.
 
         nfold: int
-        Number of folds to calculate the cross validation error
+            Number of folds to calculate the cross validation error
 
         init_points: int
-        How many steps of random exploration you want to perform.
-        Random exploration can help by diversifying the exploration space
+            How many steps of random exploration you want to perform.
+            Random exploration can help by diversifying the exploration space
 
 
         Output
         ---------------------------------------------------------
         dict
-        Contains the optimized parameters
+            Contains the optimized parameters
 
         """
 
@@ -359,15 +357,16 @@ class ModelHandler:
         -----------------------------------------------------
 
         params: dict
-        Hyperparameter values. For
-        example: max_depth, learning_rate,
-        n_estimators, gamma, min_child_weight,
-        subsample, colsample_bytree
+            Hyperparameter values. For
+            example: max_depth, learning_rate,
+            n_estimators, gamma, min_child_weight,
+            subsample, colsample_bytree
 
-        Output:
+        Output
         -----------------------------------------------------
+
         dict
-        Hyperparameter values updated
+            Hyperparameter values updated
 
         """
         for key in params.keys():
@@ -384,10 +383,10 @@ class ModelHandler:
         Input
         -----------------------------------------------------
         filename: str
-        Name of the file in which the model is saved
+            Name of the file in which the model is saved
 
         xgb_format : bool
-        If True saves the xgboost model into a .model file
+            If True saves the xgboost model into a .model file
         """
         if xgb_format is False:
             pickle.dump(self.model, open(filename, "wb"))
@@ -404,7 +403,7 @@ class ModelHandler:
         Input
         -----------------------------------------------------
         filename: str
-        Name of the file in which the model is saved
+            Name of the file in which the model is saved
 
         """
 
@@ -417,7 +416,7 @@ class ModelHandler:
         Input
         -----------------------------------------------------
         filename: str
-        Name of the file in which the model is saved
+            Name of the file in which the model is saved
         """
         loaded_model = pickle.load(open(filename, 'rb'))
         self.model = loaded_model.get_original_model()

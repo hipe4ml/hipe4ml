@@ -17,25 +17,25 @@ def bdt_efficiency_array(y_truth, y_score, n_points=50):
     Input
     ------------------------------------------------
     y_truth: array
-    Training or test set labels. The candidates for each
-    class should be labeled with 0, ..., N.
-    In case of binary classification, 0 should
-    correspond to the background while 1 to the signal
+        Training or test set labels. The candidates for each
+        class should be labeled with 0, ..., N.
+        In case of binary classification, 0 should
+        correspond to the background while 1 to the signal
 
     y_score: array
-    Estimated probabilities or decision function.
+        Estimated probabilities or decision function.
 
     n_points: int
-    Number of points to be sampled
+        Number of points to be sampled
 
     Output
     ------------------------------------------------
     efficiency: numpy array
-    Efficiency array as a function of the threshold value
-    Numpy array of numpy arrays in case of multi-classification
+        Efficiency array as a function of the threshold value
+        Numpy array of numpy arrays in case of multi-classification
 
     threshold: numpy array
-    Threshold values array
+        Threshold values array
 
 
     """
@@ -80,27 +80,27 @@ def cross_val_roc_score_multiclass(model, training_df, y_training, n_classes, n_
 
     Input
     ------------------------------------------------
-    model: xgboost or sklearn multiclass model
+    model : xgboost or sklearn multiclass model
 
     df_training: Pandas Dataframe
-    Training set dataframe
+        Training set dataframe
 
     y_training: array
-    Training set labels. The candidates for each
-    class should be labeled with 0, ..., N.
+        Training set labels. The candidates for each
+        class should be labeled with 0, ..., N.
 
     n_classes: int
-    Number of classes: should be greater than two. Otherwise
-    use the standard cross_val_score(sklearn) implementation
+        Number of classes: should be greater than two. Otherwise
+        use the standard cross_val_score(sklearn) implementation
 
     nfold: int
-    Number of folds to calculate the cross
-    validation error
+        Number of folds to calculate the cross
+        validation error
 
     Output
     ------------------------------------------------
     mean: int
-    Average of the scores evaluated in the k-different folds
+        Average of the scores evaluated in the k-different folds
 
 
     """
