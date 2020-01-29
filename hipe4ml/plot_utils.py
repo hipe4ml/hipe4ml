@@ -19,38 +19,40 @@ def plot_output_train_test(
 
     Input
     ----------------------------------------
-    model: xgboost or sklearn model
+    model: hipe4ml model handler
 
     data: list
-    Contains respectively: training
-    set dataframe, training label array,
-    test set dataframe, test label array
+        Contains respectively: training
+        set dataframe, training label array,
+        test set dataframe, test label array
 
     bins: int or sequence of scalars or str
-    If bins is an int, it defines the number of equal-width
-    bins in the given range (10, by default). If bins is a
-    sequence, it defines a monotonically increasing array of
-    bin edges, including the rightmost edge, allowing for
-    non-uniform bin widths.
-    If bins is a string, it defines the method used to
-    calculate the optimal bin width, as defined by
-    np.histogram_bin_edges:
-    https://docs.scipy.org/doc/numpy/reference/generated
-    /numpy.histogram_bin_edges.html#numpy.histogram_bin_edges
+        If bins is an int, it defines the number of equal-width
+        bins in the given range (10, by default). If bins is a
+        sequence, it defines a monotonically increasing array of
+        bin edges, including the rightmost edge, allowing for
+        non-uniform bin widths.
+        If bins is a string, it defines the method used to
+        calculate the optimal bin width, as defined by
+        np.histogram_bin_edges:
+        https://docs.scipy.org/doc/numpy/reference/generated
+        /numpy.histogram_bin_edges.html#numpy.histogram_bin_edges
 
     raw: Bool
-    If true enables the raw untransformed margin value
+        If true enables the raw untransformed margin value
 
     labels: list
-    Contains the labels to be displayed in the legend
-    If None the labels are class1, class2, ..., classN
+        Contains the labels to be displayed in the legend
+        If None the labels are class1, class2, ..., classN
 
-    **kwds: extra arguments are passed on to plt.hist()
+    **kwds
+        Extra arguments are passed on to plt.hist()
 
     Output
     ----------------------------------------
-    list of matplotlib objects with the BDT output
-    distributions for each class
+    list
+        list of matplotlib objects with the BDT output
+        distributions for each class
 
 
     """
@@ -138,33 +140,34 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
     Input
     -----------------------------------------
     list_of_df: list
-    Contains a dataframe for each class
+        Contains a dataframe for each class
 
     column: list
-    Contains the name of the features you want to plot
-    Example: ['dEdx', 'pT', 'ct']
+        Contains the name of the features you want to plot
+        Example: ['dEdx', 'pT', 'ct']
 
     figsize: list
-    The size in inches of the figure to create. Uses the value in matplotlib.rcParams by default.
+        The size in inches of the figure to create. Uses the value in matplotlib.rcParams by default.
 
     bins: int or sequence of scalars or str
-    If bins is an int, it defines the number of equal-width
-    bins in the given range (10, by default). If bins is a
-    sequence, it defines a monotonically increasing array of
-    bin edges, including the rightmost edge, allowing for
-    non-uniform bin widths.
+        If bins is an int, it defines the number of equal-width
+        bins in the given range (10, by default). If bins is a
+        sequence, it defines a monotonically increasing array of
+        bin edges, including the rightmost edge, allowing for
+        non-uniform bin widths.
 
     log: Bool
-    If True enable log scale plot
+        If True enable log scale plot
 
     labels: list
-    Contains the labels to be displayed in the legend
-    If None the labels are class1, class2, ..., classN
+        Contains the labels to be displayed in the legend
+        If None the labels are class1, class2, ..., classN
 
     Output
     -----------------------------------------
-    array of matplotlib axes with the distributions
-    of the features for each class
+    array
+        array of matplotlib axes with the distributions
+        of the features for each class
 
     """
 
@@ -204,22 +207,23 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
     Input
     -----------------------------------------------
     list_of_df: list
-    Contains dataframes for each class
+        Contains dataframes for each class
 
     columns: list
-    Contains the name of the features you want to plot
-    Example: ['dEdx', 'pT', 'ct']
+        Contains the name of the features you want to plot
+        Example: ['dEdx', 'pT', 'ct']
 
     labels: list
-    Contains the labels to be displayed in the legend
-    If None the labels are class1, class2, ..., classN
+        Contains the labels to be displayed in the legend
+        If None the labels are class1, class2, ..., classN
 
     **kwds: extra arguments are passed on to DataFrame.corr()
 
     Output
     ------------------------------------------------
-    list of matplotlib objects with the correlations
-    between the features for each class
+    list
+        list of matplotlib objects with the correlations
+        between the features for each class
 
     """
 
@@ -278,15 +282,16 @@ def plot_bdt_eff(threshold, eff_sig):
     Input
     -----------------------------------
     threshold: array
-    Score threshold array
+        Score threshold array
 
     eff_sig: array
-    bdt efficiency array
+        bdt efficiency array
 
     Output
     -----------------------------------
-    matplotlib object of the bdt efficiency as a
-    function of the threshold score
+    matplotlib_obj
+        Plot containing bdt efficiency as a
+        function of the threshold score
 
     """
     res = plt.figure()
@@ -307,29 +312,30 @@ def plot_roc(y_truth, y_score, labels=None, pos_label=None):
     -------------------------------------
 
     y_truth : array
-    True labels for the belonging class. If labels are not
-    {0, 1, ..., N}, then pos_label should be explicitly given.
+        True labels for the belonging class. If labels are not
+        {0, 1, ..., N}, then pos_label should be explicitly given.
 
     y_score : array
-    Target scores, can either be probability estimates
-    of the positive class, confidence values, or
-    non-thresholded measure of decisions (as returned
-    by “decision_function” on some classifiers).
+        Target scores, can either be probability estimates
+        of the positive class, confidence values, or
+        non-thresholded measure of decisions (as returned
+        by “decision_function” on some classifiers).
 
     labels: list
-    Contains the labels to be displayed in the legend
-    If None the labels are class1, class2, ..., classN
+        Contains the labels to be displayed in the legend
+        If None the labels are class1, class2, ..., classN
 
     pos_label : int or str
-    The label of the positive class. When pos_label=None,
-    if y_true is in {0, 1, ..., N}, pos_label is set to 1,
-    otherwise an error will be raised.
+        The label of the positive class. When pos_label=None,
+        if y_true is in {0, 1, ..., N}, pos_label is set to 1,
+        otherwise an error will be raised.
 
 
 
     Output
     -------------------------------------
-    matplotlib object with the roc curves
+    matplotlib_obj
+        Plot containing the roc curves
 
     """
     # get number of classes
@@ -381,41 +387,42 @@ def plot_roc_train_test(y_truth_test, y_score_test, y_truth_train, y_score_train
     -------------------------------------
 
     y_truth_test : array
-    True labels for the belonging class of the test set.
-    If labels are not {0, 1, ..., N}, then pos_label
-    should be explicitly given.
+        True labels for the belonging class of the test set.
+        If labels are not {0, 1, ..., N}, then pos_label
+        should be explicitly given.
 
     y_score_test : array
-    Target scores for the test set, can either be probability
-    estimates of the positive class, confidence values, or
-    non-thresholded measure of decisions (as returned
-    by “decision_function” on some classifiers).
+        Target scores for the test set, can either be probability
+        estimates of the positive class, confidence values, or
+        non-thresholded measure of decisions (as returned
+        by “decision_function” on some classifiers).
 
     y_truth_train : array
-    True labels for the belonging class of the train set.
-    If labels are not {0, 1, ..., N}, then pos_label
-    should be explicitly given.
+        True labels for the belonging class of the train set.
+        If labels are not {0, 1, ..., N}, then pos_label
+        should be explicitly given.
 
     y_score_train : array
-    Target scores for the train set, can either be probability
-    estimates of the positive class, confidence values, or
-    non-thresholded measure of decisions (as returned
-    by “decision_function” on some classifiers).
+        Target scores for the train set, can either be probability
+        estimates of the positive class, confidence values, or
+        non-thresholded measure of decisions (as returned
+        by “decision_function” on some classifiers).
 
     labels: list
-    Contains the labels to be displayed in the legend
-    If None the labels are class1, class2, ..., classN
+        Contains the labels to be displayed in the legend
+        If None the labels are class1, class2, ..., classN
 
     pos_label : int or str
-    The label of the positive class. When pos_label=None,
-    if y_true_ is in {0, 1, ..., N}, pos_label is set to 1,
-    otherwise an error will be raised.
+        The label of the positive class. When pos_label=None,
+        if y_true_ is in {0, 1, ..., N}, pos_label is set to 1,
+        otherwise an error will be raised.
 
 
 
     Output
     -------------------------------------
-    matplotlib object with the roc curves
+    matplotlib_obj
+        Plot containing the roc curves
 
     """
     # get number of classes
@@ -468,22 +475,24 @@ def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
     Input
     -------------------------------------------
     df_in: Pandas dataframe
-    Training or test set dataframe
+        Training or test set dataframe
 
     y_truth: array
-    Training or test set label
-    model: trained model
+        Training or test set label
+    model: hipe4ml model_handler
+        Trained model
 
     n_sample: int
-    Number of candidates employed to fill
-    the shap violin plots.
-    If larger than the number of candidates
-    in each class, minimum number of candidates
-    in a given class used instead
+        Number of candidates employed to fill
+        the shap violin plots.
+        If larger than the number of candidates
+        in each class, minimum number of candidates
+        in a given class used instead
 
     Output
     -------------------------------------------
-    list of matplotlib objects with shap feature importance
+    list
+        list of matplotlib objects with shap feature importance
 
     """
     class_labels, class_counts = np.unique(y_truth, return_counts=True)
@@ -522,22 +531,22 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
     Input
     -------------------------------------
     y_truth: array
-    True labels for the belonging class. If labels are not
-    {0, 1, ..., N}, then pos_label should be explicitly given.
+        True labels for the belonging class. If labels are not
+        {0, 1, ..., N}, then pos_label should be explicitly given.
 
     y_score: array
-    Estimated probabilities or decision function.
+        Estimated probabilities or decision function.
 
     pos_label : int or str
-    The label of the positive class. When pos_label=None,
-    if y_true is in {0, 1, ..., N}, pos_label is set to 1,
-    otherwise an error will be raised.
+        The label of the positive class. When pos_label=None,
+        if y_true is in {0, 1, ..., N}, pos_label is set to 1,
+        otherwise an error will be raised.
 
 
     Output
     -------------------------------------
-    matplotlib object with the precision
-    recall curves
+    matplotlib_obj
+        Plot containing the precision recall curves
 
     """
     # get number of classes
@@ -592,20 +601,21 @@ def plot_learning_curves(model, data, n_points=10):
 
     Input
     -------------------------------------
-    model: xgboost or sklearn model
+    model: hipe4ml model_handler
 
     data: list
-    Contains respectively: training
-    set dataframe, training label array,
-    test set dataframe, test label array
+        Contains respectively: training
+        set dataframe, training label array,
+        test set dataframe, test label array
 
     n_points: int
-    Number of points used to sample the learning curves
+        Number of points used to sample the learning curves
 
 
     Output
     -------------------------------------
-    matplotlib object with learning curves
+    matplotlib_obj
+        Plot containing the learning curves
 
     """
 
