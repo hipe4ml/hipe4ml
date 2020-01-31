@@ -3,7 +3,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from pandas.core.index import Index
 import shap
 from mpl_toolkits.axes_grid1 import ImageGrid
 from sklearn.metrics import (auc, average_precision_score,
@@ -172,7 +171,7 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
     """
 
     if column is not None:
-        if not isinstance(column, (list, np.ndarray, Index)):
+        if not isinstance(column, (list, np.ndarray, pd.Index)):
             column = [column]
         for dfm in list_of_df:
             dfm = dfm[column]
