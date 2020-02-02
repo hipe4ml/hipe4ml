@@ -79,12 +79,14 @@ def plot_output_train_test(
             plt.hist(prediction[i_class], color=colors[i_class], alpha=0.5, range=low_high, bins=bins,
                      histtype='stepfilled', label=f'{labels[i_class]} pdf Training Set', **kwds)
 
-            hist, bins = np.histogram(
-                prediction[i_class+2], bins=bins, range=low_high, **kwds)
             if 'density' in kwds and kwds['density']:
+                hist, bins = np.histogram(
+                    prediction[i_class+2], bins=bins, range=low_high, density=True)
                 err = np.sqrt(
                     hist * len(prediction[i_class])) / len(prediction[i_class+2])
             else:
+                hist, bins = np.histogram(
+                    prediction[i_class+2], bins=bins, range=low_high)
                 scale = len(prediction[i_class]) / sum(hist)
                 err = np.sqrt(hist) * scale
             center = (bins[:-1] + bins[1:]) / 2
@@ -110,9 +112,13 @@ def plot_output_train_test(
                 hist, bins = np.histogram(
                     prediction[i_class+n_classes][:, i_output], bins=bins, range=low_high, **kwds)
                 if 'density' in kwds and kwds['density']:
+                    hist, bins = np.histogram(
+                        prediction[i_class+n_classes][:, i_output], bins=bins, range=low_high, density=True)
                     err = np.sqrt(hist * len(prediction[i_class][:, i_output])) / len(
                         prediction[i_class+n_classes][:, i_output])
                 else:
+                    hist, bins = np.histogram(
+                        prediction[i_class+n_classes][:, i_output], bins=bins, range=low_high)
                     scale = len(prediction[i_class][:, i_output]) / sum(hist)
                     err = np.sqrt(hist) * scale
                 center = (bins[:-1] + bins[1:]) / 2
