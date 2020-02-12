@@ -205,7 +205,6 @@ class ModelHandler:
         # final training with the optimized hyperparams
         print('Training the final model: ...', end='\r')
         self.fit(data[0], data[1])
-        print(f'{self.get_model_params}')
         print('Training the final model: Done!\n')
         print('Testing the model: ...', end='\r')
 
