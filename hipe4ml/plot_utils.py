@@ -137,10 +137,7 @@ def plot_output_train_test(
 
 def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels=None):
     """
-    Build a DataFrame and create a dataset for each class
-
-    Draw histogram of the DataFrame's series comparing the
-    distribution of each class.
+    Draw histograms comparing the distributions of each class.
 
     Input
     -----------------------------------------
@@ -161,7 +158,7 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
         bin edges, including the rightmost edge, allowing for
         non-uniform bin widths.
 
-    log: Bool
+    log: bool
         If True enable log scale plot
 
     labels: list
@@ -170,7 +167,7 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
 
     Output
     -----------------------------------------
-    array
+    axes
         array of matplotlib axes with the distributions
         of the features for each class
 
