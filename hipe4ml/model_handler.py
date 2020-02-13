@@ -205,7 +205,7 @@ class ModelHandler:
         # final training with the optimized hyperparams
         print('Training the final model: ...', end='\r')
         self.fit(data[0], data[1])
-        print('Training the final model: Done!\n')
+        print('Training the final model: Done!')
         print('Testing the model: ...', end='\r')
 
         y_pred = self.predict(data[2], output_margin=True)
@@ -222,10 +222,10 @@ class ModelHandler:
                 y_test_multi.ravel(), y_pred.ravel())
             roc_score = auc(fpr['micro'], tpr['micro'])
 
-        print('Testing the model: Done!\n')
+        print('Testing the model: Done!')
 
-        print(f'ROC_AUC_score: {roc_score}\n')
-        print('==============================\n')
+        print(f'ROC_AUC_score: {roc_score}')
+        print('==============================')
 
     def evaluate_hyperparams(self, data, opt_params, metrics, n_classes, nfold=5):
         """
