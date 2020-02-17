@@ -41,8 +41,10 @@ class ModelHandler:
         self.model = input_model
         self.model_params = model_params
         self.training_columns = training_columns
+
         if self.model is not None:
             self.model_string = inspect.getmodule(self.model).__name__.partition('.')[0]
+
             if self.model_params is None:
                 self.model_params = self.model.get_params()
 
@@ -317,6 +319,9 @@ class ModelHandler:
             How many steps of random exploration you want to perform.
             Random exploration can help by diversifying the exploration space
 
+        n_iter: int
+            How many steps for bayesian optimization of the target function.
+            Bigger n_iter results in better description of thetarget function
 
         Output
         ---------------------------------------------------------
