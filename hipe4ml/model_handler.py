@@ -150,7 +150,7 @@ class ModelHandler:
         else:
             self.model.fit(x_train, y_train)
 
-    def predict(self, x_test, output_margin=True):
+    def predict(self, x_test, output_margin=True, multiclass=False):
         """
         Return model prediction for the array x_test
 
@@ -165,6 +165,10 @@ class ModelHandler:
         output_margin: bool
             Whether to output the raw untransformed margin value.
 
+        multiclass: bool
+            Set to true (mandatory) when using output_margin = False in a
+            multi-class problem to have the probability of each class
+
         Output
         ---------------------------------------
         numpy_array
@@ -174,14 +178,14 @@ class ModelHandler:
         if self.training_columns is not None:
             x_test = x_test[self.training_columns]
 
-        if self.model_string == 'xgboost':
-            if output_margin:
-                pred = self.model.predict(x_test, output_margin=output_margin)
-            else:
-                pred = self.model.predict_proba(x_test)[:, 1]
-        if self.model_string == 'sklearn':
-            if output_margin:
+        if output_margin:
+            if self.model_string == 'xgboost':
+                pred = self.model.predict(x_test, True)
+            if self.model_string == 'sklearn':
                 pred = self.model.decision_function(x_test).ravel()
+        else:
+            if multiclass:
+                pred = self.model.predict_proba(x_test)
             else:
                 pred = self.model.predict_proba(x_test)[:, 1]
 
