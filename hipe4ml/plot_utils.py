@@ -135,7 +135,7 @@ def plot_output_train_test(
     return res
 
 
-def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels=None):
+def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels=None, alpha=0.5):
     """
     Draw histograms comparing the distributions of each class.
 
@@ -165,6 +165,9 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
         Contains the labels to be displayed in the legend
         If None the labels are class1, class2, ..., classN
 
+    alpha: float
+        Value between 0 and 1, tune the histogram transparency
+
     Output
     -----------------------------------------
     axes
@@ -187,12 +190,12 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
 
     for i_class, (dfm, lab) in enumerate(zip(list_of_df, labels)):
         if i_class == 0:
-            axes = dfm.hist(column=column, alpha=0.5, bins=bins, figsize=figsize, label=lab,
+            axes = dfm.hist(column=column, alpha=alpha, bins=bins, figsize=figsize, label=lab,
                             density=True, grid=False, log=log)
             axes = axes.flatten()
             axes = axes[:len(column)]
         else:
-            dfm.hist(ax=axes, column=column, alpha=0.5, bins=bins, figsize=figsize, label=lab,
+            dfm.hist(ax=axes, column=column, alpha=alpha, bins=bins, figsize=figsize, label=lab,
                      density=True, grid=False, log=log)
     for axs in axes:
         axs.set_ylabel('Counts (arb. units)')
