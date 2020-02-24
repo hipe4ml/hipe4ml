@@ -474,7 +474,7 @@ def plot_roc_train_test(y_truth_test, y_score_test, y_truth_train, y_score_train
     return res
 
 
-def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
+def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approximate=True):
     """
     Calculate the feature importance using the shap violin plot for
     each feature. The calculation is performed on a subsample of the
@@ -487,8 +487,13 @@ def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
 
     y_truth: array
         Training or test set label
+
     model: hipe4ml model_handler
         Trained model
+
+    labels: list
+        Contains the labels to be displayed in the legend
+        If None the labels are class1, class2, ..., classN
 
     n_sample: int
         Number of candidates employed to fill
@@ -496,6 +501,10 @@ def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
         If larger than the number of candidates
         in each class, minimum number of candidates
         in a given class used instead
+
+    approximate: bool
+        Run fast and approximat roughly the SHAP values. For more information
+        see https://shap.readthedocs.io/en/latest/#shap.TreeExplainer.shap_values
 
     Output
     -------------------------------------------
@@ -510,25 +519,23 @@ def plot_feature_imp(df_in, y_truth, model, n_sample=10000):
             n_sample = class_count
 
     subs = []
-    for i_class, class_lab in enumerate(class_labels):
+    for class_lab in class_labels:
         subs.append(df_in[y_truth == class_lab].sample(n_sample))
 
-    df_subs = pd.concat(subs).sample(frac=1.)
+    df_subs = pd.concat(subs)
     explainer = shap.TreeExplainer(model.get_original_model())
-    shap_values = explainer.shap_values(df_subs, approximate=True)
+    shap_values = explainer.shap_values(df_subs, approximate=approximate)
 
     res = []
     if n_classes <= 2:
         res.append(plt.figure(figsize=(18, 9)))
-        shap.summary_plot(shap_values, df_subs, plot_size=(18, 9), show=False)
+        shap.summary_plot(shap_values, df_subs, plot_size=(18, 9), class_names=labels, show=False)
     else:
         for i_class in range(n_classes):
             res.append(plt.figure(figsize=(18, 9)))
-            shap.summary_plot(shap_values[i_class],
-                              df_subs, plot_size=(18, 9), show=False)
+            shap.summary_plot(shap_values[i_class], df_subs, plot_size=(18, 9), class_names=labels, show=False)
         res.append(plt.figure(figsize=(18, 9)))
-        shap.summary_plot(shap_values, df_subs, plot_type='bar',
-                          plot_size=(18, 9), show=False)
+        shap.summary_plot(shap_values, df_subs, plot_type='bar', plot_size=(18, 9), class_names=labels, show=False)
 
     return res
 
