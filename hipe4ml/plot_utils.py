@@ -75,63 +75,61 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
     low_high = (low, high)
 
     res = []
-    scale = 1.
     # only one figure in case of binary classification
     if n_classes <= 2:
         labels = ['Signal', 'Background'] if labels is None else labels
         colors = ['b', 'r']
         res.append(plt.figure())
-        for i_class in range(n_classes):
-            plt.hist(prediction[i_class], color=colors[i_class], alpha=0.5, range=low_high, bins=bins,
-                     histtype='stepfilled', label=f'{labels[i_class]} pdf Training Set', **kwds)
+        for i_class, label, color in enumerate(zip(labels, colors)):
+            plt.hist(prediction[i_class], color=color, alpha=0.5, range=low_high, bins=bins,
+                     histtype='stepfilled', label=f'{label} pdf Training Set', **kwds)
 
             if 'density' in kwds and kwds['density']:
                 hist, bins = np.histogram(prediction[i_class+2], bins=bins, range=low_high, density=True)
-                err = np.sqrt(hist * len(prediction[i_class])) / len(prediction[i_class+2])
+                scale = len(prediction[i_class+2]) / sum(hist)
+                err = np.sqrt(hist * scale) / scale
             else:
                 hist, bins = np.histogram(prediction[i_class+2], bins=bins, range=low_high)
-                scale = len(prediction[i_class]) / sum(hist)
+                scale = len(prediction[i_class]) / len(prediction[i_class+2])
                 err = np.sqrt(hist) * scale
+                hist = np.multiply(hist, scale)
+
             center = (bins[:-1] + bins[1:]) / 2
-            plt.errorbar(center, hist * scale, yerr=err, fmt='o', c=colors[i_class],
-                         label=f'{labels[i_class]} pdf Test Set')
+            plt.errorbar(center, hist, yerr=err, fmt='o', c=color, label=f'{label} pdf Test Set')
 
         if logscale:
             plt.yscale('log')
         plt.xlabel('BDT output', fontsize=13, ha='right', position=(1, 20))
         plt.ylabel('Counts (arb. units)', fontsize=13, horizontalalignment='left')
         plt.legend(frameon=False, fontsize=12, loc='best')
+
     # n figures in case of multi-classification with n classes
     else:
-        labels = [f'class{i_class}' for i_class, _ in enumerate(
-            class_labels)] if labels is None else labels
+        labels = [f'class{class_lab}' for class_lab in class_labels] if labels is None else labels
         cmap = plt.cm.get_cmap('tab10')
-        for i_output, _ in enumerate(class_labels):
+        for output, out_label in zip(class_labels, labels):
             res.append(plt.figure())
-            for i_class, lab in enumerate(labels):
-                plt.hist(prediction[i_class][:, i_output], alpha=0.5, range=low_high, bins=bins,
-                         color=cmap(i_class), histtype='stepfilled',
-                         label=f'{lab} pdf Training Set', **kwds)
+            for i_class, label in enumerate(labels):
+                plt.hist(prediction[i_class][:, output], color=cmap(i_class), alpha=0.5, range=low_high, bins=bins,
+                         histtype='stepfilled', label=f'{label} pdf Training Set', **kwds)
 
-                hist, bins = np.histogram(prediction[i_class+n_classes][:, i_output], bins=bins,
-                                          range=low_high, **kwds)
                 if 'density' in kwds and kwds['density']:
-                    hist, bins = np.histogram(prediction[i_class+n_classes][:, i_output], bins=bins,
-                                              range=low_high, density=True)
-                    err = np.sqrt(hist * len(prediction[i_class][:, i_output])) / len(
-                        prediction[i_class+n_classes][:, i_output])
+                    hist, bins = np.histogram(prediction[i_class+n_classes][:, output], bins=bins, range=low_high,
+                                              density=True)
+                    scale = len(prediction[i_class+n_classes][:, output]) / sum(hist)
+                    err = np.sqrt(hist * scale) / scale
                 else:
-                    hist, bins = np.histogram(prediction[i_class+n_classes][:, i_output], bins=bins, range=low_high)
-                    scale = len(prediction[i_class][:, i_output]) / sum(hist)
+                    hist, bins = np.histogram(prediction[i_class+n_classes][:, output], bins=bins, range=low_high)
+                    scale = len(prediction[i_class][:, output]) / len(prediction[i_class+n_classes][:, output])
                     err = np.sqrt(hist) * scale
-                center = (bins[:-1] + bins[1:]) / 2
+                    hist = np.multiply(hist, scale)
 
-                plt.errorbar(center, hist * scale, yerr=err, fmt='o', c=cmap(i_class), label=f'{lab} pdf Test Set')
+                center = (bins[:-1] + bins[1:]) / 2
+                plt.errorbar(center, hist, yerr=err, fmt='o', c=cmap(i_class), label=f'{label} pdf Test Set')
 
             if logscale:
                 plt.yscale('log')
-            plt.yscale('log')
-            plt.xlabel(f'BDT output for {labels[i_output]}', fontsize=13, ha='right', position=(1, 20))
+            plt.xlabel(f'BDT output for {out_label}', fontsize=13, ha='right', position=(1, 20))
             plt.ylabel('Counts (arb. units)', fontsize=13, horizontalalignment='left')
             plt.legend(frameon=False, fontsize=12, loc='best')
 
