@@ -122,6 +122,7 @@ def score_from_efficiency_array(y_truth, y_score, efficiency_selected, keep_lowe
     score_array = np.array(score_list)
     return score_array
 
+
 def cross_val_roc_score_multiclass(model, training_df, y_training, n_classes, n_fold):
     """
     Evaluate a score using the roc auc metric by cross validation for multiclass

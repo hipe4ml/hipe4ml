@@ -10,7 +10,28 @@ from sklearn.metrics import (auc, average_precision_score,
 from sklearn.preprocessing import label_binarize
 
 
-def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None, multiclass=False, # pylint: disable=too-many-branches
+def _plot_distr(df_train, df_test, lims, bins, label, color, kwds):
+    """
+    Utility function for plot_output_train_test
+    """
+    plt.hist(df_train, color=color, alpha=0.5, range=lims, bins=bins,
+             histtype='stepfilled', label=f'{label} pdf Training Set', **kwds)
+
+    if 'density' in kwds and kwds['density']:
+        hist, bins = np.histogram(df_test, bins=bins, range=lims, density=True)
+        scale = len(df_test) / sum(hist)
+        err = np.sqrt(hist * scale) / scale
+    else:
+        hist, bins = np.histogram(df_test, bins=bins, range=lims)
+        scale = len(df_train) / len(df_test)
+        err = np.sqrt(hist) * scale
+        hist = hist * scale
+
+    center = (bins[:-1] + bins[1:]) / 2
+    plt.errorbar(center, hist, yerr=err, fmt='o', c=color, label=f'{label} pdf Test Set')
+
+
+def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None, multiclass=False,
                            logscale=False, **kwds):
     """
     Plot the BDT output distributions for each class and output
@@ -60,7 +81,6 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
         list of matplotlib objects with the BDT output
         distributions for each class
 
-
     """
     class_labels = np.unique(data[1])
     n_classes = len(class_labels)
@@ -80,23 +100,8 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
         labels = ['Signal', 'Background'] if labels is None else labels
         colors = ['b', 'r']
         res.append(plt.figure())
-        for i_class, label, color in enumerate(zip(labels, colors)):
-            plt.hist(prediction[i_class], color=color, alpha=0.5, range=low_high, bins=bins,
-                     histtype='stepfilled', label=f'{label} pdf Training Set', **kwds)
-
-            if 'density' in kwds and kwds['density']:
-                hist, bins = np.histogram(prediction[i_class+2], bins=bins, range=low_high, density=True)
-                scale = len(prediction[i_class+2]) / sum(hist)
-                err = np.sqrt(hist * scale) / scale
-            else:
-                hist, bins = np.histogram(prediction[i_class+2], bins=bins, range=low_high)
-                scale = len(prediction[i_class]) / len(prediction[i_class+2])
-                err = np.sqrt(hist) * scale
-                hist = np.multiply(hist, scale)
-
-            center = (bins[:-1] + bins[1:]) / 2
-            plt.errorbar(center, hist, yerr=err, fmt='o', c=color, label=f'{label} pdf Test Set')
-
+        for i_class, (label, color) in enumerate(zip(labels, colors)):
+            _plot_distr(prediction[i_class], prediction[i_class+2], low_high, bins, label, color, kwds)
         if logscale:
             plt.yscale('log')
         plt.xlabel('BDT output', fontsize=13, ha='right', position=(1, 20))
@@ -107,26 +112,12 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
     else:
         labels = [f'class{class_lab}' for class_lab in class_labels] if labels is None else labels
         cmap = plt.cm.get_cmap('tab10')
+        colors = [cmap(i_class) for i_class in range(len(labels))]
         for output, out_label in zip(class_labels, labels):
             res.append(plt.figure())
-            for i_class, label in enumerate(labels):
-                plt.hist(prediction[i_class][:, output], color=cmap(i_class), alpha=0.5, range=low_high, bins=bins,
-                         histtype='stepfilled', label=f'{label} pdf Training Set', **kwds)
-
-                if 'density' in kwds and kwds['density']:
-                    hist, bins = np.histogram(prediction[i_class+n_classes][:, output], bins=bins, range=low_high,
-                                              density=True)
-                    scale = len(prediction[i_class+n_classes][:, output]) / sum(hist)
-                    err = np.sqrt(hist * scale) / scale
-                else:
-                    hist, bins = np.histogram(prediction[i_class+n_classes][:, output], bins=bins, range=low_high)
-                    scale = len(prediction[i_class][:, output]) / len(prediction[i_class+n_classes][:, output])
-                    err = np.sqrt(hist) * scale
-                    hist = np.multiply(hist, scale)
-
-                center = (bins[:-1] + bins[1:]) / 2
-                plt.errorbar(center, hist, yerr=err, fmt='o', c=cmap(i_class), label=f'{label} pdf Test Set')
-
+            for i_class, (label, color) in enumerate(zip(labels, colors)):
+                _plot_distr(prediction[i_class][:, output], prediction[i_class+n_classes][:, output], low_high, bins,
+                            label, color, kwds)
             if logscale:
                 plt.yscale('log')
             plt.xlabel(f'BDT output for {out_label}', fontsize=13, ha='right', position=(1, 20))
