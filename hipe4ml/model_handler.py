@@ -230,7 +230,7 @@ class ModelHandler:
 
         print('Testing the model: Done!')
 
-        print(f'ROC_AUC_score: {roc_score}')
+        print(f'ROC_AUC_score: {roc_score:.6f}')
         print('==============================')
 
     def evaluate_hyperparams(self, data, opt_params, metrics, n_classes, nfold=5):
