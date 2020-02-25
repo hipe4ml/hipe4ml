@@ -7,9 +7,8 @@ import pickle
 
 import numpy as np
 from bayes_opt import BayesianOptimization
-from sklearn.metrics import auc, roc_auc_score, roc_curve
+from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
-from sklearn.preprocessing import label_binarize
 
 import hipe4ml.analysis_utils as au
 
@@ -191,17 +190,26 @@ class ModelHandler:
 
         return pred
 
-    def train_test_model(self, data):
+    def train_test_model(self, data, average='macro', multi_class_opt='raise'):
         """
-        Perform the training and the testing of the model
+        Perform the training and the testing of the model. The model performance is estimated
+        using the ROC AUC metric
 
         Input
         ----------------------------------------------
-
         data: list
             Contains respectively: training
             set dataframe, training label array,
             test set dataframe, test label array
+
+        average: string
+            Option for the average of ROC AUC scores used only in case of multi-classification.
+            You can choose between 'macro' and 'weighted'. For more information see
+            https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html#sklearn.metrics.roc_auc_score
+
+        multi_class_opt: string
+            Option to compute ROC AUC scores used only in case of multi-classification.
+            The one-vs-one 'ovo' and one-vs-rest 'ovr' approaches are available.
         """
 
         # get number of classes
@@ -214,19 +222,12 @@ class ModelHandler:
         print('Training the final model: Done!')
         print('Testing the model: ...', end='\r')
 
-        y_pred = self.predict(data[2], output_margin=True)
         if n_classes <= 2:
+            y_pred = self.predict(data[2], output_margin=True)
             roc_score = roc_auc_score(data[3], y_pred)
         else:
-            # convert multi-class labels to multi-labels to obtain roc curves
-            y_test_multi = label_binarize(data[3], classes=range(n_classes))
-            fpr, tpr = {}, {}
-            for clas in range(n_classes):
-                fpr[clas], tpr[clas], _ = roc_curve(
-                    y_test_multi[:, clas], y_pred[:, clas])
-            fpr['micro'], tpr['micro'], _ = roc_curve(
-                y_test_multi.ravel(), y_pred.ravel())
-            roc_score = auc(fpr['micro'], tpr['micro'])
+            y_pred = self.predict(data[2], output_margin=False, multiclass=True)
+            roc_score = roc_auc_score(data[3], y_pred, average, None, None, multi_class_opt)
 
         print('Testing the model: Done!')
 
