@@ -3,8 +3,6 @@
 
 import numpy as np
 from scipy.interpolate import InterpolatedUnivariateSpline
-from sklearn.metrics import roc_auc_score
-from sklearn.model_selection import KFold
 from sklearn.preprocessing import label_binarize
 
 
@@ -121,50 +119,3 @@ def score_from_efficiency_array(y_truth, y_score, efficiency_selected, keep_lowe
         score_list.append(interp.roots()[0])
     score_array = np.array(score_list)
     return score_array
-
-
-def cross_val_roc_score_multiclass(model, training_df, y_training, n_classes, n_fold):
-    """
-    Evaluate a score using the roc auc metric by cross validation for multiclass
-    classifiers
-
-    Input
-    ------------------------------------------------
-    model : xgboost or sklearn multiclass model
-
-    df_training: Pandas Dataframe
-        Training set dataframe
-
-    y_training: array
-        Training set labels. The candidates for each
-        class should be labeled with 0, ..., N.
-
-    n_classes: int
-        Number of classes: should be greater than two. Otherwise
-        use the standard cross_val_score(sklearn) implementation
-
-    nfold: int
-        Number of folds to calculate the cross
-        validation error
-
-    Output
-    ------------------------------------------------
-    mean: int
-        Average of the scores evaluated in the k-different folds
-
-
-    """
-    scores = []
-    kfold = KFold(n_splits=n_fold, shuffle=True, random_state=42)
-    for index in kfold.split(training_df):
-        x_train = training_df.iloc[index[0]]
-        y_train = y_training[index[0]]
-        x_test = training_df.iloc[index[1]]
-        y_test = y_training[index[1]]
-        model.fit(x_train, y_train)
-        y_score = model.predict_proba(x_test)
-        y_test_multi = label_binarize(y_test, classes=range(n_classes))
-        score = roc_auc_score(y_test_multi, y_score, average='micro')
-        scores.append(score)
-    mean = np.mean(scores)
-    return mean
