@@ -1,13 +1,15 @@
 """ Module containing the plot utils. Each function returns a matplotlib object
-    """
+"""
+from itertools import combinations
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import shap
 from mpl_toolkits.axes_grid1 import ImageGrid
-from sklearn.metrics import (auc, average_precision_score,
+from sklearn.metrics import (auc, average_precision_score, roc_auc_score,
                              precision_recall_curve, roc_curve, mean_squared_error)
 from sklearn.preprocessing import label_binarize
+from scipy.special import softmax
 
 
 def _plot_output(df_train, df_test, lims, bins, label, color, kwds):
@@ -298,73 +300,112 @@ def plot_bdt_eff(threshold, eff_sig):
     plt.ylabel('Efficiency')
     plt.title('Efficiency vs Score')
     plt.grid()
+
     return res
 
 
-def plot_roc(y_truth, y_score, labels=None, pos_label=None):
+def plot_roc(y_truth, y_score, pos_label=None, labels=None, average='macro', multi_class_opt='raise'):
     """
     Calculate and plot the roc curve
 
     Input
     -------------------------------------
-
-    y_truth : array
+    y_truth: array
         True labels for the belonging class. If labels are not
-        {0, 1, ..., N}, then pos_label should be explicitly given.
+        {0, 1} in binary classification, then pos_label should
+        be explicitly given. In multi-classification labels must
+        be {0, 1, ..., N}
 
-    y_score : array
-        Target scores, can either be probability estimates
-        of the positive class, confidence values, or
+    y_score: array
+        Target scores, can either be probability estimates or
         non-thresholded measure of decisions (as returned
         by “decision_function” on some classifiers).
 
+    pos_label: int or str
+        The label of the positive class. Only available in binary
+        classification. When pos_label=None, if y_true is in {0, 1},
+        pos_label is set to 1, otherwise an error will be raised.
+
     labels: list
-        Contains the labels to be displayed in the legend
+        Contains the labels to be displayed in the legend, used only in case of
+        multi-classification. They must be in the same order as the y_score columns.
         If None the labels are class1, class2, ..., classN
 
-    pos_label : int or str
-        The label of the positive class. When pos_label=None,
-        if y_true is in {0, 1, ..., N}, pos_label is set to 1,
-        otherwise an error will be raised.
+    average: string
+        Option for the average of ROC AUC scores used only in case of multi-classification.
+        You can choose between 'macro' and 'weighted'. For more information see
+        https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html#sklearn.metrics.roc_auc_score
 
-
+    multi_class_opt: string
+        Option to compute ROC curves used only in case of multi-classification.
+        The one-vs-one 'ovo' and one-vs-rest 'ovr' approaches are available
 
     Output
     -------------------------------------
     matplotlib_obj
         Plot containing the roc curves
-
     """
     # get number of classes
     n_classes = len(np.unique(y_truth))
 
-    if (labels is None and n_classes > 2) or (labels and len(labels) != n_classes):
-        labels = []
-        for i_class in range(n_classes):
-            labels.append(f'class{i_class}')
-
     res = plt.figure()
     if n_classes <= 2:
+        # binary case
         fpr, tpr, _ = roc_curve(y_truth, y_score, pos_label=pos_label)
         roc_auc = auc(fpr, tpr)
-        plt.plot(fpr, tpr, lw=1, label='ROC (area = %0.4f)' % (roc_auc))
+        plt.plot(fpr, tpr, lw=1, label=f'ROC (AUC = {roc_auc:.4f})')
+
     else:
+        # multi-class case
+        if (labels is None) or (labels and len(labels) != n_classes):
+            labels = [f'class{i_class}' for i_class in range(n_classes)]
+        if multi_class_opt not in ['ovo', 'ovr']:
+            print('ERROR: if n_class > 2 multi_class_opt must be ovo or ovr')
+            return res
+
+        # check to have numpy arrays
+        if not isinstance(y_truth, np.ndarray):
+            y_truth = np.array(y_truth)
+        if not isinstance(y_score, np.ndarray):
+            y_score = np.array(y_score)
+
+        # if y_score contains raw outputs transform them to probabilities
+        if not np.allclose(1, y_score.sum(axis=1)):
+            y_score = softmax(y_score, axis=1)
+
         cmap = plt.cm.get_cmap('tab10')
-        fpr, tpr, roc_auc = (dict() for i_dict in range(3))
-        # convert multi-class labels to multi-labels to obtain roc curves
-        y_truth_multi = label_binarize(y_truth, classes=range(n_classes))
-        for clas, lab in enumerate(labels):
-            fpr[clas], tpr[clas], _ = roc_curve(
-                y_truth_multi[:, clas], y_score[:, clas])
-            roc_auc[clas] = auc(fpr[clas], tpr[clas])
-            plt.plot(fpr[clas], tpr[clas], lw=1, c=cmap(clas),
-                     label=f'{lab} (AUC = {roc_auc[clas]:.4f})')
-        # compute also micro average
-        fpr['micro'], tpr['micro'], _ = roc_curve(
-            y_truth_multi.ravel(), y_score.ravel())
-        roc_auc['micro'] = auc(fpr['micro'], tpr['micro'])
-        plt.plot(fpr['micro'], tpr['micro'], lw=1, linestyle='--', c='black',
-                 label=f"average (AUC = {roc_auc['micro']:.4f})")
+
+        # one-vs-rest case
+        if multi_class_opt == 'ovr':
+            # convert multi-class labels to multi-labels to obtain roc curves
+            y_truth_multi = label_binarize(y_truth, classes=range(n_classes))
+            for i_class, lab in enumerate(labels):
+                fpr, tpr, _ = roc_curve(y_truth_multi[:, i_class], y_score[:, i_class])
+                roc_auc = auc(fpr, tpr)
+                plt.plot(fpr, tpr, lw=1, c=cmap(i_class), label=f'{lab} Vs Rest (AUC = {roc_auc:.4f})')
+            # compute global ROC AUC
+            global_roc_auc = roc_auc_score(y_truth, y_score, average=average, multi_class=multi_class_opt)
+            plt.plot([], [], ' ', label=f'Average OvR ROC AUC: {global_roc_auc:.4f}')
+
+        # one-vs-one case
+        if multi_class_opt == 'ovo':
+            for i_comb, (aaa, bbb) in enumerate(combinations(range(n_classes), 2)):
+                a_mask = y_truth == aaa
+                b_mask = y_truth == bbb
+                ab_mask = np.logical_or(a_mask, b_mask)
+                a_true = a_mask[ab_mask]
+                b_true = b_mask[ab_mask]
+                fpr_a, tpr_a, _ = roc_curve(a_true, y_score[ab_mask, aaa])
+                roc_auc_a = auc(fpr_a, tpr_a)
+                fpr_b, tpr_b, _ = roc_curve(b_true, y_score[ab_mask, bbb])
+                roc_auc_b = auc(fpr_b, tpr_b)
+                plt.plot(fpr_a, tpr_a, lw=1, c=cmap(i_comb),
+                         label=f'{labels[aaa]} Vs {labels[bbb]} (AUC = {roc_auc_a:.4f})')
+                plt.plot(fpr_b, tpr_b, lw=1, c=cmap(i_comb), alpha=0.6,
+                         label=f'{labels[bbb]} Vs {labels[aaa]} (AUC = {roc_auc_b:.4f})')
+            # compute global ROC AUC
+            global_roc_auc = roc_auc_score(y_truth, y_score, average=average, multi_class=multi_class_opt)
+            plt.plot([], [], ' ', label=f'Average OvO ROC AUC: {global_roc_auc:.4f}')
 
     plt.plot([0, 1], [0, 1], '-.', color=(0.6, 0.6, 0.6), label='Luck')
     plt.xlim([-0.05, 1.05])
@@ -373,92 +414,93 @@ def plot_roc(y_truth, y_score, labels=None, pos_label=None):
     plt.ylabel('True Positive Rate', fontsize=12)
     plt.legend(loc='lower right')
     plt.grid()
+
     return res
 
 
-def plot_roc_train_test(y_truth_test, y_score_test, y_truth_train, y_score_train, labels=None, pos_label=None):
+def plot_roc_train_test(y_truth_test, y_score_test, y_truth_train, y_score_train, pos_label=None, labels=None,
+                        average='macro', multi_class_opt='raise'):
     """
     Calculate and plot the roc curve for test and train sets
 
     Input
     -------------------------------------
+    y_truth_test: array
+        True labels for the belonging class of the test set. If labels
+        are not {0, 1} in binary classification, then pos_label should
+        be explicitly given. In multi-classification labels must be
+        {0, 1, ..., N}
 
-    y_truth_test : array
-        True labels for the belonging class of the test set.
-        If labels are not {0, 1, ..., N}, then pos_label
-        should be explicitly given.
-
-    y_score_test : array
+    y_score_test: array
         Target scores for the test set, can either be probability
-        estimates of the positive class, confidence values, or
-        non-thresholded measure of decisions (as returned
+        estimates or non-thresholded measure of decisions (as returned
         by “decision_function” on some classifiers).
 
-    y_truth_train : array
-        True labels for the belonging class of the train set.
-        If labels are not {0, 1, ..., N}, then pos_label
-        should be explicitly given.
+    y_truth_train: array
+        True labels for the belonging class of the train set. If labels
+        are not {0, 1} in binary classification, then pos_label should
+        be explicitly given. In multi-classification labels must be
+        {0, 1, ..., N}
 
-    y_score_train : array
+    y_score_train: array
         Target scores for the train set, can either be probability
-        estimates of the positive class, confidence values, or
-        non-thresholded measure of decisions (as returned
+        estimates or non-thresholded measure of decisions (as returned
         by “decision_function” on some classifiers).
+
+    pos_label: int or str
+        The label of the positive class. Only available in binary
+        classification. When pos_label=None, if y_true is in {0, 1},
+        pos_label is set to 1, otherwise an error will be raised.
 
     labels: list
-        Contains the labels to be displayed in the legend
+        Contains the labels to be displayed in the legend, used only in case of
+        multi-classification. They must be in the same order as the y_score columns.
         If None the labels are class1, class2, ..., classN
 
-    pos_label : int or str
-        The label of the positive class. When pos_label=None,
-        if y_true_ is in {0, 1, ..., N}, pos_label is set to 1,
-        otherwise an error will be raised.
+    average: string
+        Option for the average of ROC AUC scores used only in case of multi-classification.
+        You can choose between 'macro' and 'weighted'. For more information see
+        https://scikit-learn.org/stable/modules/generated/sklearn.metrics.roc_auc_score.html#sklearn.metrics.roc_auc_score
 
-
+    multi_class_opt: string
+        Option to compute ROC curves used only in case of multi-classification.
+        The one-vs-one 'ovo' and one-vs-rest 'ovr' approaches are available
 
     Output
     -------------------------------------
     matplotlib_obj
         Plot containing the roc curves
-
     """
-    # get number of classes
-    n_classes = len(np.unique(y_truth_test))
-
-    if (labels is None and n_classes > 2) or (labels and len(labels) != n_classes):
-        labels = []
-        for i_class in range(n_classes):
-            labels.append(f'class{i_class}')
-    elif labels is None and n_classes <= 2:
-        labels = ['']
-
-    # call plot_roc function for both train and test sets
-    fig_test = plot_roc(y_truth_test, y_score_test, labels, pos_label)
-    fig_train = plot_roc(y_truth_train, y_score_train, labels, pos_label)
+    # call plot_roc for both train and test sets
+    fig_test = plot_roc(y_truth_test, y_score_test, pos_label, labels, average, multi_class_opt)
+    fig_train = plot_roc(y_truth_train, y_score_train, pos_label, labels, average, multi_class_opt)
     axes_test = fig_test.get_axes()[0]
     axes_train = fig_train.get_axes()[0]
 
     # plot results together
-    cmap = plt.cm.get_cmap('tab10')
     res = plt.figure()
-    for i_roc, (roc_test, roc_train) in enumerate(zip(axes_test.lines, axes_train.lines)):
-        if i_roc < n_classes:
-            if i_roc > 0 and n_classes <= 2:
-                continue
-            roc_auc_test = auc(roc_test.get_xdata(), roc_test.get_ydata())
-            roc_auc_train = auc(roc_train.get_xdata(), roc_train.get_ydata())
-            plt.plot(roc_train.get_xdata(), roc_train.get_ydata(), c=cmap(
-                i_roc), alpha=0.3, lw=1, label=f'Train {labels[i_roc]} (AUC = {roc_auc_test:.4f})')
-            plt.plot(roc_test.get_xdata(), roc_test.get_ydata(), c=cmap(
-                i_roc), lw=1, label=f'Test {labels[i_roc]} (AUC = {roc_auc_train:.4f})')
+    for roc_test, roc_train in zip(axes_test.lines, axes_train.lines):
+        test_label = roc_test.get_label()
+        train_label = roc_train.get_label()
+        if 'Luck' in [test_label, train_label]:
+            continue
+
+        plt.plot(roc_test.get_xdata(), roc_test.get_ydata(), lw=roc_test.get_lw(), c=roc_test.get_c(),
+                 alpha=roc_test.get_alpha(), marker=roc_test.get_marker(), linestyle=roc_test.get_linestyle(),
+                 label=f'Test -> {test_label}')
+
+        linestyle = roc_train.get_linestyle()
+        if linestyle in '-':
+            linestyle = '--'
+        plt.plot(roc_train.get_xdata(), roc_train.get_ydata(), lw=roc_train.get_lw(), c=roc_train.get_c(),
+                 alpha=roc_train.get_alpha(), marker=roc_train.get_marker(), linestyle=linestyle,
+                 label=f'Train -> {train_label}')
+
+    plt.plot([0, 1], [0, 1], '-.', color=(0.6, 0.6, 0.6), label='Luck')
     plt.xlabel('False Positive Rate', fontsize=12)
     plt.ylabel('True Positive Rate', fontsize=12)
     plt.legend(loc='lower right')
     plt.grid()
-
-    plt.close(fig_test)
-    plt.close(fig_train)
-    del fig_test, fig_train, axes_test, axes_train
 
     return res
 
