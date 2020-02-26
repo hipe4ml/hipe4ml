@@ -207,7 +207,7 @@ class ModelHandler:
 
         multi_class_opt: string
             Option to compute ROC AUC scores used only in case of multi-classification.
-            The one-vs-one 'ovo' and one-vs-rest 'ovr' approaches are available.
+            The one-vs-one 'ovo' and one-vs-rest 'ovr' approaches are available
         """
 
         # get number of classes
@@ -225,7 +225,7 @@ class ModelHandler:
             roc_score = roc_auc_score(data[3], y_pred)
         else:
             y_pred = self.predict(data[2], output_margin=False, multiclass=True)
-            roc_score = roc_auc_score(data[3], y_pred, average, None, None, multi_class_opt)
+            roc_score = roc_auc_score(data[3], y_pred, average=average, multi_class=multi_class_opt)
 
         print('Testing the model: Done!')
 
