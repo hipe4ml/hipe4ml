@@ -10,7 +10,7 @@ from sklearn.metrics import (auc, average_precision_score,
 from sklearn.preprocessing import label_binarize
 
 
-def _plot_distr(df_train, df_test, lims, bins, label, color, kwds):
+def _plot_output(df_train, df_test, lims, bins, label, color, kwds):
     """
     Utility function for plot_output_train_test
     """
@@ -101,7 +101,7 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
         colors = ['b', 'r']
         res.append(plt.figure())
         for i_class, (label, color) in enumerate(zip(labels, colors)):
-            _plot_distr(prediction[i_class], prediction[i_class+2], low_high, bins, label, color, kwds)
+            _plot_output(prediction[i_class], prediction[i_class+2], low_high, bins, label, color, kwds)
         if logscale:
             plt.yscale('log')
         plt.xlabel('BDT output', fontsize=13, ha='right', position=(1, 20))
@@ -116,8 +116,8 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
         for output, out_label in zip(class_labels, labels):
             res.append(plt.figure())
             for i_class, (label, color) in enumerate(zip(labels, colors)):
-                _plot_distr(prediction[i_class][:, output], prediction[i_class+n_classes][:, output], low_high, bins,
-                            label, color, kwds)
+                _plot_output(prediction[i_class][:, output], prediction[i_class+n_classes][:, output], low_high, bins,
+                             label, color, kwds)
             if logscale:
                 plt.yscale('log')
             plt.xlabel(f'BDT output for {out_label}', fontsize=13, ha='right', position=(1, 20))
