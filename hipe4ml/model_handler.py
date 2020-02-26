@@ -10,8 +10,6 @@ from bayes_opt import BayesianOptimization
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
 
-import hipe4ml.analysis_utils as au
-
 
 class ModelHandler:
     """
@@ -234,7 +232,7 @@ class ModelHandler:
         print(f'ROC_AUC_score: {roc_score:.6f}')
         print('==============================')
 
-    def evaluate_hyperparams(self, data, opt_params, metrics, n_classes, nfold=5):
+    def evaluate_hyperparams(self, data, opt_params, scoring, nfold=5, njobs=None):
         """
         Calculate for a set of hyperparams the cross val score
 
@@ -252,18 +250,18 @@ class ModelHandler:
             n_estimators, gamma, min_child_weight,
             subsample, colsample_bytree
 
-        metrics: string, callable or None
-            A string (see sklearn model evaluation
-            documentation:
+        scoring: string, callable or None
+            A string (see sklearn model evaluation documentation:
             https://scikit-learn.org/stable/modules/model_evaluation.html)
-            or a scorer callable object / function
-            with signature scorer(estimator, X, y)
-            which should return only a
-            single value.
+            or a scorer callable object / function with signature scorer(estimator, X, y)
+            which should return only a single value
 
         nfold: int
-            Number of folds to calculate the cross
-            validation error
+            Number of folds to perform the cross validation
+
+        njobs: int or None
+            Number of CPUs to use to perform computation.
+            Set to -1 to use all CPUs
 
         Output
         ---------------------------------------------------------
@@ -276,19 +274,13 @@ class ModelHandler:
         opt_params = self.cast_model_params(opt_params)
         params = {**self.model_params, **opt_params}
         self.model.set_params(**params)
-        if n_classes > 2 and metrics == 'roc_auc':
-            if self.training_columns is not None:
-                return np.mean(au.cross_val_roc_score_multiclass(self.model, data[0][self.training_columns],
-                                                                 data[1], n_classes=n_classes, n_fold=nfold))
-            return np.mean(au.cross_val_roc_score_multiclass(self.model, data[0], data[1],
-                                                             n_classes=n_classes, n_fold=nfold))
         if self.training_columns is not None:
             return np.mean(cross_val_score(self.model, data[0][self.training_columns], data[1],
-                                           cv=nfold, scoring=metrics))
-        return np.mean(cross_val_score(self.model, data[0], data[1], cv=nfold, scoring=metrics))
+                                           cv=nfold, scoring=scoring, n_jobs=njobs))
+        return np.mean(cross_val_score(self.model, data[0], data[1], cv=nfold, scoring=scoring, n_jobs=njobs))
 
-    def optimize_params_bayes(self, data, hyperparams_ranges, metrics, nfold=5, init_points=5,
-                              n_iter=5):
+    def optimize_params_bayes(self, data, hyperparams_ranges, scoring, nfold=5, init_points=5,
+                              n_iter=5, njobs=None):
         """
         Perform Bayesian optimization
 
@@ -308,14 +300,16 @@ class ModelHandler:
                 'learning_rate': (0.01,0.03)
             }
 
-        metrics: string, callable or None
-            A string (see sklearn model evaluation
-            documentation:
+        scoring: string, callable or None
+            A string (see sklearn model evaluation documentation:
             https://scikit-learn.org/stable/modules/model_evaluation.html)
-            or a scorer callable object / function
-            with signature scorer(estimator, X, y)
-            which should return only a
-            single value.
+            or a scorer callable object / function with signature scorer(estimator, X, y)
+            which should return only a single value.
+            In binary classification 'roc_auc' is suggested.
+            In multi-classification one between ‘roc_auc_ovr’, ‘roc_auc_ovo’,
+            ‘roc_auc_ovr_weighted’ and ‘roc_auc_ovo_weighted’ is suggested.
+            For more information see
+            https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
 
         nfold: int
             Number of folds to calculate the cross validation error
@@ -328,23 +322,23 @@ class ModelHandler:
             How many steps for bayesian optimization of the target function.
             Bigger n_iter results in better description of thetarget function
 
+        njobs: int or None
+            Number of CPUs to perform computation used in the score evaluation
+            with cross-validation. Set to -1 to use all CPUs
+
         Output
         ---------------------------------------------------------
         dict
             Contains the optimized parameters
 
         """
-
-        # get number of classes
-        n_classes = len(np.unique(data[1]))
-
         # just an helper function
         def hyperparams_crossvalidation(**kwargs):
-            return self.evaluate_hyperparams(data, kwargs, metrics, n_classes, nfold)
+            return self.evaluate_hyperparams(data, kwargs, scoring, nfold, njobs)
         print('')
 
-        optimizer = BayesianOptimization(f=hyperparams_crossvalidation,
-                                         pbounds=hyperparams_ranges, verbose=2, random_state=42)
+        optimizer = BayesianOptimization(f=hyperparams_crossvalidation, pbounds=hyperparams_ranges,
+                                         verbose=2, random_state=42)
         optimizer.maximize(init_points=init_points, n_iter=n_iter, acq='poi')
         print('')
 
@@ -354,8 +348,7 @@ class ModelHandler:
             max_params[key] = optimizer.max['params'][key]
         print(f"Best target: {optimizer.max['target']:.6f}")
         print(f'Best parameters: {max_params}')
-        self.set_model_params(
-            {**self.model_params, **self.cast_model_params(max_params)})
+        self.set_model_params({**self.model_params, **self.cast_model_params(max_params)})
 
     def cast_model_params(self, params):
         """
