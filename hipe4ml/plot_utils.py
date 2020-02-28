@@ -33,8 +33,7 @@ def _plot_output(df_train, df_test, lims, bins, label, color, kwds):
     plt.errorbar(center, hist, yerr=err, fmt='o', c=color, label=f'{label} pdf Test Set')
 
 
-def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None, multiclass=False,
-                           logscale=False, **kwds):
+def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None, logscale=False, **kwds):
     """
     Plot the BDT output distributions for each class and output
     both for training and test set.
@@ -67,10 +66,6 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
         Contains the labels to be displayed in the legend
         If None the labels are class1, class2, ..., classN
 
-    multiclass: bool
-        Set to true (mandatory) when using output_margin = False in a
-        multi-class problem to have the probability of each class
-
     logscale: bool
         Whether to plot the y axis in log scale
 
@@ -90,7 +85,7 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
     prediction = []
     for xxx, yyy in ((data[0], data[1]), (data[2], data[3])):
         for class_lab in class_labels:
-            prediction.append(model.predict(xxx[yyy == class_lab], output_margin, multiclass))
+            prediction.append(model.predict(xxx[yyy == class_lab], output_margin))
 
     low = min(np.min(d) for d in prediction)
     high = max(np.max(d) for d in prediction)
