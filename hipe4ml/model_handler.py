@@ -412,3 +412,4 @@ class ModelHandler:
         self.training_columns = loaded_model.get_training_columns()
         self.model_params = loaded_model.get_model_params()
         self.model_string = loaded_model.get_model_module()
+        self.multiclass = loaded_model.get_multiclass()
