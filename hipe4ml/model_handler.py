@@ -14,7 +14,8 @@ from sklearn.model_selection import cross_val_score
 class ModelHandler:
     """
     Class used for wrapping the models from different ML libraries to
-    build a new model with common methods
+    build a new model with common methods. Currently only XGBoost
+    (through it's sklearn interface) and sklearn models are supported.
 
     Input
     -------------------------------------------------
@@ -25,19 +26,20 @@ class ModelHandler:
         Example: ['dEdx', 'pT', 'ct']
 
     model_params: dict
-        Model (hyper-)parameter values. For
-        example: silent, n_jobs, objective,
-        random_state, eval_metric, tree_method,
-        max_depth, learning_rate,
-        n_estimators, gamma, min_child_weight,
-        subsample, colsample_bytree
+        Model hyper-parameter values. For
+        example (XGBoost): max_depth, learning_rate,
+        n_estimators, gamma, min_child_weight, ...
+
+     multiclass: bool
+        Whether it is a multi-classification problem
 
     """
 
-    def __init__(self, input_model=None, training_columns=None, model_params=None):
+    def __init__(self, input_model=None, training_columns=None, model_params=None, multiclass=False):
         self.model = input_model
-        self.model_params = model_params
         self.training_columns = training_columns
+        self.model_params = model_params
+        self.multiclass = multiclass
 
         if self.model is not None:
             self.model_string = inspect.getmodule(self.model).__name__.partition('.')[0]
@@ -52,12 +54,9 @@ class ModelHandler:
         Input
         ------------------------------------
         model_params: dict
-            Model (hyper-)parameter values. For
-            example: silent, n_jobs, objective,
-            random_state, eval_metric, tree_method,
-            max_depth, learning_rate,
-            n_estimators, gamma, min_child_weight,
-            subsample, colsample_bytree
+            Model hyper-parameter values. For
+            example (XGBoost): max_depth, learning_rate,
+            n_estimators, gamma, min_child_weight, ...
 
         """
         self.model_params = model_params
@@ -70,12 +69,9 @@ class ModelHandler:
         Output
         ------------------------------------
         dict
-            Model (hyper-)parameter values. For
-            example: silent, n_jobs, objective,
-            random_state, eval_metric, tree_method,
-            max_depth, learning_rate,
-            n_estimators, gamma, min_child_weight,
-            subsample, colsample_bytree
+            Model hyper-parameter values. For
+            example (XGBoost): max_depth, learning_rate,
+            n_estimators, gamma, min_child_weight, ...
 
         """
         return self.model.get_params()
@@ -106,6 +102,30 @@ class ModelHandler:
         """
 
         return self.training_columns
+
+    def set_multiclass(self, multiclass=True):
+        """
+        Set the multiclass flag
+
+        Input
+        ------------------------------------
+        multiclass: bool
+            Whether it is a multi-classification problem
+
+        """
+        self.multiclass = multiclass
+
+    def get_multiclass(self):
+        """
+        Get the multiclass flag
+
+        Output
+        ------------------------------------
+        bool
+            Whether it is a multi-classification problem
+
+        """
+        return self.multiclass
 
     def get_original_model(self):
         """
@@ -147,7 +167,7 @@ class ModelHandler:
         else:
             self.model.fit(x_train, y_train)
 
-    def predict(self, x_test, output_margin=True, multiclass=False):
+    def predict(self, x_test, output_margin=True):
         """
         Return model prediction for the array x_test
 
@@ -161,10 +181,6 @@ class ModelHandler:
 
         output_margin: bool
             Whether to output the raw untransformed margin value.
-
-        multiclass: bool
-            Set to true (mandatory) when using output_margin = False in a
-            multi-class problem to have the probability of each class
 
         Output
         ---------------------------------------
@@ -181,7 +197,7 @@ class ModelHandler:
             if self.model_string == 'sklearn':
                 pred = self.model.decision_function(x_test).ravel()
         else:
-            if multiclass:
+            if self.multiclass:
                 pred = self.model.predict_proba(x_test)
             else:
                 pred = self.model.predict_proba(x_test)[:, 1]
@@ -219,14 +235,8 @@ class ModelHandler:
         self.fit(data[0], data[1])
         print('Training the final model: Done!')
         print('Testing the model: ...', end='\r')
-
-        if n_classes <= 2:
-            y_pred = self.predict(data[2], output_margin=True)
-            roc_score = roc_auc_score(data[3], y_pred)
-        else:
-            y_pred = self.predict(data[2], output_margin=False, multiclass=True)
-            roc_score = roc_auc_score(data[3], y_pred, average=average, multi_class=multi_class_opt)
-
+        y_pred = self.predict(data[2], output_margin=False)
+        roc_score = roc_auc_score(data[3], y_pred, average=average, multi_class=multi_class_opt)
         print('Testing the model: Done!')
 
         print(f'ROC_AUC_score: {roc_score:.6f}')
