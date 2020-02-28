@@ -30,9 +30,8 @@ class ModelHandler:
         example (XGBoost): max_depth, learning_rate,
         n_estimators, gamma, min_child_weight, ...
 
-     multiclass: bool
+    multiclass: bool
         Whether it is a multi-classification problem
-
     """
 
     def __init__(self, input_model=None, training_columns=None, model_params=None, multiclass=False):
@@ -57,7 +56,6 @@ class ModelHandler:
             Model hyper-parameter values. For
             example (XGBoost): max_depth, learning_rate,
             n_estimators, gamma, min_child_weight, ...
-
         """
         self.model_params = model_params
         self.model.set_params(**model_params)
@@ -72,7 +70,6 @@ class ModelHandler:
             Model hyper-parameter values. For
             example (XGBoost): max_depth, learning_rate,
             n_estimators, gamma, min_child_weight, ...
-
         """
         return self.model.get_params()
 
@@ -85,7 +82,6 @@ class ModelHandler:
         training_columns: list
             Contains the name of the features used for the training.
             Example: ['dEdx', 'pT', 'ct']
-
         """
         self.training_columns = training_columns
 
@@ -98,7 +94,6 @@ class ModelHandler:
         list
             Contains the name of the features used for the training.
             Example: ['dEdx', 'pT', 'ct']
-
         """
 
         return self.training_columns
@@ -111,7 +106,6 @@ class ModelHandler:
         ------------------------------------
         multiclass: bool
             Whether it is a multi-classification problem
-
         """
         self.multiclass = multiclass
 
@@ -123,7 +117,6 @@ class ModelHandler:
         ------------------------------------
         bool
             Whether it is a multi-classification problem
-
         """
         return self.multiclass
 
@@ -133,7 +126,7 @@ class ModelHandler:
 
         Output
         ---------------------------
-        sklearn_or_xgboost_model
+        sklearn or XGBoost model
         """
         return self.model
 
@@ -160,7 +153,6 @@ class ModelHandler:
 
         y_train: array-like, sparse matrix
             Target data
-
         """
         if self.training_columns is not None:
             self.model.fit(x_train[self.training_columns], y_train)
@@ -184,9 +176,8 @@ class ModelHandler:
 
         Output
         ---------------------------------------
-        numpy_array
-            Model prediction
-
+        pred: numpy_array
+            Model predictions
         """
         if self.training_columns is not None:
             x_test = x_test[self.training_columns]
@@ -244,11 +235,10 @@ class ModelHandler:
 
     def evaluate_hyperparams(self, data, opt_params, scoring, nfold=5, njobs=None):
         """
-        Calculate for a set of hyperparams the cross val score
+        Calculate the cross-validation score for a set of hyper-parameters
 
         Input
         ------------------------------------------
-
         data: list
             Contains respectively: training
             set dataframe, training label array,
@@ -278,8 +268,6 @@ class ModelHandler:
         float
             Cross validation score evaluated using
             the ROC AUC metrics
-
-
         """
         opt_params = self.cast_model_params(opt_params)
         params = {**self.model_params, **opt_params}
@@ -292,11 +280,11 @@ class ModelHandler:
     def optimize_params_bayes(self, data, hyperparams_ranges, scoring, nfold=5, init_points=5,
                               n_iter=5, njobs=None):
         """
-        Perform Bayesian optimization
+        Perform Bayesian optimization and update the model hyper-parameters
+        with the best ones
 
         Input
         ------------------------------------------------------
-
         data: list
             Contains respectively: training
             set dataframe, training label array,
@@ -335,12 +323,6 @@ class ModelHandler:
         njobs: int or None
             Number of CPUs to perform computation used in the score evaluation
             with cross-validation. Set to -1 to use all CPUs
-
-        Output
-        ---------------------------------------------------------
-        dict
-            Contains the optimized parameters
-
         """
         # just an helper function
         def hyperparams_crossvalidation(**kwargs):
@@ -367,7 +349,6 @@ class ModelHandler:
 
         Input
         -----------------------------------------------------
-
         params: dict
             Hyperparameter values. For
             example: max_depth, learning_rate,
@@ -376,10 +357,8 @@ class ModelHandler:
 
         Output
         -----------------------------------------------------
-
-        dict
+        params: dict
             Hyperparameter values updated
-
         """
         for key in params.keys():
             if isinstance(self.model.get_params()[key], int):
@@ -416,9 +395,7 @@ class ModelHandler:
         -----------------------------------------------------
         filename: str
             Name of the file in which the model is saved
-
         """
-
         pickle.dump(self, open(filename, "wb"))
 
     def load_model_handler(self, filename):
