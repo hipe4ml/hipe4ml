@@ -1,6 +1,9 @@
-""" Module containing the plot utils. Each function returns a matplotlib object
 """
+Module containing the plot utils. Each function returns a matplotlib object
+"""
+
 from itertools import combinations
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -35,7 +38,7 @@ def _plot_output(df_train, df_test, lims, bins, label, color, kwds):
 
 def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None, logscale=False, **kwds):
     """
-    Plot the BDT output distributions for each class and output
+    Plot the model output distributions for each class and output
     both for training and test set.
 
     Input
@@ -74,10 +77,8 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
 
     Output
     ----------------------------------------
-    list
-        list of matplotlib objects with the BDT output
-        distributions for each class
-
+    res: list of matplotlib.figure.Figure
+        Model output distributions for each class
     """
     class_labels = np.unique(data[1])
     n_classes = len(class_labels)
@@ -138,7 +139,8 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
         Example: ['dEdx', 'pT', 'ct']
 
     figsize: list
-        The size in inches of the figure to create. Uses the value in matplotlib.rcParams by default.
+        The size in inches of the figure to create. Uses the value in
+        matplotlib.rcParams by default.
 
     bins: int or sequence of scalars or str
         If bins is an int, it defines the number of equal-width
@@ -159,10 +161,8 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
 
     Output
     -----------------------------------------
-    axes
-        array of matplotlib axes with the distributions
-        of the features for each class
-
+    axes: numpy array of matplotlib.figure.Figure
+        Distributions of the features for each class
     """
 
     if column is not None:
@@ -215,10 +215,8 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
 
     Output
     ------------------------------------------------
-    list
-        list of matplotlib objects with the correlations
-        between the features for each class
-
+    fig: list of matplotlib.figure.Figure
+        Correlations between the features for each class
     """
 
     corr_mat = []
@@ -270,7 +268,7 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
 
 def plot_bdt_eff(threshold, eff_sig):
     """
-    Plot the BDT efficiency calculated with the function
+    Plot the model efficiency calculated with the function
     bdt_efficiency_array() in analysis_utils
 
     Input
@@ -279,14 +277,13 @@ def plot_bdt_eff(threshold, eff_sig):
         Score threshold array
 
     eff_sig: array
-        bdt efficiency array
+        model efficiency array
 
     Output
     -----------------------------------
-    matplotlib_obj
-        Plot containing bdt efficiency as a
+    res: matplotlib.figure.Figure
+        Plot containing model efficiency as a
         function of the threshold score
-
     """
     res = plt.figure()
     plt.plot(threshold, eff_sig, 'r.', label='Signal efficiency')
@@ -337,7 +334,7 @@ def plot_roc(y_truth, y_score, pos_label=None, labels=None, average='macro', mul
 
     Output
     -------------------------------------
-    matplotlib_obj
+    res: matplotlib.figure.Figure
         Plot containing the roc curves
     """
     # get number of classes
@@ -463,7 +460,7 @@ def plot_roc_train_test(y_truth_test, y_score_test, y_truth_train, y_score_train
 
     Output
     -------------------------------------
-    matplotlib_obj
+    res: matplotlib.figure.Figure
         Plot containing the roc curves
     """
     # call plot_roc for both train and test sets
@@ -534,9 +531,8 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
 
     Output
     -------------------------------------------
-    list
-        list of matplotlib objects with shap feature importance
-
+    res: list of matplotlib.figure.Figure
+        Plots with shap feature importance
     """
     class_labels, class_counts = np.unique(y_truth, return_counts=True)
     n_classes = len(class_labels)
@@ -583,12 +579,10 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
         if y_true is in {0, 1, ..., N}, pos_label is set to 1,
         otherwise an error will be raised.
 
-
     Output
     -------------------------------------
-    matplotlib_obj
+    res: matplotlib.figure.Figure
         Plot containing the precision recall curves
-
     """
     # get number of classes
     n_classes = len(np.unique(y_truth))
@@ -652,12 +646,10 @@ def plot_learning_curves(model, data, n_points=10):
     n_points: int
         Number of points used to sample the learning curves
 
-
     Output
     -------------------------------------
-    matplotlib_obj
+    res: matplotlib.figure.Figure
         Plot containing the learning curves
-
     """
 
     res = plt.figure()
