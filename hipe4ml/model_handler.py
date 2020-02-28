@@ -29,16 +29,12 @@ class ModelHandler:
         Model hyper-parameter values. For
         example (XGBoost): max_depth, learning_rate,
         n_estimators, gamma, min_child_weight, ...
-
-    multiclass: bool
-        Whether it is a multi-classification problem
     """
 
-    def __init__(self, input_model=None, training_columns=None, model_params=None, multiclass=False):
+    def __init__(self, input_model=None, training_columns=None, model_params=None):
         self.model = input_model
         self.training_columns = training_columns
         self.model_params = model_params
-        self.multiclass = multiclass
 
         if self.model is not None:
             self.model_string = inspect.getmodule(self.model).__name__.partition('.')[0]
@@ -97,28 +93,6 @@ class ModelHandler:
         """
 
         return self.training_columns
-
-    def set_multiclass(self, multiclass=True):
-        """
-        Set the multiclass flag
-
-        Input
-        ------------------------------------
-        multiclass: bool
-            Whether it is a multi-classification problem
-        """
-        self.multiclass = multiclass
-
-    def get_multiclass(self):
-        """
-        Get the multiclass flag
-
-        Output
-        ------------------------------------
-        bool
-            Whether it is a multi-classification problem
-        """
-        return self.multiclass
 
     def get_original_model(self):
         """
@@ -188,10 +162,11 @@ class ModelHandler:
             if self.model_string == 'sklearn':
                 pred = self.model.decision_function(x_test).ravel()
         else:
-            if self.multiclass:
-                pred = self.model.predict_proba(x_test)
-            else:
-                pred = self.model.predict_proba(x_test)[:, 1]
+            pred = self.model.predict_proba(x_test)
+            # in case of binary classification return only the scores of
+            # the signal class
+            if pred.shape[1] <= 2:
+                pred = pred[:, 1]
 
         return pred
 
@@ -412,4 +387,3 @@ class ModelHandler:
         self.training_columns = loaded_model.get_training_columns()
         self.model_params = loaded_model.get_model_params()
         self.model_string = loaded_model.get_model_module()
-        self.multiclass = loaded_model.get_multiclass()
