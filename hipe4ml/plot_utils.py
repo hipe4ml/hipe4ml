@@ -296,6 +296,48 @@ def plot_bdt_eff(threshold, eff_sig):
     return res
 
 
+def _plot_roc_ovr(y_truth, y_score, n_classes, labels, average):
+    """
+    Utility function for plot_roc in the multi-class case. Calculate and plot the
+    ROC curves with the one-vs-rest approach
+    """
+    cmap = plt.cm.get_cmap('tab10')
+    # convert multi-class labels to multi-labels to obtain roc curves
+    y_truth_multi = label_binarize(y_truth, classes=range(n_classes))
+    for i_class, lab in enumerate(labels):
+        fpr, tpr, _ = roc_curve(y_truth_multi[:, i_class], y_score[:, i_class])
+        roc_auc = auc(fpr, tpr)
+        plt.plot(fpr, tpr, lw=1, c=cmap(i_class), label=f'{lab} Vs Rest (AUC = {roc_auc:.4f})')
+    # compute global ROC AUC
+    global_roc_auc = roc_auc_score(y_truth, y_score, average=average, multi_class='ovr')
+    plt.plot([], [], ' ', label=f'Average OvR ROC AUC: {global_roc_auc:.4f}')
+
+
+def _plot_roc_ovo(y_truth, y_score, n_classes, labels, average):
+    """
+    Utility function for plot_roc in the multi-class case. Calculate and plot the
+    ROC curves with the one-vs-one approach
+    """
+    cmap = plt.cm.get_cmap('tab10')
+    for i_comb, (aaa, bbb) in enumerate(combinations(range(n_classes), 2)):
+        a_mask = y_truth == aaa
+        b_mask = y_truth == bbb
+        ab_mask = np.logical_or(a_mask, b_mask)
+        a_true = a_mask[ab_mask]
+        b_true = b_mask[ab_mask]
+        fpr_a, tpr_a, _ = roc_curve(a_true, y_score[ab_mask, aaa])
+        roc_auc_a = auc(fpr_a, tpr_a)
+        fpr_b, tpr_b, _ = roc_curve(b_true, y_score[ab_mask, bbb])
+        roc_auc_b = auc(fpr_b, tpr_b)
+        plt.plot(fpr_a, tpr_a, lw=1, c=cmap(i_comb),
+                 label=f'{labels[aaa]} Vs {labels[bbb]} (AUC = {roc_auc_a:.4f})')
+        plt.plot(fpr_b, tpr_b, lw=1, c=cmap(i_comb), alpha=0.6,
+                 label=f'{labels[bbb]} Vs {labels[aaa]} (AUC = {roc_auc_b:.4f})')
+    # compute global ROC AUC
+    global_roc_auc = roc_auc_score(y_truth, y_score, average=average, multi_class='ovo')
+    plt.plot([], [], ' ', label=f'Average OvO ROC AUC: {global_roc_auc:.4f}')
+
+
 def plot_roc(y_truth, y_score, pos_label=None, labels=None, average='macro', multi_class_opt='raise'):
     """
     Calculate and plot the roc curve
@@ -365,39 +407,12 @@ def plot_roc(y_truth, y_score, pos_label=None, labels=None, average='macro', mul
         if not np.allclose(1, y_score.sum(axis=1)):
             y_score = softmax(y_score, axis=1)
 
-        cmap = plt.cm.get_cmap('tab10')
-
         # one-vs-rest case
         if multi_class_opt == 'ovr':
-            # convert multi-class labels to multi-labels to obtain roc curves
-            y_truth_multi = label_binarize(y_truth, classes=range(n_classes))
-            for i_class, lab in enumerate(labels):
-                fpr, tpr, _ = roc_curve(y_truth_multi[:, i_class], y_score[:, i_class])
-                roc_auc = auc(fpr, tpr)
-                plt.plot(fpr, tpr, lw=1, c=cmap(i_class), label=f'{lab} Vs Rest (AUC = {roc_auc:.4f})')
-            # compute global ROC AUC
-            global_roc_auc = roc_auc_score(y_truth, y_score, average=average, multi_class=multi_class_opt)
-            plt.plot([], [], ' ', label=f'Average OvR ROC AUC: {global_roc_auc:.4f}')
-
+            _plot_roc_ovr(y_truth, y_score, n_classes, labels, average)
         # one-vs-one case
         if multi_class_opt == 'ovo':
-            for i_comb, (aaa, bbb) in enumerate(combinations(range(n_classes), 2)):
-                a_mask = y_truth == aaa
-                b_mask = y_truth == bbb
-                ab_mask = np.logical_or(a_mask, b_mask)
-                a_true = a_mask[ab_mask]
-                b_true = b_mask[ab_mask]
-                fpr_a, tpr_a, _ = roc_curve(a_true, y_score[ab_mask, aaa])
-                roc_auc_a = auc(fpr_a, tpr_a)
-                fpr_b, tpr_b, _ = roc_curve(b_true, y_score[ab_mask, bbb])
-                roc_auc_b = auc(fpr_b, tpr_b)
-                plt.plot(fpr_a, tpr_a, lw=1, c=cmap(i_comb),
-                         label=f'{labels[aaa]} Vs {labels[bbb]} (AUC = {roc_auc_a:.4f})')
-                plt.plot(fpr_b, tpr_b, lw=1, c=cmap(i_comb), alpha=0.6,
-                         label=f'{labels[bbb]} Vs {labels[aaa]} (AUC = {roc_auc_b:.4f})')
-            # compute global ROC AUC
-            global_roc_auc = roc_auc_score(y_truth, y_score, average=average, multi_class=multi_class_opt)
-            plt.plot([], [], ' ', label=f'Average OvO ROC AUC: {global_roc_auc:.4f}')
+            _plot_roc_ovo(y_truth, y_score, n_classes, labels, average)
 
     plt.plot([0, 1], [0, 1], '-.', color=(0.6, 0.6, 0.6), label='Luck')
     plt.xlim([-0.05, 1.05])
