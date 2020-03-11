@@ -161,7 +161,7 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
 
     Output
     -----------------------------------------
-    axes: numpy array of matplotlib.figure.Figure
+    axes: numpy array of matplotlib.axes.AxesSubplot
         Distributions of the features for each class
     """
 
