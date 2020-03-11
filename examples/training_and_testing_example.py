@@ -1,5 +1,5 @@
 """
-Minimal example to run the package utilities
+Minimal example to run the package methods
 """
 import pandas as pd
 import xgboost as xgb
