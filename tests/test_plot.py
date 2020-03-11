@@ -77,7 +77,7 @@ def test_plot_feature_imp():
     Test the feature importance plot
     """
     assert isinstance(plot_utils.plot_feature_imp(
-        DATA[0], DATA[1], MODEL, 50), list)
+        DATA[0], DATA[1], MODEL, 50), matplotlib.figure.Figure)
 
 
 def test_plot_bdt_output():
@@ -85,7 +85,7 @@ def test_plot_bdt_output():
     Test the test-training bdt output plot
     """
     assert isinstance(plot_utils.plot_output_train_test(
-        MODEL, DATA), list)
+        MODEL, DATA), matplotlib.figure.Figure)
 
 
 def test_plot_bdt_efficiency():
