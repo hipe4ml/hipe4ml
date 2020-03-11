@@ -33,7 +33,8 @@ def _plot_output(df_train, df_test, lims, bins, label, color, kwds):
         hist = hist * scale
 
     center = (bins[:-1] + bins[1:]) / 2
-    plt.errorbar(center, hist, yerr=err, fmt='o', c=color, label=f'{label} pdf Test Set')
+    plt.errorbar(center, hist, yerr=err, fmt='o',
+                 c=color, label=f'{label} pdf Test Set')
 
 
 def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None, logscale=False, **kwds):
@@ -77,7 +78,7 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
 
     Output
     ----------------------------------------
-    res: list of matplotlib.figure.Figure
+    res: matplotlib.figure.Figure or list of them
         Model output distributions for each class
     """
     class_labels = np.unique(data[1])
@@ -86,29 +87,33 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
     prediction = []
     for xxx, yyy in ((data[0], data[1]), (data[2], data[3])):
         for class_lab in class_labels:
-            prediction.append(model.predict(xxx[yyy == class_lab], output_margin))
+            prediction.append(model.predict(
+                xxx[yyy == class_lab], output_margin))
 
     low = min(np.min(d) for d in prediction)
     high = max(np.max(d) for d in prediction)
     low_high = (low, high)
 
-    res = []
     # only one figure in case of binary classification
     if n_classes <= 2:
+        res = plt.figure()
         labels = ['Signal', 'Background'] if labels is None else labels
         colors = ['b', 'r']
-        res.append(plt.figure())
         for i_class, (label, color) in enumerate(zip(labels, colors)):
-            _plot_output(prediction[i_class], prediction[i_class+2], low_high, bins, label, color, kwds)
+            _plot_output(
+                prediction[i_class], prediction[i_class+2], low_high, bins, label, color, kwds)
         if logscale:
             plt.yscale('log')
         plt.xlabel('BDT output', fontsize=13, ha='right', position=(1, 20))
-        plt.ylabel('Counts (arb. units)', fontsize=13, horizontalalignment='left')
+        plt.ylabel('Counts (arb. units)', fontsize=13,
+                   horizontalalignment='left')
         plt.legend(frameon=False, fontsize=12, loc='best')
 
     # n figures in case of multi-classification with n classes
     else:
-        labels = [f'class{class_lab}' for class_lab in class_labels] if labels is None else labels
+        res = []
+        labels = [
+            f'class{class_lab}' for class_lab in class_labels] if labels is None else labels
         cmap = plt.cm.get_cmap('tab10')
         colors = [cmap(i_class) for i_class in range(len(labels))]
         for output, out_label in zip(class_labels, labels):
@@ -118,8 +123,10 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
                              label, color, kwds)
             if logscale:
                 plt.yscale('log')
-            plt.xlabel(f'BDT output for {out_label}', fontsize=13, ha='right', position=(1, 20))
-            plt.ylabel('Counts (arb. units)', fontsize=13, horizontalalignment='left')
+            plt.xlabel(f'BDT output for {out_label}',
+                       fontsize=13, ha='right', position=(1, 20))
+            plt.ylabel('Counts (arb. units)', fontsize=13,
+                       horizontalalignment='left')
             plt.legend(frameon=False, fontsize=12, loc='best')
 
     return res
@@ -161,7 +168,7 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
 
     Output
     -----------------------------------------
-    axes: numpy array of matplotlib.figure.Figure
+    axes: numpy array of matplotlib.axes.AxesSubplot
         Distributions of the features for each class
     """
 
@@ -215,7 +222,7 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
 
     Output
     ------------------------------------------------
-    fig: list of matplotlib.figure.Figure
+    res: matplotlib.figure.Figure or list of them
         Correlations between the features for each class
     """
 
@@ -226,18 +233,23 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
 
     if labels is None:
         labels = []
-        if len(corr_mat) > 2:
+        if len(corr_mat) != 2:
             for i_mat, _ in enumerate(corr_mat):
                 labels.append(f'class{i_mat}')
         else:
             labels.append('Signal')
             labels.append('Background')
 
-    fig = []
+    res = []
     for mat, lab in zip(corr_mat, labels):
-        fig.append(plt.figure(figsize=(8, 7)))
-        grid = ImageGrid(fig[-1], 111, axes_pad=0.15, nrows_ncols=(1, 1), share_all=True,
-                         cbar_location='right', cbar_mode='single', cbar_size='7%', cbar_pad=0.15)
+        if len(corr_mat) < 2:
+            res = plt.figure(figsize=(8, 7))
+            grid = ImageGrid(res, 111, axes_pad=0.15, nrows_ncols=(1, 1), share_all=True,
+                             cbar_location='right', cbar_mode='single', cbar_size='7%', cbar_pad=0.15)
+        else:
+            res.append(plt.figure(figsize=(8, 7)))
+            grid = ImageGrid(res[-1], 111, axes_pad=0.15, nrows_ncols=(1, 1), share_all=True,
+                             cbar_location='right', cbar_mode='single', cbar_size='7%', cbar_pad=0.15)
 
         opts = {'cmap': plt.get_cmap(
             'coolwarm'), 'vmin': -1, 'vmax': +1, 'snap': True}
@@ -263,7 +275,7 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
 
         axs.cax.colorbar(heatmap)
 
-    return fig
+    return res
 
 
 def plot_bdt_eff(threshold, eff_sig):
@@ -307,9 +319,11 @@ def _plot_roc_ovr(y_truth, y_score, n_classes, labels, average):
     for i_class, lab in enumerate(labels):
         fpr, tpr, _ = roc_curve(y_truth_multi[:, i_class], y_score[:, i_class])
         roc_auc = auc(fpr, tpr)
-        plt.plot(fpr, tpr, lw=1, c=cmap(i_class), label=f'{lab} Vs Rest (AUC = {roc_auc:.4f})')
+        plt.plot(fpr, tpr, lw=1, c=cmap(i_class),
+                 label=f'{lab} Vs Rest (AUC = {roc_auc:.4f})')
     # compute global ROC AUC
-    global_roc_auc = roc_auc_score(y_truth, y_score, average=average, multi_class='ovr')
+    global_roc_auc = roc_auc_score(
+        y_truth, y_score, average=average, multi_class='ovr')
     plt.plot([], [], ' ', label=f'Average OvR ROC AUC: {global_roc_auc:.4f}')
 
 
@@ -334,7 +348,8 @@ def _plot_roc_ovo(y_truth, y_score, n_classes, labels, average):
         plt.plot(fpr_b, tpr_b, lw=1, c=cmap(i_comb), alpha=0.6,
                  label=f'{labels[bbb]} Vs {labels[aaa]} (AUC = {roc_auc_b:.4f})')
     # compute global ROC AUC
-    global_roc_auc = roc_auc_score(y_truth, y_score, average=average, multi_class='ovo')
+    global_roc_auc = roc_auc_score(
+        y_truth, y_score, average=average, multi_class='ovo')
     plt.plot([], [], ' ', label=f'Average OvO ROC AUC: {global_roc_auc:.4f}')
 
 
@@ -479,8 +494,10 @@ def plot_roc_train_test(y_truth_test, y_score_test, y_truth_train, y_score_train
         Plot containing the roc curves
     """
     # call plot_roc for both train and test sets
-    fig_test = plot_roc(y_truth_test, y_score_test, pos_label, labels, average, multi_class_opt)
-    fig_train = plot_roc(y_truth_train, y_score_train, pos_label, labels, average, multi_class_opt)
+    fig_test = plot_roc(y_truth_test, y_score_test,
+                        pos_label, labels, average, multi_class_opt)
+    fig_train = plot_roc(y_truth_train, y_score_train,
+                         pos_label, labels, average, multi_class_opt)
     axes_test = fig_test.get_axes()[0]
     axes_train = fig_train.get_axes()[0]
 
@@ -546,7 +563,7 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
 
     Output
     -------------------------------------------
-    res: list of matplotlib.figure.Figure
+    res: matplotlib.figure.Figure or list of them
         Plots with shap feature importance
     """
     class_labels, class_counts = np.unique(y_truth, return_counts=True)
@@ -563,16 +580,19 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
     explainer = shap.TreeExplainer(model.get_original_model())
     shap_values = explainer.shap_values(df_subs, approximate=approximate)
 
-    res = []
     if n_classes <= 2:
-        res.append(plt.figure(figsize=(18, 9)))
-        shap.summary_plot(shap_values, df_subs, plot_size=(18, 9), class_names=labels, show=False)
+        res = plt.figure(figsize=(18, 9))
+        shap.summary_plot(shap_values, df_subs, plot_size=(
+            18, 9), class_names=labels, show=False)
     else:
+        res = []
         for i_class in range(n_classes):
             res.append(plt.figure(figsize=(18, 9)))
-            shap.summary_plot(shap_values[i_class], df_subs, plot_size=(18, 9), class_names=labels, show=False)
+            shap.summary_plot(shap_values[i_class], df_subs, plot_size=(
+                18, 9), class_names=labels, show=False)
         res.append(plt.figure(figsize=(18, 9)))
-        shap.summary_plot(shap_values, df_subs, plot_type='bar', plot_size=(18, 9), class_names=labels, show=False)
+        shap.summary_plot(shap_values, df_subs, plot_type='bar',
+                          plot_size=(18, 9), class_names=labels, show=False)
 
     return res
 
