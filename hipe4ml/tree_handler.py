@@ -176,6 +176,62 @@ class TreeHandler:
         if delete_original_df:
             self._full_data_frame = None
 
+    def shuffle_data_frame(self, size=None, frac=None, inplace=True):
+        """
+        Compute a random sample of the DataFrame
+
+        Input
+        ------------------------------------------------
+        size: int
+            Number of candidates to return. Cannot be used with frac. Default = 1 if
+            frac = None.
+
+        frac: float
+            Fraction of candidates to return. Cannot be used with n.
+
+        inplace: bool
+            If True the shuffled dataframe replaces the initial dataframe. Otherwise return a copy
+            of the shuffled df
+
+        Output
+        df: pandas.DataFrame or None
+            if inplace == True returns the shuffled DataFrame
+
+        """
+        df_shuf = None
+        if inplace:
+            self._full_data_frame = self._full_data_frame.sample(size, frac)
+            return df_shuf
+
+        df_shuf = self._full_data_frame.sample(size, frac)
+        return df_shuf
+
+    def eval_data_frame(self, ev_str, inplace=True):
+        """
+        Evaluate a string describing operations on DataFrame columns
+
+        Input
+        ------------------------------------------------
+        preselection: str
+            The expression string to evaluatedatetime A combination of a date and a time. Attributes: ()
+            The string syntax is the one required in the pandas.DataFrame.eval() method.
+        inplace: bool
+            If the expression contains an assignment, whether to perform the operation inplace and mutate
+            the existing DataFrame. Otherwise, a new DataFrame is returned.
+
+        Output
+        df: pandas.DataFrame or None
+            if inplace == True returns the new DataFrame
+
+        """
+        df_ev = None
+        if inplace:
+            self._full_data_frame.eval(ev_str, inplace=True)
+            return df_ev
+
+        df_ev = self._full_data_frame.eval(ev_str)
+        return df_ev
+
     def print_infos(self):
         """
         Print informations about the DataHandler object and its
