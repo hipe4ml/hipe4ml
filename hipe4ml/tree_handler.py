@@ -11,7 +11,7 @@ class TreeHandler:
     Class for storing and managing the data of a ROOT tree
     """
 
-    def __init__(self, file_name, tree_name, columns_names):
+    def __init__(self, file_name, tree_name, columns_names=None):
         """
         Open the file to put the selected leafs of the
         tree the corresponding columns of a pandas
@@ -27,7 +27,10 @@ class TreeHandler:
         """
         self._file = uproot.open(file_name)
         self._tree = self._file[tree_name]
-        self._full_data_frame = self._tree.pandas.df(columns_names)
+        if columns_names is None:
+            self._full_data_frame = self._tree.pandas.df()
+        else:
+            self._full_data_frame = self._tree.pandas.df(columns_names)
         self._preselections = None
         self._projection_variable = None
         self._projection_binning = None
