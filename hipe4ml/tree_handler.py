@@ -13,9 +13,9 @@ class TreeHandler:
 
     def __init__(self, file_name, tree_name, columns_names=None):
         """
-        Open the file to put the selected leafs of the
-        tree the corresponding columns of a pandas
-        dataframe
+        Open the file in which the selected tree leaves are converted
+        into pandas dataframe columns
+
         Input
         ------------------------------------------------
         file_name: str
@@ -90,7 +90,7 @@ class TreeHandler:
 
         Input
         ------------------------------------------------
-        n: int
+        n_bin: int
             n-th element of _projection_binning list.
 
         Output
@@ -125,12 +125,13 @@ class TreeHandler:
             tree. The string syntax is the one required in the pandas.DataFrame.query() method.
             You can refer to variables in the environment by prefixing them with an ‘@’ character like @a + b.
         inplace: bool
-            If True the preselected dataframe replaces the initial dataframe. Otherwise return a copy of the
+            If True, the preselected dataframe replaces the initial dataframe. Otherwise return a copy of the
             preselected df
 
         Output
+        ------------------------------------------------
         df: pandas.DataFrame or None
-            if inplace == True returns the preselected DataFrame
+            If inplace == True return None and replace the full DataFrame
 
         """
         df_pres = None
@@ -148,7 +149,6 @@ class TreeHandler:
         Create a list containing slices of the orginal DataFrame.
         The original DataFrame is splitted in N sub-DataFrames following
         the binning(projection_binning) of a given variable(projected_variable)
-
 
         Input
         ------------------------------------------------
@@ -178,7 +178,7 @@ class TreeHandler:
 
     def shuffle_data_frame(self, size=None, frac=None, inplace=True):
         """
-        Compute a random sample of the DataFrame
+        Extract a random sample from the DataFrame
 
         Input
         ------------------------------------------------
@@ -194,8 +194,9 @@ class TreeHandler:
             of the shuffled df
 
         Output
+        ------------------------------------------------
         df: pandas.DataFrame or None
-            if inplace == True returns the shuffled DataFrame
+            If inplace == True return None and replace the full DataFrame
 
         """
         df_shuf = None
@@ -213,15 +214,16 @@ class TreeHandler:
         Input
         ------------------------------------------------
         preselection: str
-            The expression string to evaluatedatetime A combination of a date and a time. Attributes: ()
+            The expression string to evaluate. A combination of a date and a time. Attributes: ()
             The string syntax is the one required in the pandas.DataFrame.eval() method.
         inplace: bool
-            If the expression contains an assignment, whether to perform the operation inplace and mutate
-            the existing DataFrame. Otherwise, a new DataFrame is returned.
+            If the expression contains an assignment, whether to perform the operation inplace and
+            mutate the existing DataFrame. Otherwise, a new DataFrame is returned.
 
         Output
+        ------------------------------------------------
         df: pandas.DataFrame or None
-            if inplace == True returns the new DataFrame
+            if inplace == True None is returned and the full dataframe is evaluated
 
         """
         df_ev = None
@@ -234,7 +236,7 @@ class TreeHandler:
 
     def print_infos(self):
         """
-        Print informations about the DataHandler object and its
+        Print information about the DataHandler object and its
         data members
         """
         print("\nFile name: ", self._file)
@@ -247,6 +249,7 @@ class TreeHandler:
     def write_df_to_parquet_files(self, base_file_name="TreeDataFrame", path="./", save_slices=False):
         """
         Write the pandas dataframe to parquet files
+
         Input
         ------------------------------------------------
         base_file_name: str

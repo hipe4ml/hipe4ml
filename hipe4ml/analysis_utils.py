@@ -125,22 +125,22 @@ def train_test_split(data_list, labels_list, sliced_df=False, **kwds):
     """
     Return a list containing respectively training set dataframe,
     training label array, test set dataframe, test label array
-    computed from a list of TreeHandler objects. If sliced_df == True
+    computed from a list of TreeHandler objects. If sliced_df == True,
     the method preforms the train-test split for each slice
 
     Input
     -----------------------------------------------
     data_list: list
-        List of TreeHandler models. For example: if ypu perform binary
+        List of TreeHandler models. For example: if you perform binary
         classification the list should contain the TreeHandlers corresponding
         to the signal and the background candidates
 
     labels_list: list
         List containing the labels associated to each DataHandler. For example:
-        if you perform binary classification the list should be [1,0]
+        if you perform binary classification, the list should be [1,0]
 
     sliced_df: bool
-        If True the function searches for the slices stored in the DataHandler
+        If True, the function searches for the slices stored in the DataHandler
         and perform the train_test_split for each slice
 
     **kwds
@@ -150,9 +150,9 @@ def train_test_split(data_list, labels_list, sliced_df=False, **kwds):
     Output
     -----------------------------------------------
     list:
-        Returns a list containing respectively training set dataframe,
+        Return a list containing respectively training set dataframe,
         training label array, test set dataframe, test label array. If sliced_df==True
-        returns a list containing the above cited list for each slice
+        return a list containing the above cited list for each slice
     """
     if sliced_df is False:
         labels_train_test = []
