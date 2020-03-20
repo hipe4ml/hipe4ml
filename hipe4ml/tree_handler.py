@@ -16,7 +16,7 @@ class TreeHandler:
         Open the file in which the selected tree leaves are converted
         into pandas dataframe columns
 
-        Input
+        Parameters
         ------------------------------------------------
         file_name: str
             Name of the input file where the data sit
@@ -40,9 +40,9 @@ class TreeHandler:
         """
         Get the pandas DataFrame stored in the TreeHandler
 
-        Output
+        Returns
         ------------------------------------------------
-        pandas.DataFrame:
+        out: pandas.DataFrame
             DataFrame stored in the TreeHandler
         """
         return self._full_data_frame
@@ -51,10 +51,10 @@ class TreeHandler:
         """
         Get the preselections applied to the stored DataFrame
 
-        Output
+        Returns
         ------------------------------------------------
-        str:
-            Contains the cuts applied to the stored DataFrame
+        out: str
+            String containing the cuts applied to the stored DataFrame
 
         """
         return self._preselections
@@ -63,9 +63,9 @@ class TreeHandler:
         """
         Get the name of the sliced variable
 
-        Output
+        Returns
         ------------------------------------------------
-        str:
+        out: str
             Sliced variable
 
         """
@@ -75,10 +75,10 @@ class TreeHandler:
         """
         Get the bins used for slicing the DataFrame
 
-        Output
+        Returns
         ------------------------------------------------
-        list:
-            each element of the list is a list containing the
+        out: list
+            Each element of the list is a list containing the
             bin edges
 
         """
@@ -88,14 +88,14 @@ class TreeHandler:
         """
         Get the n-th slice of the original DataFrame
 
-        Input
+        Parameters
         ------------------------------------------------
         n_bin: int
             n-th element of _projection_binning list.
 
-        Output
+        Returns
         ------------------------------------------------
-        pandas.DataFrame:
+        out: pandas.DataFrame
             N-th Slice of the original DataFrame
         """
         return self._sliced_df_list[n_bin]
@@ -105,9 +105,9 @@ class TreeHandler:
         Get the list containing the slices of the orginal
         DataFrame
 
-        Output
+        Returns
         ------------------------------------------------
-        list:
+        out: list
             List containing the slices of the orginal
             DataFrame
 
@@ -118,7 +118,7 @@ class TreeHandler:
         """
         Apply preselections to data
 
-        Input
+        Parameters
         ------------------------------------------------
         preselection: str
             String containing the cuts to be applied as preselection on the data contained in the original
@@ -128,10 +128,10 @@ class TreeHandler:
             If True, the preselected dataframe replaces the initial dataframe. Otherwise return a copy of the
             preselected df
 
-        Output
+        Returns
         ------------------------------------------------
-        df: pandas.DataFrame or None
-            If inplace == True return None and replace the full DataFrame
+        out: pandas.DataFrame or None
+            If inplace == True return None is returned and the full DataFrame is replaced
 
         """
         df_pres = None
@@ -150,7 +150,7 @@ class TreeHandler:
         The original DataFrame is splitted in N sub-DataFrames following
         the binning(projection_binning) of a given variable(projected_variable)
 
-        Input
+        Parameters
         ------------------------------------------------
         projection_variable: str
             Name of the variable that will be sliced in the analysis
@@ -180,7 +180,7 @@ class TreeHandler:
         """
         Extract a random sample from the DataFrame
 
-        Input
+        Parameters
         ------------------------------------------------
         size: int
             Number of candidates to return. Cannot be used with frac. Default = 1 if
@@ -193,10 +193,10 @@ class TreeHandler:
             If True the shuffled dataframe replaces the initial dataframe. Otherwise return a copy
             of the shuffled df
 
-        Output
+        Returns
         ------------------------------------------------
-        df: pandas.DataFrame or None
-            If inplace == True return None and replace the full DataFrame
+        out: pandas.DataFrame or None
+            If inplace == True None is returned and the full DataFrame is replaced
 
         """
         df_shuf = None
@@ -211,7 +211,7 @@ class TreeHandler:
         """
         Evaluate a string describing operations on DataFrame columns
 
-        Input
+        Parameters
         ------------------------------------------------
         preselection: str
             The expression string to evaluate. A combination of a date and a time. Attributes: ()
@@ -220,9 +220,9 @@ class TreeHandler:
             If the expression contains an assignment, whether to perform the operation inplace and
             mutate the existing DataFrame. Otherwise, a new DataFrame is returned.
 
-        Output
+        Returns
         ------------------------------------------------
-        df: pandas.DataFrame or None
+        out: pandas.DataFrame or None
             if inplace == True None is returned and the full dataframe is evaluated
 
         """
@@ -234,7 +234,7 @@ class TreeHandler:
         df_ev = self._full_data_frame.eval(ev_str)
         return df_ev
 
-    def print_infos(self):
+    def print_summary(self):
         """
         Print information about the DataHandler object and its
         data members
@@ -250,7 +250,7 @@ class TreeHandler:
         """
         Write the pandas dataframe to parquet files
 
-        Input
+        Parameters
         ------------------------------------------------
         base_file_name: str
             Base filename used to save the parquet files

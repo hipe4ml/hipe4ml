@@ -16,7 +16,7 @@ def bdt_efficiency_array(y_truth, y_score, n_points=50, keep_lower=False):
     with 0, ..., N. In case of binary classification, 0 should
     correspond to the background while 1 to the signal
 
-    Input
+    Parameters
     ------------------------------------------------
     y_truth: array
         Training or test set labels. The candidates for each
@@ -35,13 +35,13 @@ def bdt_efficiency_array(y_truth, y_score, n_points=50, keep_lower=False):
         score lower than the score threshold; otherwise using the
         candidates with score higher than the score threshold.
 
-    Output
+    Returns
     ------------------------------------------------
-    efficiency: numpy array
+    out: numpy array
         Efficiency as a function of the threshold value
         Numpy array of numpy arrays in case of multi-classification
 
-    threshold: numpy array
+    out: numpy array
         Threshold values
     """
     operator = np.greater
@@ -86,7 +86,7 @@ def score_from_efficiency_array(y_truth, y_score, efficiency_selected, keep_lowe
     Return the score array corresponding to an external fixed efficiency
     array.
 
-    Input
+    Parameters
     -----------------------------------------------
     y_truth: array
         Training or test set labels. The candidates for each
@@ -106,9 +106,9 @@ def score_from_efficiency_array(y_truth, y_score, efficiency_selected, keep_lowe
         Efficiency array along which calculate
         the corresponding score array
 
-    Output
+    Returns
     -----------------------------------------------
-    score_array: numpy array
+    out: numpy array
         Score array corresponding to efficiency_selected
     """
     score_list = []
@@ -128,7 +128,7 @@ def train_test_split(data_list, labels_list, sliced_df=False, **kwds):
     computed from a list of TreeHandler objects. If sliced_df == True,
     the method preforms the train-test split for each slice
 
-    Input
+    Parameters
     -----------------------------------------------
     data_list: list
         List of TreeHandler models. For example: if you perform binary
@@ -147,12 +147,12 @@ def train_test_split(data_list, labels_list, sliced_df=False, **kwds):
         Extra arguments are passed on to sklearn.model_selection.train_test_split:
         https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
 
-    Output
+    Returns
     -----------------------------------------------
-    list:
-        Return a list containing respectively training set dataframe,
+    out: list
+        List containing respectively training set dataframe,
         training label array, test set dataframe, test label array. If sliced_df==True
-        return a list containing the above cited list for each slice
+        returns a list containing the above cited list for each slice
     """
     if sliced_df is False:
         labels_train_test = []
