@@ -2,35 +2,41 @@
 Simple module with a class to manage the data used in the analysis
 """
 
-import uproot
 import numpy as np
+import pandas as pd
+import uproot
 
 
 class TreeHandler:
     """
-    Class for storing and managing the data of a ROOT tree
+    Class for storing and managing the data of a ROOT tree from a .root file
+    or a pandas.DataFrame from a .parquet file
     """
 
-    def __init__(self, file_name, tree_name, columns_names=None):
+    def __init__(self, file_name, tree_name=None, columns_names=None, **kwds):
         """
         Open the file in which the selected tree leaves are converted
-        into pandas dataframe columns
+        into pandas dataframe columns. If tree_name is not provided file_name is
+        assumed to be associated to a .parquet file
 
         Parameters
         ------------------------------------------------
         file_name: str
             Name of the input file where the data sit
         tree_name: str
-            Name of the tree within the input file
+            Name of the tree within the input file. If None the method pandas.read_parquet
+            is called
         columns_name: list
             List of the names of the branches that one wants to analyse
+        **kwds: extra arguments are passed on to the pandas.read_parquet method
+
         """
-        self._file = uproot.open(file_name)
-        self._tree = self._file[tree_name]
-        if columns_names is None:
-            self._full_data_frame = self._tree.pandas.df()
+        if tree_name is not None:
+            self._file = uproot.open(file_name)
+            self._tree = self._file[tree_name]
+            self._full_data_frame = self._tree.pandas.df(branches=columns_names)
         else:
-            self._full_data_frame = self._tree.pandas.df(columns_names)
+            self._full_data_frame = pd.read_parquet(file_name, columns=columns_names, **kwds)
         self._preselections = None
         self._projection_variable = None
         self._projection_binning = None
