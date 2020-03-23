@@ -27,14 +27,17 @@ class TreeHandler:
             Name of the tree within the input file. If None the method pandas.read_parquet
             is called
         columns_name: list
-            List of the names of the branches that one wants to analyse
-        **kwds: extra arguments are passed on to the pandas.read_parquet method
-
+            List of the names of the branches that one wants to analyse. If columns_names is
+            not specified all the branches are converted
+        **kwds: extra arguments are passed on to the uproot.pandas.iterate or the pandas.read_parquet
+                methods:
+                https://uproot.readthedocs.io/en/latest/opening-files.html#uproot-pandas-iterate
+                https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_parquet.html#pandas.read_parquet
         """
         if tree_name is not None:
             self._file = uproot.open(file_name)
             self._tree = self._file[tree_name]
-            self._full_data_frame = self._tree.pandas.df(branches=columns_names)
+            self._full_data_frame = self._tree.pandas.df(branches=columns_names, **kwds)
         else:
             self._full_data_frame = pd.read_parquet(file_name, columns=columns_names, **kwds)
         self._preselections = None
