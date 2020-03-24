@@ -142,6 +142,7 @@ class TreeHandler:
         out: pandas.DataFrame or None
             If inplace == True return None is returned and the full DataFrame is replaced
         """
+        self._preselections = preselections
         return self._full_data_frame.query(preselections, inplace=inplace, **kwds)
 
     def slice_data_frame(self, projection_variable, projection_binning, delete_original_df=False):
@@ -258,6 +259,8 @@ class TreeHandler:
         if self._full_data_frame is not None:
             self._full_data_frame.to_parquet(
                 f"{path}{base_file_name}.parquet.gzip", compression="gzip")
+        else:
+            print("\nWarning: original DataFrame not available")
         if save_slices:
             if self._sliced_df_list is not None:
                 for ind, i_bin in enumerate(self._projection_binning):
@@ -265,4 +268,4 @@ class TreeHandler:
                     self._sliced_df_list[ind].to_parquet(f"{name}.parquet.gzip",
                                                          compression="gzip")
             else:
-                print("\nSlices not available")
+                print("\nWarning: slices not available")
