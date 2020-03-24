@@ -42,7 +42,7 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
     Plot the model output distributions for each class and output
     both for training and test set.
 
-    Input
+    Parameters
     ----------------------------------------
     model: hipe4ml model handler
 
@@ -76,9 +76,9 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
     **kwds
         Extra arguments are passed on to plt.hist()
 
-    Output
+    Returns
     ----------------------------------------
-    res: matplotlib.figure.Figure or list of them
+    out: matplotlib.figure.Figure or list of them
         Model output distributions for each class
     """
     class_labels = np.unique(data[1])
@@ -136,7 +136,7 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
     """
     Draw histograms comparing the distributions of each class.
 
-    Input
+    Parameters
     -----------------------------------------
     list_of_df: list
         Contains a dataframe for each class
@@ -166,9 +166,9 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
     alpha: float
         Value between 0 and 1, tune the histogram transparency
 
-    Output
+    Returns
     -----------------------------------------
-    axes: numpy array of matplotlib.axes.AxesSubplot
+    out: numpy array of matplotlib.axes.AxesSubplot
         Distributions of the features for each class
     """
 
@@ -205,7 +205,7 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
     each class (e.g. signal and background in case of binary
     classification)
 
-    Input
+    Parameters
     -----------------------------------------------
     list_of_df: list
         Contains dataframes for each class
@@ -220,9 +220,9 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
 
     **kwds: extra arguments are passed on to DataFrame.corr()
 
-    Output
+    Returns
     ------------------------------------------------
-    res: matplotlib.figure.Figure or list of them
+    out: matplotlib.figure.Figure or list of them
         Correlations between the features for each class
     """
 
@@ -283,7 +283,7 @@ def plot_bdt_eff(threshold, eff_sig):
     Plot the model efficiency calculated with the function
     bdt_efficiency_array() in analysis_utils
 
-    Input
+    Parameters
     -----------------------------------
     threshold: array
         Score threshold array
@@ -291,9 +291,9 @@ def plot_bdt_eff(threshold, eff_sig):
     eff_sig: array
         model efficiency array
 
-    Output
+    Returns
     -----------------------------------
-    res: matplotlib.figure.Figure
+    out: matplotlib.figure.Figure
         Plot containing model efficiency as a
         function of the threshold score
     """
@@ -357,7 +357,7 @@ def plot_roc(y_truth, y_score, pos_label=None, labels=None, average='macro', mul
     """
     Calculate and plot the roc curve
 
-    Input
+    Parameters
     -------------------------------------
     y_truth: array
         True labels for the belonging class. If labels are not
@@ -389,9 +389,9 @@ def plot_roc(y_truth, y_score, pos_label=None, labels=None, average='macro', mul
         Option to compute ROC curves used only in case of multi-classification.
         The one-vs-one 'ovo' and one-vs-rest 'ovr' approaches are available
 
-    Output
+    Returns
     -------------------------------------
-    res: matplotlib.figure.Figure
+    out: matplotlib.figure.Figure
         Plot containing the roc curves
     """
     # get number of classes
@@ -445,7 +445,7 @@ def plot_roc_train_test(y_truth_test, y_score_test, y_truth_train, y_score_train
     """
     Calculate and plot the roc curve for test and train sets
 
-    Input
+    Parameters
     -------------------------------------
     y_truth_test: array
         True labels for the belonging class of the test set. If labels
@@ -488,9 +488,9 @@ def plot_roc_train_test(y_truth_test, y_score_test, y_truth_train, y_score_train
         Option to compute ROC curves used only in case of multi-classification.
         The one-vs-one 'ovo' and one-vs-rest 'ovr' approaches are available
 
-    Output
+    Returns
     -------------------------------------
-    res: matplotlib.figure.Figure
+    out: matplotlib.figure.Figure
         Plot containing the roc curves
     """
     # call plot_roc for both train and test sets
@@ -535,7 +535,7 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
     each feature. The calculation is performed on a subsample of the
     input training/test set
 
-    Input
+    Parameters
     -------------------------------------------
     df_in: Pandas dataframe
         Training or test set dataframe
@@ -561,9 +561,9 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
         Run fast and approximat roughly the SHAP values. For more information
         see https://shap.readthedocs.io/en/latest/#shap.TreeExplainer.shap_values
 
-    Output
+    Returns
     -------------------------------------------
-    res: matplotlib.figure.Figure or list of them
+    out: matplotlib.figure.Figure or list of them
         Plots with shap feature importance
     """
     class_labels, class_counts = np.unique(y_truth, return_counts=True)
@@ -600,7 +600,7 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
 def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
     """ Plot precision recall curve
 
-    Input
+    Parameters
     -------------------------------------
     y_truth: array
         True labels for the belonging class. If labels are not
@@ -614,9 +614,9 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
         if y_true is in {0, 1, ..., N}, pos_label is set to 1,
         otherwise an error will be raised.
 
-    Output
+    Returns
     -------------------------------------
-    res: matplotlib.figure.Figure
+    out: matplotlib.figure.Figure
         Plot containing the precision recall curves
     """
     # get number of classes
@@ -669,7 +669,7 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
 def plot_learning_curves(model, data, n_points=10):
     """ Plot learning curves
 
-    Input
+    Parameters
     -------------------------------------
     model: hipe4ml model_handler
 
@@ -681,9 +681,9 @@ def plot_learning_curves(model, data, n_points=10):
     n_points: int
         Number of points used to sample the learning curves
 
-    Output
+    Returns
     -------------------------------------
-    res: matplotlib.figure.Figure
+    out: matplotlib.figure.Figure
         Plot containing the learning curves
     """
 
