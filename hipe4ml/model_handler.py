@@ -17,7 +17,7 @@ class ModelHandler:
     build a new model with common methods. Currently only XGBoost
     (through it's sklearn interface) and sklearn models are supported.
 
-    Input
+    Parameters
     -------------------------------------------------
     input_model: xgboost or sklearn model
 
@@ -46,7 +46,7 @@ class ModelHandler:
         """
         Set the model (hyper-)parameters
 
-        Input
+        Parameters
         ------------------------------------
         model_params: dict
             Model hyper-parameter values. For
@@ -60,9 +60,9 @@ class ModelHandler:
         """
         Get the model (hyper-)parameters
 
-        Output
+        Returns
         ------------------------------------
-        dict
+        out: dict
             Model hyper-parameter values. For
             example (XGBoost): max_depth, learning_rate,
             n_estimators, gamma, min_child_weight, ...
@@ -73,7 +73,7 @@ class ModelHandler:
         """
         Set the features used for the training process
 
-        Input
+        Parameters
         ------------------------------------
         training_columns: list
             Contains the name of the features used for the training.
@@ -85,10 +85,10 @@ class ModelHandler:
         """
         Get the features used for the training process
 
-        Output
+        Returns
         ------------------------------------
-        list
-            Contains the name of the features used for the training.
+        out: list
+            Names of the features used for the training.
             Example: ['dEdx', 'pT', 'ct']
         """
 
@@ -98,9 +98,9 @@ class ModelHandler:
         """
         Get the original unwrapped model
 
-        Output
+        Returns
         ---------------------------
-        sklearn or XGBoost model
+        out: sklearn or XGBoost model
         """
         return self.model
 
@@ -109,9 +109,9 @@ class ModelHandler:
         Get the string containing the name
         of the model module
 
-        Output
+        Returns
         ---------------------------
-        str
+        out: str
             Name of the model module
         """
         return self.model_string
@@ -120,7 +120,7 @@ class ModelHandler:
         """
         Fit Model
 
-        Input
+        Parameters
         ---------------------------
         x_train: array-like, sparse matrix
             Training data
@@ -137,7 +137,7 @@ class ModelHandler:
         """
         Return model prediction for the array x_test
 
-        Input
+        Parameters
         --------------------------------------
         x_test: array-like, sparse matrix
             The input samples. Internally, its dtype
@@ -148,9 +148,9 @@ class ModelHandler:
         output_margin: bool
             Whether to output the raw untransformed margin value.
 
-        Output
+        Returns
         ---------------------------------------
-        pred: numpy_array
+        out: numpy array
             Model predictions
         """
         if self.training_columns is not None:
@@ -175,7 +175,7 @@ class ModelHandler:
         Perform the training and the testing of the model. The model performance is estimated
         using the ROC AUC metric
 
-        Input
+        Parameters
         ----------------------------------------------
         data: list
             Contains respectively: training
@@ -212,7 +212,7 @@ class ModelHandler:
         """
         Calculate the cross-validation score for a set of hyper-parameters
 
-        Input
+        Parameters
         ------------------------------------------
         data: list
             Contains respectively: training
@@ -238,9 +238,9 @@ class ModelHandler:
             Number of CPUs to use to perform computation.
             Set to -1 to use all CPUs
 
-        Output
+        Returns
         ---------------------------------------------------------
-        float
+        out: float
             Cross validation score evaluated using
             the ROC AUC metrics
         """
@@ -258,7 +258,7 @@ class ModelHandler:
         Perform Bayesian optimization and update the model hyper-parameters
         with the best ones
 
-        Input
+        Parameters
         ------------------------------------------------------
         data: list
             Contains respectively: training
@@ -322,7 +322,7 @@ class ModelHandler:
         Check if each model parameter is defined as integer
         and change the parameter dictionary consequently
 
-        Input
+        Parameters
         -----------------------------------------------------
         params: dict
             Hyperparameter values. For
@@ -330,9 +330,9 @@ class ModelHandler:
             n_estimators, gamma, min_child_weight,
             subsample, colsample_bytree
 
-        Output
+        Returns
         -----------------------------------------------------
-        params: dict
+        out: dict
             Hyperparameter values updated
         """
         for key in params.keys():
@@ -346,7 +346,7 @@ class ModelHandler:
         file. Only for xgboost models it is also given
         the possibility to save them into a .model file
 
-        Input
+        Parameters
         -----------------------------------------------------
         filename: str
             Name of the file in which the model is saved
@@ -366,7 +366,7 @@ class ModelHandler:
         """
         Save the model handler into a pickle file
 
-        Input
+        Parameters
         -----------------------------------------------------
         filename: str
             Name of the file in which the model is saved
@@ -377,7 +377,7 @@ class ModelHandler:
         """
         Load a model handler saved into a pickle file
 
-        Input
+        Parameters
         -----------------------------------------------------
         filename: str
             Name of the file in which the model is saved
