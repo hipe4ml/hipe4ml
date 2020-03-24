@@ -37,9 +37,11 @@ class TreeHandler:
         if tree_name is not None:
             self._file = uproot.open(file_name)
             self._tree = self._file[tree_name]
-            self._full_data_frame = self._tree.pandas.df(branches=columns_names, **kwds)
+            self._full_data_frame = self._tree.pandas.df(
+                branches=columns_names, **kwds)
         else:
-            self._full_data_frame = pd.read_parquet(file_name, columns=columns_names, **kwds)
+            self._full_data_frame = pd.read_parquet(
+                file_name, columns=columns_names, **kwds)
         self._preselections = None
         self._projection_variable = None
         self._projection_binning = None
@@ -64,7 +66,6 @@ class TreeHandler:
         ------------------------------------------------
         out: str
             String containing the cuts applied to the stored DataFrame
-
         """
         return self._preselections
 
@@ -76,7 +77,6 @@ class TreeHandler:
         ------------------------------------------------
         out: str
             Sliced variable
-
         """
         return self._projection_variable
 
@@ -89,7 +89,6 @@ class TreeHandler:
         out: list
             Each element of the list is a list containing the
             bin edges
-
         """
         return self._projection_binning
 
@@ -119,11 +118,10 @@ class TreeHandler:
         out: list
             List containing the slices of the orginal
             DataFrame
-
         """
         return self._sliced_df_list
 
-    def apply_preselections(self, preselections, inplace=True):
+    def apply_preselections(self, preselections, inplace=True, **kwds):
         """
         Apply preselections to data
 
@@ -136,22 +134,15 @@ class TreeHandler:
         inplace: bool
             If True, the preselected dataframe replaces the initial dataframe. Otherwise return a copy of the
             preselected df
+        **kwds: extra arguments are passed on to the pandas.DataFrame.query method:
+                https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html#pandas.DataFrame.query
 
         Returns
         ------------------------------------------------
         out: pandas.DataFrame or None
             If inplace == True return None is returned and the full DataFrame is replaced
-
         """
-        df_pres = None
-        if inplace:
-            self._preselections = preselections
-            self._full_data_frame = self._full_data_frame.query(
-                self._preselections)
-            return df_pres
-
-        df_pres = self._full_data_frame.query(preselections)
-        return df_pres
+        return self._full_data_frame.query(preselections, inplace=inplace, **kwds)
 
     def slice_data_frame(self, projection_variable, projection_binning, delete_original_df=False):
         """
@@ -170,7 +161,6 @@ class TreeHandler:
         delete_original_df: bool
             If True delete the original DataFrame. Only the
             the slice array will be accessible in this case
-
         """
 
         self._projection_variable = projection_variable
@@ -185,7 +175,7 @@ class TreeHandler:
         if delete_original_df:
             self._full_data_frame = None
 
-    def shuffle_data_frame(self, size=None, frac=None, inplace=True):
+    def shuffle_data_frame(self, size=None, frac=None, inplace=True, **kwds):
         """
         Extract a random sample from the DataFrame
 
@@ -201,51 +191,47 @@ class TreeHandler:
         inplace: bool
             If True the shuffled dataframe replaces the initial dataframe. Otherwise return a copy
             of the shuffled df
+        **kwds: extra arguments are passed on to the pandas.DataFrame.sample method:
+                https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.sample.html
 
         Returns
         ------------------------------------------------
         out: pandas.DataFrame or None
             If inplace == True None is returned and the full DataFrame is replaced
-
         """
         df_shuf = None
         if inplace:
-            self._full_data_frame = self._full_data_frame.sample(size, frac)
+            self._full_data_frame = self._full_data_frame.sample(size, frac, **kwds)
             return df_shuf
 
-        df_shuf = self._full_data_frame.sample(size, frac)
+        df_shuf = self._full_data_frame.sample(size, frac, **kwds)
         return df_shuf
 
-    def eval_data_frame(self, ev_str, inplace=True):
+    def eval_data_frame(self, ev_str, inplace=True, **kwds):
         """
         Evaluate a string describing operations on DataFrame columns
 
         Parameters
         ------------------------------------------------
-        preselection: str
-            The expression string to evaluate. A combination of a date and a time. Attributes: ()
-            The string syntax is the one required in the pandas.DataFrame.eval() method.
+        ev_str: str
+            The expression string to evaluate. The string syntax is the one required in the
+            pandas.DataFrame.eval() method.
         inplace: bool
             If the expression contains an assignment, whether to perform the operation inplace and
             mutate the existing DataFrame. Otherwise, a new DataFrame is returned.
+        **kwds: extra arguments are passed on to the pandas.DataFrame.eval method:
+                https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.eval.html
 
         Returns
         ------------------------------------------------
         out: pandas.DataFrame or None
             if inplace == True None is returned and the full dataframe is evaluated
-
         """
-        df_ev = None
-        if inplace:
-            self._full_data_frame.eval(ev_str, inplace=True)
-            return df_ev
-
-        df_ev = self._full_data_frame.eval(ev_str)
-        return df_ev
+        return self._full_data_frame.eval(ev_str, inplace=inplace, **kwds)
 
     def print_summary(self):
         """
-        Print information about the DataHandler object and its
+        Print information about the TreeHandler object and its
         data members
         """
         print("\nFile name: ", self._file)
@@ -269,10 +255,14 @@ class TreeHandler:
             If True and the slices are available, single parquet files for each
             bins are created
         """
-        self._full_data_frame.to_parquet(
-            f"{path}{base_file_name}.parquet.gzip", compression="gzip")
+        if self._full_data_frame is not None:
+            self._full_data_frame.to_parquet(
+                f"{path}{base_file_name}.parquet.gzip", compression="gzip")
         if save_slices:
-            for ind, i_bin in enumerate(self._projection_binning):
-                name = f"{path}{base_file_name}_{self._projection_variable}_{i_bin[0]}_{i_bin[1]}"
-                self._sliced_df_list[ind].to_parquet(f"{name}.parquet.gzip",
-                                                     compression="gzip")
+            if self._sliced_df_list is not None:
+                for ind, i_bin in enumerate(self._projection_binning):
+                    name = f"{path}{base_file_name}_{self._projection_variable}_{i_bin[0]}_{i_bin[1]}"
+                    self._sliced_df_list[ind].to_parquet(f"{name}.parquet.gzip",
+                                                         compression="gzip")
+            else:
+                print("\nSlices not available")
