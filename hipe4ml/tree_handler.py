@@ -1,7 +1,7 @@
 """
 Simple module with a class to manage the data used in the analysis
 """
-
+import copy
 import numpy as np
 import pandas as pd
 import uproot
@@ -145,6 +145,54 @@ class TreeHandler:
         self._preselections = preselections
         return self._full_data_frame.query(preselections, inplace=inplace, **kwds)
 
+    def deepcopy(self, original):
+        """
+        Performs a deepcopy of another TreeHandler.
+        Note: Deepcopy cannot be performed directly on the object itself as we store the
+        pointer to the open file.
+
+        Parameters
+        ------------------------------------------------
+        original: TreeHandler
+            TreeHandler to be copied in this object
+        """
+
+        self._full_data_frame = copy.deepcopy(original.get_data_frame())
+        self._preselections = copy.deepcopy(original.get_preselections())
+        self._projection_variable = copy.deepcopy(original.get_projection_variable())
+        self._projection_binning = copy.deepcopy(original.get_projection_binning())
+        self._sliced_df_list = copy.deepcopy(original.get_sliced_df_list())
+
+    def get_subset(self, selections=None, frac=None, size=None):
+        """
+        Returns a TreeHandler containing a subset of the data
+
+        Parameters
+        ------------------------------------------------
+        selection: str
+            String containing the cuts to be applied as preselection on the data contained in the original
+            tree. The string syntax is the one required in the pandas.DataFrame.query() method.
+            You can refer to variables in the environment by prefixing them with an ‘@’ character like @a + b.
+        frac: float
+            Fraction of candidates to return.
+        size: int
+            Number of candidates to return. Cannot be used with frac.
+
+        Returns
+        ------------------------------------------------
+        out: TreeHandler
+            TreeHandler containing a subset of the current data
+        """
+
+        subset = copy.copy(self)
+        subset.deepcopy(self)
+
+        if selections:
+            subset.apply_preselections(selections, inplace=True)
+        if frac or size:
+            subset.shuffle_data_frame(frac=frac, size=size, inplace=True)
+        return subset
+
     def slice_data_frame(self, projection_variable, projection_binning, delete_original_df=False):
         """
         Create a list containing slices of the orginal DataFrame.
@@ -187,7 +235,7 @@ class TreeHandler:
             frac = None.
 
         frac: float
-            Fraction of candidates to return. Cannot be used with n.
+            Fraction of candidates to return. Cannot be used with size.
 
         inplace: bool
             If True the shuffled dataframe replaces the initial dataframe. Otherwise return a copy
