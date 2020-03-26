@@ -53,7 +53,7 @@ SETUP = Setup(
     name="hipe4ml",
 
     # LAST-TAG is a placeholder. Automatically replaced at deploy time with the right tag
-    version="0.0.5",
+    version="0.0.6",
 
     description="Minimal heavy ion physics environment for Machine Learning",
 
@@ -71,6 +71,7 @@ SETUP = Setup(
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8"
     ],
 
     # What does your project relate to?
