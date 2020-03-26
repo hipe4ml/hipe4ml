@@ -172,7 +172,7 @@ class TreeHandler:
         self._preselections = preselections
         return self._full_data_frame.query(preselections, inplace=inplace, **kwds)
 
-    def apply_model_handler(self, model_handler, output_margin=True, column_name="model_output"):
+    def apply_model_handler(self, model_handler, output_margin=True, column_name=None):
         """
         Apply the ML model to data: a new column is added to the DataFrame
         If a list is given the application is performed on the slices.
@@ -181,7 +181,7 @@ class TreeHandler:
         ------------------------------------------------
         model_handler: list or hipe4ml model_handler
             If a list of handlers(one for each bin) is provided, the ML
-            model is applied to the slice
+            model is applied to the slices
 
         output_margin: bool
             Whether to output the raw untransformed margin value.
@@ -190,12 +190,34 @@ class TreeHandler:
             Name of the new column with the model output
         """
         if isinstance(model_handler, list):
-            for sliced_df in self._sliced_df_list:
-                sliced_df[column_name] = model_handler.predict(
-                    sliced_df, output_margin)
+            n_class = model_handler[0].get_n_classes()
+            sliced = True
         else:
-            self._full_data_frame[column_name] = model_handler.predict(
-                self._full_data_frame, output_margin)
+            sliced = False
+            n_class = model_handler.get_n_classes()
+        if column_name is None:
+            if n_class > 2:
+                column_name = [f'model_output_{i_class}' for i_class in range(n_class)]
+            else:
+                column_name = "model_output"
+
+        if sliced:
+            for (mod_handl, sliced_df) in zip(model_handler, self._sliced_df_list):
+                prediction = mod_handl.predict(sliced_df, output_margin)
+                if n_class > 2:
+                    for i_class in range(n_class):
+                        sliced_df[column_name[i_class]] = prediction[:, i_class]
+                else:
+                    sliced_df[column_name] = prediction
+            return
+
+        prediction = model_handler.predict(self._full_data_frame, output_margin)
+        if n_class > 2:
+            for i_class in range(n_class):
+                self._full_data_frame[column_name[i_class]] = prediction[:, i_class]
+            return
+
+        self._full_data_frame[column_name] = prediction
 
     def deepcopy(self, original):
         """
@@ -275,7 +297,7 @@ class TreeHandler:
             bin_mask = np.logical_and(
                 self._full_data_frame[projection_variable] >= ibin[0],
                 self._full_data_frame[projection_variable] < ibin[1])
-            self._sliced_df_list.append(self._full_data_frame[bin_mask])
+            self._sliced_df_list.append(self._full_data_frame[bin_mask].copy())
         if delete_original_df:
             self._full_data_frame = None
 

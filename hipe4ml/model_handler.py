@@ -37,6 +37,7 @@ class ModelHandler:
         self.model = input_model
         self.training_columns = training_columns
         self.model_params = model_params
+        self._n_classes = None
 
         if self.model is not None:
             self.model_string = inspect.getmodule(self.model).__name__.partition('.')[0]
@@ -118,6 +119,17 @@ class ModelHandler:
         """
         return self.model_string
 
+    def get_n_classes(self):
+        """
+        Get the number of classes
+
+        Returns
+        ---------------------------
+        out: int
+            Number of classes
+        """
+        return self._n_classes
+
     def fit(self, x_train, y_train):
         """
         Fit Model
@@ -130,6 +142,8 @@ class ModelHandler:
         y_train: array-like, sparse matrix
             Target data
         """
+        n_classes = len(np.unique(y_train))
+        self._n_classes = n_classes
         if self.training_columns is not None:
             self.model.fit(x_train[self.training_columns], y_train)
         else:
@@ -195,6 +209,7 @@ class ModelHandler:
 
         # get number of classes
         n_classes = len(np.unique(data[1]))
+        self._n_classes = n_classes
         print('Number of detected classes:', n_classes)
 
         # final training with the optimized hyperparams
