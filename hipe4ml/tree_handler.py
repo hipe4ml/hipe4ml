@@ -23,12 +23,15 @@ class TreeHandler:
         ------------------------------------------------
         file_name: str
             Name of the input file where the data sit
+
         tree_name: str
             Name of the tree within the input file. If None the method pandas.read_parquet
             is called
+
         columns_name: list
             List of the names of the branches that one wants to analyse. If columns_names is
             not specified all the branches are converted
+
         **kwds: extra arguments are passed on to the uproot.pandas.iterate or the pandas.read_parquet
                 methods:
                 https://uproot.readthedocs.io/en/latest/opening-files.html#uproot-pandas-iterate
@@ -92,6 +95,29 @@ class TreeHandler:
         """
         return self._projection_binning
 
+    def get_n_cand(self):
+        """
+        Get the number of candidates stored in the full DataFrame
+
+        Returns
+        ------------------------------------------------
+        out: int
+           Number of candidates
+        """
+        return len(self._full_data_frame)
+
+    def get_var_names(self):
+        """
+        Get a list containing the name of the variables
+
+        Returns
+        ------------------------------------------------
+        out: list
+           Names of the variables
+        """
+        return list(self._full_data_frame.columns)
+
+
     def get_slice(self, n_bin):
         """
         Get the n-th slice of the original DataFrame
@@ -131,9 +157,11 @@ class TreeHandler:
             String containing the cuts to be applied as preselection on the data contained in the original
             tree. The string syntax is the one required in the pandas.DataFrame.query() method.
             You can refer to variables in the environment by prefixing them with an ‘@’ character like @a + b.
+
         inplace: bool
             If True, the preselected dataframe replaces the initial dataframe. Otherwise return a copy of the
             preselected df
+
         **kwds: extra arguments are passed on to the pandas.DataFrame.query method:
                 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.query.html#pandas.DataFrame.query
 
@@ -144,6 +172,28 @@ class TreeHandler:
         """
         self._preselections = preselections
         return self._full_data_frame.query(preselections, inplace=inplace, **kwds)
+
+    def apply_model_handler(self, model_handler, output_margin=True):
+        """
+        Apply the ML model to data: a new column named model_output is added to the DataFrame
+        If a list is given the application is performed on the slices.
+
+        Parameters
+        ------------------------------------------------
+        model_handler: list or hipe4ml model_handler
+            If a list of handlers(one for each bin) is provided, the ML
+            model is applied to the slice
+
+        output_margin: bool
+            Whether to output the raw untransformed margin value.
+        """
+        if isinstance(model_handler, list):
+            for sliced_df in self._sliced_df_list:
+                sliced_df["model_output"] = model_handler.predict(
+                    sliced_df, output_margin)
+        else:
+            self._full_data_frame["model_output"] = model_handler.predict(
+                self._full_data_frame, output_margin)
 
     def deepcopy(self, original):
         """
@@ -173,8 +223,10 @@ class TreeHandler:
             String containing the cuts to be applied as preselection on the data contained in the original
             tree. The string syntax is the one required in the pandas.DataFrame.query() method.
             You can refer to variables in the environment by prefixing them with an ‘@’ character like @a + b.
+
         frac: float
             Fraction of candidates to return.
+
         size: int
             Number of candidates to return. Cannot be used with frac.
 
@@ -203,6 +255,7 @@ class TreeHandler:
         ------------------------------------------------
         projection_variable: str
             Name of the variable that will be sliced in the analysis
+
         projection_binning: list
             Binning of the sliced variable should be given as a list of
             [min, max) values for each bin
@@ -265,9 +318,11 @@ class TreeHandler:
         ev_str: str
             The expression string to evaluate. The string syntax is the one required in the
             pandas.DataFrame.eval() method.
+
         inplace: bool
             If the expression contains an assignment, whether to perform the operation inplace and
             mutate the existing DataFrame. Otherwise, a new DataFrame is returned.
+
         **kwds: extra arguments are passed on to the pandas.DataFrame.eval method:
                 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.eval.html
 
@@ -298,8 +353,10 @@ class TreeHandler:
         ------------------------------------------------
         base_file_name: str
             Base filename used to save the parquet files
+
         path: str
             Base path of the output files
+
         save_slices: bool
             If True and the slices are available, single parquet files for each
             bins are created
