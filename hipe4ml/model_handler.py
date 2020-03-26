@@ -10,6 +10,8 @@ from bayes_opt import BayesianOptimization
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
 
+import hipe4ml.tree_handler
+
 
 class ModelHandler:
     """
@@ -35,6 +37,7 @@ class ModelHandler:
         self.model = input_model
         self.training_columns = training_columns
         self.model_params = model_params
+        self._n_classes = None
 
         if self.model is not None:
             self.model_string = inspect.getmodule(self.model).__name__.partition('.')[0]
@@ -116,6 +119,17 @@ class ModelHandler:
         """
         return self.model_string
 
+    def get_n_classes(self):
+        """
+        Get the number of classes
+
+        Returns
+        ---------------------------
+        out: int
+            Number of classes
+        """
+        return self._n_classes
+
     def fit(self, x_train, y_train):
         """
         Fit Model
@@ -128,6 +142,8 @@ class ModelHandler:
         y_train: array-like, sparse matrix
             Target data
         """
+        n_classes = len(np.unique(y_train))
+        self._n_classes = n_classes
         if self.training_columns is not None:
             self.model.fit(x_train[self.training_columns], y_train)
         else:
@@ -139,11 +155,8 @@ class ModelHandler:
 
         Parameters
         --------------------------------------
-        x_test: array-like, sparse matrix
-            The input samples. Internally, its dtype
-            will be converted to dtype=np.float32. If a
-            sparse matrix is provided, it will be converted
-            to a sparse csr_matrix.
+        x_test: hipe4ml tree_handler, array-like, sparse matrix
+            The input sample.
 
         output_margin: bool
             Whether to output the raw untransformed margin value.
@@ -153,6 +166,8 @@ class ModelHandler:
         out: numpy array
             Model predictions
         """
+        if isinstance(x_test, hipe4ml.tree_handler.TreeHandler):
+            x_test = x_test.get_data_frame()
         if self.training_columns is not None:
             x_test = x_test[self.training_columns]
 
@@ -194,6 +209,7 @@ class ModelHandler:
 
         # get number of classes
         n_classes = len(np.unique(data[1]))
+        self._n_classes = n_classes
         print('Number of detected classes:', n_classes)
 
         # final training with the optimized hyperparams
