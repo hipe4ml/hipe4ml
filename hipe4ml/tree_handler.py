@@ -172,9 +172,9 @@ class TreeHandler:
         self._preselections = preselections
         return self._full_data_frame.query(preselections, inplace=inplace, **kwds)
 
-    def apply_model_handler(self, model_handler, output_margin=True):
+    def apply_model_handler(self, model_handler, output_margin=True, column_name="model_output"):
         """
-        Apply the ML model to data: a new column named model_output is added to the DataFrame
+        Apply the ML model to data: a new column is added to the DataFrame
         If a list is given the application is performed on the slices.
 
         Parameters
@@ -185,13 +185,16 @@ class TreeHandler:
 
         output_margin: bool
             Whether to output the raw untransformed margin value.
+
+        column_name: str
+            Name of the new column with the model output
         """
         if isinstance(model_handler, list):
             for sliced_df in self._sliced_df_list:
-                sliced_df["model_output"] = model_handler.predict(
+                sliced_df[column_name] = model_handler.predict(
                     sliced_df, output_margin)
         else:
-            self._full_data_frame["model_output"] = model_handler.predict(
+            self._full_data_frame[column_name] = model_handler.predict(
                 self._full_data_frame, output_margin)
 
     def deepcopy(self, original):
