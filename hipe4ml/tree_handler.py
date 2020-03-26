@@ -117,7 +117,6 @@ class TreeHandler:
         """
         return list(self._full_data_frame.columns)
 
-
     def get_slice(self, n_bin):
         """
         Get the n-th slice of the original DataFrame

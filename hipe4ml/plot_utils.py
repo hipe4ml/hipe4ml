@@ -14,7 +14,7 @@ from sklearn.metrics import (auc, average_precision_score, mean_squared_error,
                              precision_recall_curve, roc_auc_score, roc_curve)
 from sklearn.preprocessing import label_binarize
 
-import hipe4ml
+import hipe4ml.tree_handler
 
 
 def _plot_output(df_train, df_test, lims, bins, label, color, kwds):
@@ -133,8 +133,8 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
 
     return res
 
-
-def plot_distr(data_list, column=None, bins=50, labels=None, colors=None, **kwds):
+# flake8: noqa: C901
+def plot_distr(data_list, column=None, bins=50, labels=None, colors=None, **kwds):  # pylint: disable=too-many-branches
     """
     Draw histograms comparing the distributions of each class.
 
@@ -318,7 +318,6 @@ def plot_bdt_eff(threshold, eff_sig):
     plt.ylabel('Efficiency')
     plt.title('Efficiency vs Score')
     plt.grid()
-
     return res
 
 

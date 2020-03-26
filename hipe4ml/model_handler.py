@@ -10,7 +10,7 @@ from bayes_opt import BayesianOptimization
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
 
-import hipe4ml
+import hipe4ml.tree_handler
 
 
 class ModelHandler:

@@ -3,13 +3,13 @@ Module used to test the plot functions
 """
 
 import matplotlib
+import numpy as np
 import pandas as pd
 import xgboost as xgb
-import numpy as np
 from sklearn import datasets
 from sklearn.model_selection import train_test_split
-from hipe4ml import analysis_utils
-from hipe4ml import plot_utils
+
+from hipe4ml import analysis_utils, plot_utils
 from hipe4ml.model_handler import ModelHandler
 
 # data preparation
