@@ -9,10 +9,12 @@ import numpy as np
 import pandas as pd
 import shap
 from mpl_toolkits.axes_grid1 import ImageGrid
-from sklearn.metrics import (auc, average_precision_score, roc_auc_score,
-                             precision_recall_curve, roc_curve, mean_squared_error)
-from sklearn.preprocessing import label_binarize
 from scipy.special import softmax
+from sklearn.metrics import (auc, average_precision_score, mean_squared_error,
+                             precision_recall_curve, roc_auc_score, roc_curve)
+from sklearn.preprocessing import label_binarize
+
+import hipe4ml.tree_handler
 
 
 def _plot_output(df_train, df_test, lims, bins, label, color, kwds):
@@ -131,23 +133,19 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
 
     return res
 
-
-def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels=None, alpha=0.5):
+# flake8: noqa: C901
+def plot_distr(data_list, column=None, bins=50, labels=None, colors=None, **kwds):  # pylint: disable=too-many-branches
     """
     Draw histograms comparing the distributions of each class.
 
     Parameters
     -----------------------------------------
-    list_of_df: list
-        Contains a dataframe for each class
+    data_list: TreeHandler, pandas.Dataframe or list of them
+        Contains a TreeHandler or a dataframe for each class
 
-    column: list
+    column: str or list of them
         Contains the name of the features you want to plot
         Example: ['dEdx', 'pT', 'ct']
-
-    figsize: list
-        The size in inches of the figure to create. Uses the value in
-        matplotlib.rcParams by default.
 
     bins: int or sequence of scalars or str
         If bins is an int, it defines the number of equal-width
@@ -156,21 +154,32 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
         bin edges, including the rightmost edge, allowing for
         non-uniform bin widths.
 
-    log: bool
-        If True enable log scale plot
-
-    labels: list
+    labels: str or list of them
         Contains the labels to be displayed in the legend
         If None the labels are class1, class2, ..., classN
 
-    alpha: float
-        Value between 0 and 1, tune the histogram transparency
+    colors: str or list of them
+        List of the colors to be used to fill the histograms
+
+    **kwds:
+        extra arguments are passed on to pandas.DataFrame.hist():
+        https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.hist.html
 
     Returns
     -----------------------------------------
     out: numpy array of matplotlib.axes.AxesSubplot
         Distributions of the features for each class
     """
+    list_of_df = []
+    if not isinstance(data_list, list):
+        data_list = [data_list]
+        labels = [labels]
+        colors = [colors]
+    if isinstance(data_list[0], hipe4ml.tree_handler.TreeHandler):
+        for handl in data_list:
+            list_of_df.append(handl.get_data_frame())
+    else:
+        list_of_df = data_list
 
     if column is not None:
         if not isinstance(column, (list, np.ndarray, pd.Index)):
@@ -178,28 +187,28 @@ def plot_distr(list_of_df, column=None, figsize=None, bins=50, log=False, labels
         for dfm in list_of_df:
             dfm = dfm[column]
 
-    if figsize is None:
-        figsize = [20, 15]
-
     if labels is None:
         labels = [f'class{i_class}' for i_class, _ in enumerate(list_of_df)]
 
-    for i_class, (dfm, lab) in enumerate(zip(list_of_df, labels)):
+    if colors is None:
+        colors = [None for i_class, _ in enumerate(list_of_df)]
+
+    for i_class, (dfm, lab, col) in enumerate(zip(list_of_df, labels, colors)):
         if i_class == 0:
-            axes = dfm.hist(column=column, alpha=alpha, bins=bins, figsize=figsize, label=lab,
-                            density=True, grid=False, log=log)
+            axes = dfm.hist(column=column, bins=bins, label=lab, color=col, **kwds)
             axes = axes.flatten()
             axes = axes[:len(column)]
         else:
-            dfm.hist(ax=axes, column=column, alpha=alpha, bins=bins, figsize=figsize, label=lab,
-                     density=True, grid=False, log=log)
+            dfm.hist(ax=axes, column=column, bins=bins, label=lab, color=col, **kwds)
     for axs in axes:
-        axs.set_ylabel('Counts (arb. units)')
+        axs.set_ylabel('Counts')
     axes[-1].legend(loc='best')
+    if len(axes) == 1:
+        axes = axes[0]
     return axes
 
 
-def plot_corr(list_of_df, columns, labels=None, **kwds):
+def plot_corr(data_list, columns, labels=None, **kwds):
     """
     Calculate pairwise correlation between features for
     each class (e.g. signal and background in case of binary
@@ -207,7 +216,7 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
 
     Parameters
     -----------------------------------------------
-    list_of_df: list
+    data_list: list
         Contains dataframes for each class
 
     columns: list
@@ -225,7 +234,12 @@ def plot_corr(list_of_df, columns, labels=None, **kwds):
     out: matplotlib.figure.Figure or list of them
         Correlations between the features for each class
     """
-
+    list_of_df = []
+    if isinstance(data_list[0], hipe4ml.tree_handler.TreeHandler):
+        for handl in data_list:
+            list_of_df.append(handl.get_data_frame())
+    else:
+        list_of_df = data_list
     corr_mat = []
     for dfm in list_of_df:
         dfm = dfm[columns]
@@ -304,7 +318,6 @@ def plot_bdt_eff(threshold, eff_sig):
     plt.ylabel('Efficiency')
     plt.title('Efficiency vs Score')
     plt.grid()
-
     return res
 
 
