@@ -237,7 +237,7 @@ class TreeHandler:
         self._projection_binning = copy.deepcopy(original.get_projection_binning())
         self._sliced_df_list = copy.deepcopy(original.get_sliced_df_list())
 
-    def get_subset(self, selections=None, frac=None, size=None):
+    def get_subset(self, selections=None, frac=None, size=None, rndm_state=None):
         """
         Returns a TreeHandler containing a subset of the data
 
@@ -254,6 +254,12 @@ class TreeHandler:
         size: int
             Number of candidates to return. Cannot be used with frac.
 
+        rndm_state: int or numpy.random.RandomState, optional
+            Seed for the random number generator (if int), or numpy RandomState object, passed to the
+            pandas.DataFrame.samle() method:
+            https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.sample.html
+
+
         Returns
         ------------------------------------------------
         out: TreeHandler
@@ -266,7 +272,7 @@ class TreeHandler:
         if selections:
             subset.apply_preselections(selections, inplace=True)
         if frac or size:
-            subset.shuffle_data_frame(frac=frac, size=size, inplace=True)
+            subset.shuffle_data_frame(frac=frac, size=size, inplace=True, random_state=rndm_state)
         return subset
 
     def slice_data_frame(self, projection_variable, projection_binning, delete_original_df=False):
