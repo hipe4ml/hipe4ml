@@ -66,7 +66,7 @@ while [[ $# -gt 0 ]]; do
         pwarn "Specific tests:"
         pwarn "    run_tests.sh pylint                    # test with pylint"
         pwarn "    run_tests.sh flake8                    # test with flake8"
-        pwarn "    run_tests.sh test-pytest               # test with pytest"
+        pwarn "    run_tests.sh pytest                    # test with pytest"
         pwarn ""
         pwarn "Parameters:"
         pwarn "    --help                                 # print this help"
