@@ -7,7 +7,7 @@ from pathlib import Path
 
 def clean_dir_path(path):
     """
-    Remove directory identified by path and all it's content recursively.
+    Remove directory identified by path and all its content recursively.
     Very similar to bash 'rm -r path'
     """
     if path.exists():
@@ -25,7 +25,7 @@ def clean_dir_path(path):
 
 def create_test_dir_tree(base_dir):
     """
-    Create the correct diretory tree used in the tests.
+    Create the correct directory tree used in the tests.
     """
     tmp_test_dir = base_dir.joinpath('tmp_test')
 
@@ -41,7 +41,7 @@ def create_test_dir_tree(base_dir):
 
 def download_from_url_list(url_list, path):
     """
-    Download urls list in a defined destination directoery.
+    Download urls list in a defined destination directory.
     """
     output_list = []
 
@@ -60,7 +60,7 @@ def download_from_url_list(url_list, path):
 
 def download_test_data(path):
     """
-    Download .root files used for the tests in a dedicated diretory.
+    Download .root files used for the tests in a dedicated directory.
     """
     data_url = 'https://raw.github.com/hipe4ml/hipe4ml_tests/master/Dplus7TeV/Bkg_Dpluspp7TeV_pT_1_50.root'
     prompt_url = 'https://raw.github.com/hipe4ml/hipe4ml_tests/master/Dplus7TeV/Prompt_Dpluspp7TeV_pT_1_50.root'
@@ -73,7 +73,7 @@ def download_test_data(path):
 def download_test_references(path):
     """
     Download .pickle files used as reference for the tests in dedicated
-    diretory.
+    directory.
     """
 
     data_slice_url = 'https://github.com/hipe4ml/hipe4ml_tests/raw/master/references/data_slice.pickle'

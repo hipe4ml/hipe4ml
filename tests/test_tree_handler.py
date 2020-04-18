@@ -15,7 +15,7 @@ SEED = 42
 
 def init_tree_handler_test_workspace(path):
     """
-    Prepare the TreeHandler test workspace. Create the correct directorey
+    Prepare the TreeHandler test workspace. Create the correct directory
     structure and downloads data and references needed in the tests.
     """
     print('Clean test workspace ...', end='\r')
