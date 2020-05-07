@@ -145,7 +145,8 @@ def plot_distr(data_list, column=None, bins=50, labels=None, colors=None, **kwds
 
     column: str or list of them
         Contains the name of the features you want to plot
-        Example: ['dEdx', 'pT', 'ct']
+        Example: ['dEdx', 'pT', 'ct']. If None all the features
+        are selected
 
     bins: int or sequence of scalars or str
         If bins is an int, it defines the number of equal-width
@@ -184,8 +185,9 @@ def plot_distr(data_list, column=None, bins=50, labels=None, colors=None, **kwds
     if column is not None:
         if not isinstance(column, (list, np.ndarray, pd.Index)):
             column = [column]
-        for dfm in list_of_df:
-            dfm = dfm[column]
+
+    else:
+        column = list(list_of_df[0].columns)
 
     if labels is None:
         labels = [f'class{i_class}' for i_class, _ in enumerate(list_of_df)]
