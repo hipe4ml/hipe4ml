@@ -40,7 +40,8 @@ class ModelHandler:
         self._n_classes = None
 
         if self.model is not None:
-            self.model_string = inspect.getmodule(self.model).__name__.partition('.')[0]
+            self.model_string = inspect.getmodule(
+                self.model).__name__.partition('.')[0]
 
             if self.model_params is None:
                 self.model_params = self.model.get_params()
@@ -159,7 +160,8 @@ class ModelHandler:
             The input sample.
 
         output_margin: bool
-            Whether to output the raw untransformed margin value.
+            Whether to output the raw untransformed margin value. If False model
+            probabilities are returned
 
         Returns
         ---------------------------------------
@@ -185,7 +187,8 @@ class ModelHandler:
 
         return pred
 
-    def train_test_model(self, data, average='macro', multi_class_opt='raise'):
+    def train_test_model(self, data, return_prediction=False, output_margin=False, average='macro',
+                         multi_class_opt='raise'):
         """
         Perform the training and the testing of the model. The model performance is estimated
         using the ROC AUC metric
@@ -197,6 +200,14 @@ class ModelHandler:
             set dataframe, training label array,
             test set dataframe, test label array
 
+        return_prediction: bool
+            If True Model predictions on the test set are
+            returned
+
+        output_margin: bool
+            Whether to output the raw untransformed margin value. If False model
+            probabilities are returned
+
         average: string
             Option for the average of ROC AUC scores used only in case of multi-classification.
             You can choose between 'macro' and 'weighted'. For more information see
@@ -205,6 +216,13 @@ class ModelHandler:
         multi_class_opt: string
             Option to compute ROC AUC scores used only in case of multi-classification.
             The one-vs-one 'ovo' and one-vs-rest 'ovr' approaches are available
+
+        Returns
+        ---------------------------------------
+        out: numpy array or None
+            If return_prediction==True, Model predictions on the test set are
+            returned
+
         """
 
         # get number of classes
@@ -217,12 +235,16 @@ class ModelHandler:
         self.fit(data[0], data[1])
         print('Training the final model: Done!')
         print('Testing the model: ...', end='\r')
-        y_pred = self.predict(data[2], output_margin=False)
-        roc_score = roc_auc_score(data[3], y_pred, average=average, multi_class=multi_class_opt)
+        y_pred = self.predict(data[2], output_margin=output_margin)
+        roc_score = roc_auc_score(
+            data[3], y_pred, average=average, multi_class=multi_class_opt)
         print('Testing the model: Done!')
 
         print(f'ROC_AUC_score: {roc_score:.6f}')
         print('==============================')
+        if return_prediction:
+            return y_pred
+        return None
 
     def evaluate_hyperparams(self, data, opt_params, scoring, nfold=5, njobs=None):
         """
@@ -331,7 +353,8 @@ class ModelHandler:
             max_params[key] = optimizer.max['params'][key]
         print(f"Best target: {optimizer.max['target']:.6f}")
         print(f'Best parameters: {max_params}')
-        self.set_model_params({**self.model_params, **self.cast_model_params(max_params)})
+        self.set_model_params(
+            {**self.model_params, **self.cast_model_params(max_params)})
 
     def cast_model_params(self, params):
         """
