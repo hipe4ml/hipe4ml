@@ -40,8 +40,7 @@ class ModelHandler:
         self._n_classes = None
 
         if self.model is not None:
-            self.model_string = inspect.getmodule(
-                self.model).__name__.partition('.')[0]
+            self.model_string = inspect.getmodule(self.model).__name__.partition('.')[0]
 
             if self.model_params is None:
                 self.model_params = self.model.get_params()
@@ -353,8 +352,7 @@ class ModelHandler:
             max_params[key] = optimizer.max['params'][key]
         print(f"Best target: {optimizer.max['target']:.6f}")
         print(f'Best parameters: {max_params}')
-        self.set_model_params(
-            {**self.model_params, **self.cast_model_params(max_params)})
+        self.set_model_params({**self.model_params, **self.cast_model_params(max_params)})
 
     def cast_model_params(self, params):
         """
