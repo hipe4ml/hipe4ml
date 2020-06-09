@@ -144,10 +144,10 @@ class ModelHandler:
         """
         n_classes = len(np.unique(y_train))
         self._n_classes = n_classes
-        if self.training_columns is not None:
-            self.model.fit(x_train[self.training_columns], y_train)
-        else:
-            self.model.fit(x_train, y_train)
+        if self.training_columns is None:
+            self.training_columns = list(x_train.columns)
+
+        self.model.fit(x_train[self.training_columns], y_train)
 
     def predict(self, x_test, output_margin=True):
         """
@@ -169,8 +169,8 @@ class ModelHandler:
         """
         if isinstance(x_test, hipe4ml.tree_handler.TreeHandler):
             x_test = x_test.get_data_frame()
-        if self.training_columns is not None:
-            x_test = x_test[self.training_columns]
+
+        x_test = x_test[self.training_columns]
 
         if output_margin:
             if self.model_string == 'xgboost':
