@@ -27,6 +27,7 @@ DATA = [TRAIN_SET, Y_TRAIN, TEST_SET, Y_TEST]
 INPUT_MODEL = xgb.XGBClassifier()
 MODEL = ModelHandler(INPUT_MODEL)
 MODEL.train_test_model(DATA)
+print(MODEL.get_training_columns())
 Y_PRED = MODEL.predict(DATA[2])
 Y_PRED_TRAIN = MODEL.predict(DATA[0])
 EFFICIENCY, THRESHOLD = analysis_utils.bdt_efficiency_array(DATA[3], Y_PRED, n_points=10)
@@ -77,7 +78,7 @@ def test_plot_feature_imp():
     Test the feature importance plot
     """
     assert isinstance(plot_utils.plot_feature_imp(
-        DATA[0], DATA[1], MODEL, 50), matplotlib.figure.Figure)
+        DATA[0], DATA[1], MODEL, MODEL.get_training_columns(), 20), list)
 
 
 def test_plot_bdt_output():

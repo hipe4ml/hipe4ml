@@ -546,7 +546,7 @@ def plot_roc_train_test(y_truth_test, y_score_test, y_truth_train, y_score_train
 
 def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approximate=True):
     """
-    Calculate the feature importance using the shap violin plot for
+    Calculate the feature importance using the shap algorithm for
     each feature. The calculation is performed on a subsample of the
     input training/test set
 
@@ -567,9 +567,8 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
 
     n_sample: int
         Number of candidates employed to fill
-        the shap violin plots.
-        If larger than the number of candidates
-        in each class, minimum number of candidates
+        the shap plots. If larger than the number of
+        candidates in each class, minimum number of candidates
         in a given class used instead
 
     approximate: bool
@@ -578,8 +577,13 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
 
     Returns
     -------------------------------------------
-    out: matplotlib.figure.Figure or list of them
-        Plots with shap feature importance
+    out: List of matplotlib.figure.Figure
+        Plots with shap feature importance. The first ones are the shap violin plots
+        computed for each class(in case of binary classification only one plot is returned).
+        The last plot of the list is built by taking the mean absolute value of the SHAP
+        values for each feature to get a standard bar plot (stacked bars are produced for
+        multi-class outputs)
+
     """
     class_labels, class_counts = np.unique(y_truth, return_counts=True)
     n_classes = len(class_labels)
@@ -592,22 +596,24 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
         subs.append(df_in[y_truth == class_lab].sample(n_sample))
 
     df_subs = pd.concat(subs)
+    df_subs = df_subs[model.get_training_columns()]
     explainer = shap.TreeExplainer(model.get_original_model())
     shap_values = explainer.shap_values(df_subs, approximate=approximate)
+    res = []
 
     if n_classes <= 2:
-        res = plt.figure(figsize=(18, 9))
+        res.append(plt.figure(figsize=(18, 9)))
         shap.summary_plot(shap_values, df_subs, plot_size=(
             18, 9), class_names=labels, show=False)
     else:
-        res = []
         for i_class in range(n_classes):
             res.append(plt.figure(figsize=(18, 9)))
             shap.summary_plot(shap_values[i_class], df_subs, plot_size=(
                 18, 9), class_names=labels, show=False)
-        res.append(plt.figure(figsize=(18, 9)))
-        shap.summary_plot(shap_values, df_subs, plot_type='bar',
-                          plot_size=(18, 9), class_names=labels, show=False)
+
+    res.append(plt.figure(figsize=(18, 9)))
+    shap.summary_plot(shap_values, df_subs, plot_type='bar', plot_size=(
+        18, 9), class_names=labels, show=False)
 
     return res
 
