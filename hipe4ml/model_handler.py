@@ -57,7 +57,7 @@ class ModelHandler:
             n_estimators, gamma, min_child_weight, ...
         """
         self.model_params = model_params
-        self.model.set_params(**model_params)
+        self.model.set_params(**self.model_params)
 
     def get_model_params(self):
         """
@@ -402,4 +402,5 @@ class ModelHandler:
         self.model = loaded_model.get_original_model()
         self.training_columns = loaded_model.get_training_columns()
         self.model_params = loaded_model.get_model_params()
+        self.model.set_params(**self.model_params)
         self.model_string = loaded_model.get_model_module()
