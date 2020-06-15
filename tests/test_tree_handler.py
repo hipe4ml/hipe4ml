@@ -75,9 +75,9 @@ def test_tree_handler():  # pylint: disable=too-many-statements
         'prompt Dataframe from parquet file differs from the root file one!'
 
     # test loading from multiple files
-    merged_df = pd.concat([data_hdlr.get_data_frame(), prompt_hdlr.get_data_frame()])
+    merged_df = pd.concat([data_hdlr.get_data_frame(), prompt_hdlr.get_data_frame()], ignore_index=True)
     assert mult_hdlr.get_data_frame().equals(merged_df), 'loading of multiple root files not working!'
-    merged_pq_df = pd.concat([data_pq_hdlr.get_data_frame(), prompt_pq_hdlr.get_data_frame()])
+    merged_pq_df = pd.concat([data_pq_hdlr.get_data_frame(), prompt_pq_hdlr.get_data_frame()], ignore_index=True)
     assert mult_pq_hdlr.get_data_frame().equals(merged_pq_df), 'loading of multiple parquet files not working!'
 
     # define the info dict that will be compared with the reference
