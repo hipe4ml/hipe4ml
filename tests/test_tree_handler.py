@@ -42,7 +42,7 @@ def terminate_tree_handler_test_workspace(path):
     print('Terminate test worksapce: done!')
 
 
-def test_tree_handler():
+def test_tree_handler():  # pylint: disable=too-many-statements
     """
     Test the TreeHandler class functionalities.
     """
@@ -55,6 +55,10 @@ def test_tree_handler():
     # instantiate tree handler objects
     data_hdlr = TreeHandler(test_data[0], 'treeMLDplus')
     prompt_hdlr = TreeHandler(test_data[1], 'treeMLDplus')
+    data_pq_hdlr = TreeHandler(test_data[2])
+    prompt_pq_hdlr = TreeHandler(test_data[3])
+    mult_hdlr = TreeHandler(test_data[:2], 'treeMLDplus')
+    mult_pq_hdlr = TreeHandler(test_data[2:])
 
     # open refernces objects
     reference_data_slice_df = pd.read_pickle(references[0])
@@ -63,6 +67,18 @@ def test_tree_handler():
         reference_dict = pickle.load(handle)
 
     terminate_tree_handler_test_workspace(test_dir)
+
+    # test that data is the same in root and parquet
+    assert data_hdlr.get_data_frame().equals(data_pq_hdlr.get_data_frame()), \
+        'data Dataframe from parquet file differs from the root file one!'
+    assert prompt_hdlr.get_data_frame().equals(prompt_pq_hdlr.get_data_frame()), \
+        'prompt Dataframe from parquet file differs from the root file one!'
+
+    # test loading from multiple files
+    merged_df = pd.concat([data_hdlr.get_data_frame(), prompt_hdlr.get_data_frame()], ignore_index=True)
+    assert mult_hdlr.get_data_frame().equals(merged_df), 'loading of multiple root files not working!'
+    merged_pq_df = pd.concat([data_pq_hdlr.get_data_frame(), prompt_pq_hdlr.get_data_frame()], ignore_index=True)
+    assert mult_pq_hdlr.get_data_frame().equals(merged_pq_df), 'loading of multiple parquet files not working!'
 
     # define the info dict that will be compared with the reference
     info_dict = {}
@@ -82,7 +98,7 @@ def test_tree_handler():
     data_hdlr.apply_preselections(preselections_data)
     prompt_hdlr.apply_preselections(preselections_prompt)
 
-    # get the number of selcted data
+    # get the number of selected data
     info_dict['n_data_preselected'] = data_hdlr.get_n_cand()
     info_dict['n_prompt_preselected'] = prompt_hdlr.get_n_cand()
 
