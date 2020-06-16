@@ -64,8 +64,12 @@ def download_test_data(path):
     """
     data_url = 'https://raw.github.com/hipe4ml/hipe4ml_tests/master/Dplus7TeV/Bkg_Dpluspp7TeV_pT_1_50.root'
     prompt_url = 'https://raw.github.com/hipe4ml/hipe4ml_tests/master/Dplus7TeV/Prompt_Dpluspp7TeV_pT_1_50.root'
+    data_pq_url = ('https://raw.github.com/hipe4ml/hipe4ml_tests/master/Dplus7TeV/'
+                   'Bkg_Dpluspp7TeV_pT_1_50.parquet.gzip')
+    prompt_pq_url = ('https://raw.github.com/hipe4ml/hipe4ml_tests/master/Dplus7TeV/'
+                     'Prompt_Dpluspp7TeV_pT_1_50.parquet.gzip')
 
-    urls = [data_url, prompt_url]
+    urls = [data_url, prompt_url, data_pq_url, prompt_pq_url]
 
     return download_from_url_list(urls, path)
 

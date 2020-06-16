@@ -21,12 +21,12 @@ class TreeHandler:
 
         Parameters
         ------------------------------------------------
-        file_name: str
-            Name of the input file where the data sit
+        file_name: str or list of str
+            Name of the input file where the data sit or list of input files
 
         tree_name: str
-            Name of the tree within the input file. If None the method pandas.read_parquet
-            is called
+            Name of the tree within the input file, must be the same for all files.
+            If None the method pandas.read_parquet is called
 
         columns_name: list
             List of the names of the branches that one wants to analyse. If columns_names is
@@ -37,14 +37,16 @@ class TreeHandler:
                 https://uproot.readthedocs.io/en/latest/opening-files.html#uproot-pandas-iterate
                 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_parquet.html#pandas.read_parquet
         """
-        if tree_name is not None:
-            self._file = uproot.open(file_name)
-            self._tree = self._file[tree_name]
-            self._full_data_frame = self._tree.pandas.df(
-                branches=columns_names, **kwds)
-        else:
-            self._full_data_frame = pd.read_parquet(
-                file_name, columns=columns_names, **kwds)
+        self._files = file_name if isinstance(file_name, list) else [file_name]
+        self._tree = tree_name
+        self._full_data_frame = pd.DataFrame()
+        for file in self._files:
+            if self._tree is not None:
+                self._full_data_frame = self._full_data_frame.append(
+                    uproot.open(file)[self._tree].pandas.df(branches=columns_names, **kwds), ignore_index=True)
+            else:
+                self._full_data_frame = self._full_data_frame.append(
+                    pd.read_parquet(file, columns=columns_names, **kwds), ignore_index=True)
         self._preselections = None
         self._projection_variable = None
         self._projection_binning = None
@@ -368,7 +370,7 @@ class TreeHandler:
         Print information about the TreeHandler object and its
         data members
         """
-        print("\nFile name: ", self._file)
+        print("\nFile name: ", self._files)
         print("Tree name: ", self._tree)
         print("DataFrame head:\n", self._full_data_frame.head(5))
         print("\nPreselections:", self._preselections)
