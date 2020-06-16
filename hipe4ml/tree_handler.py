@@ -168,11 +168,18 @@ class TreeHandler:
 
         Returns
         ------------------------------------------------
-        out: pandas.DataFrame or None
+        out: TreeHandler or None
             If inplace == True return None is returned and the full DataFrame is replaced
         """
-        self._preselections = preselections
-        return self._full_data_frame.query(preselections, inplace=inplace, **kwds)
+        if inplace:
+            self._preselections = preselections
+            self._full_data_frame.query(preselections, inplace=True, **kwds)
+            return None
+
+        new_hndl = copy.deepcopy(self)
+        new_hndl._preselections = preselections # pylint: disable=W0212
+        new_hndl._full_data_frame.query(preselections, inplace=True, **kwds) # pylint: disable=W0212
+        return new_hndl
 
     def apply_model_handler(self, model_handler, output_margin=True, column_name=None):
         """
@@ -221,24 +228,6 @@ class TreeHandler:
 
         self._full_data_frame[column_name] = prediction
 
-    def deepcopy(self, original):
-        """
-        Performs a deepcopy of another TreeHandler.
-        Note: Deepcopy cannot be performed directly on the object itself as we store the
-        pointer to the open file.
-
-        Parameters
-        ------------------------------------------------
-        original: TreeHandler
-            TreeHandler to be copied in this object
-        """
-
-        self._full_data_frame = copy.deepcopy(original.get_data_frame())
-        self._preselections = copy.deepcopy(original.get_preselections())
-        self._projection_variable = copy.deepcopy(original.get_projection_variable())
-        self._projection_binning = copy.deepcopy(original.get_projection_binning())
-        self._sliced_df_list = copy.deepcopy(original.get_sliced_df_list())
-
     def get_subset(self, selections=None, frac=None, size=None, rndm_state=None):
         """
         Returns a TreeHandler containing a subset of the data
@@ -268,8 +257,8 @@ class TreeHandler:
             TreeHandler containing a subset of the current data
         """
 
-        subset = copy.copy(self)
-        subset.deepcopy(self)
+
+        subset = copy.deepcopy(self)
 
         if selections:
             subset.apply_preselections(selections, inplace=True)
@@ -330,16 +319,17 @@ class TreeHandler:
 
         Returns
         ------------------------------------------------
-        out: pandas.DataFrame or None
+        out: TreeHandler or None
             If inplace == True None is returned and the full DataFrame is replaced
         """
-        df_shuf = None
+
         if inplace:
             self._full_data_frame = self._full_data_frame.sample(size, frac, **kwds)
-            return df_shuf
+            return None
 
-        df_shuf = self._full_data_frame.sample(size, frac, **kwds)
-        return df_shuf
+        new_hndl = copy.deepcopy(self)
+        new_hndl._full_data_frame = self._full_data_frame.sample(size, frac, **kwds) # pylint: disable=W0212
+        return new_hndl
 
     def eval_data_frame(self, ev_str, inplace=True, **kwds):
         """
@@ -360,10 +350,16 @@ class TreeHandler:
 
         Returns
         ------------------------------------------------
-        out: pandas.DataFrame or None
+        out: TreeHandler or None
             if inplace == True None is returned and the full dataframe is evaluated
         """
-        return self._full_data_frame.eval(ev_str, inplace=inplace, **kwds)
+        if inplace:
+            self._full_data_frame.eval(ev_str, inplace=True, **kwds)
+            return None
+
+        new_hndl = copy.deepcopy(self)
+        new_hndl._full_data_frame.eval(ev_str, inplace=True, **kwds) # pylint: disable=W0212
+        return new_hndl
 
     def print_summary(self):
         """
