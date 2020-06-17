@@ -177,8 +177,8 @@ class TreeHandler:
             return None
 
         new_hndl = copy.deepcopy(self)
-        new_hndl._preselections = preselections # pylint: disable=W0212
-        new_hndl._full_data_frame.query(preselections, inplace=True, **kwds) # pylint: disable=W0212
+        new_hndl._preselections = preselections  # pylint: disable=W0212
+        new_hndl._full_data_frame.query(preselections, inplace=True, **kwds)  # pylint: disable=W0212
         return new_hndl
 
     def apply_model_handler(self, model_handler, output_margin=True, column_name=None):
@@ -257,7 +257,6 @@ class TreeHandler:
             TreeHandler containing a subset of the current data
         """
 
-
         subset = copy.deepcopy(self)
 
         if selections:
@@ -328,7 +327,7 @@ class TreeHandler:
             return None
 
         new_hndl = copy.deepcopy(self)
-        new_hndl._full_data_frame = self._full_data_frame.sample(size, frac, **kwds) # pylint: disable=W0212
+        new_hndl._full_data_frame = self._full_data_frame.sample(size, frac, **kwds)  # pylint: disable=W0212
         return new_hndl
 
     def eval_data_frame(self, ev_str, inplace=True, **kwds):
@@ -358,7 +357,7 @@ class TreeHandler:
             return None
 
         new_hndl = copy.deepcopy(self)
-        new_hndl._full_data_frame.eval(ev_str, inplace=True, **kwds) # pylint: disable=W0212
+        new_hndl._full_data_frame.eval(ev_str, inplace=True, **kwds)  # pylint: disable=W0212
         return new_hndl
 
     def print_summary(self):
