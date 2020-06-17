@@ -289,7 +289,7 @@ def plot_corr(data_list, columns, labels=None, **kwds):
             tick.tick2line.set_markersize(0)
             tick.label1.set_horizontalalignment('center')
 
-        axs.cax.colorbar(heatmap)
+        plt.colorbar(heatmap, axs.cax)
 
     return res
 
