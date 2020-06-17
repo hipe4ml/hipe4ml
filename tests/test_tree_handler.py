@@ -1,6 +1,7 @@
 """
 Module used to test the TreeHandler class functionalities
 """
+import copy
 import pickle
 from pathlib import Path
 
@@ -91,11 +92,22 @@ def test_tree_handler():  # pylint: disable=too-many-statements
     info_dict['data_var_list'] = prompt_hdlr.get_var_names()
     info_dict['prompt_var_list'] = prompt_hdlr.get_var_names()
 
+    # shuffle dataframes
+    new_hndl = data_hdlr.shuffle_data_frame(size=10, random_state=5, inplace=False)
+    copied_hndl = copy.deepcopy(data_hdlr)
+    copied_hndl.shuffle_data_frame(size=10, random_state=5, inplace=True)
+    assert copied_hndl.get_data_frame().equals(new_hndl.get_data_frame()), \
+        'Inplaced dataframe differs from the not inplaced one'
+
     # apply preselections
     preselections_data = '(pt_cand > 1.30 and pt_cand < 42.00) and (inv_mass > 1.6690 and inv_mass < 2.0690)'
     preselections_prompt = '(pt_cand > 1.00 and pt_cand < 25.60) and (inv_mass > 1.8320 and inv_mass < 1.8940)'
 
+    new_hndl = data_hdlr.apply_preselections(preselections_data, inplace=False)
     data_hdlr.apply_preselections(preselections_data)
+    assert data_hdlr.get_data_frame().equals(new_hndl.get_data_frame()), \
+        'Inplaced dataframe differs from the not inplaced one'
+
     prompt_hdlr.apply_preselections(preselections_prompt)
 
     # get the number of selected data
@@ -107,7 +119,11 @@ def test_tree_handler():  # pylint: disable=too-many-statements
     info_dict['prompt_preselections'] = prompt_hdlr.get_preselections()
 
     # apply dummy eval() on the underlying data frame
+    new_hndl = data_hdlr.eval_data_frame('d_len_z = sqrt(d_len**2 - d_len_xy**2)', inplace=False)
     data_hdlr.eval_data_frame('d_len_z = sqrt(d_len**2 - d_len_xy**2)')
+    assert data_hdlr.get_data_frame().equals(new_hndl.get_data_frame()), \
+        'Inplaced dataframe differs from the not inplaced one'
+
     prompt_hdlr.eval_data_frame('d_len_z = sqrt(d_len**2 - d_len_xy**2)')
 
     # get the new variable list
@@ -139,6 +155,7 @@ def test_tree_handler():  # pylint: disable=too-many-statements
     info_dict['n_prompt_slice'] = len(prompt_slice_df)
 
     # test info_dict reproduction
+
     assert info_dict == reference_dict, 'dictionary with the data info differs from the reference!'
 
     # test sliced data frames reproduction
