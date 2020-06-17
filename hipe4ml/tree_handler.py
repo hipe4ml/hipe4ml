@@ -53,9 +53,23 @@ class TreeHandler:
         self._sliced_df_list = None
 
     def __getitem__(self, column):
+        """
+        Access to the elements of the full data frame using
+        a dictionary-like syntax. Accessing to the slices
+        of the data frame in this way is not supported
+
+        Parameters
+        ------------------------------------------------
+        column: string or list
+            Column name/s of the full data frame
+
+        """
         return self._full_data_frame[column]
 
     def __len__(self):
+        """
+        Evaluate the number of entries in the full data frame
+        """
         return len(self._full_data_frame)
 
     def get_data_frame(self):
