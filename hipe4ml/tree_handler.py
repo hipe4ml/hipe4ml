@@ -52,6 +52,12 @@ class TreeHandler:
         self._projection_binning = None
         self._sliced_df_list = None
 
+    def __getitem__(self, column):
+        return self._full_data_frame[column]
+
+    def __len__(self):
+        return len(self._full_data_frame)
+
     def get_data_frame(self):
         """
         Get the pandas DataFrame stored in the TreeHandler
