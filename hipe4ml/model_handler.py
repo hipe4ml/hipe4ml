@@ -44,6 +44,8 @@ class ModelHandler:
 
             if self.model_params is None:
                 self.model_params = self.model.get_params()
+            else:
+                self.model.set_params(**self.model_params)
 
     def set_model_params(self, model_params):
         """
@@ -386,8 +388,8 @@ class ModelHandler:
         """
         for key in params.keys():
             if key in self.model.get_params():
-                params[key] = type(self.model.get_params()[key])(round(params[key]) \
-                    if isinstance(self.model.get_params()[key], int) else params[key])
+                def_val = self.model.get_params()[key]
+                params[key] = type(def_val)(round(params[key]) if isinstance(def_val, int) else params[key])
         return params
 
     def dump_original_model(self, filename, xgb_format=False):
