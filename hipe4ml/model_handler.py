@@ -281,7 +281,7 @@ class ModelHandler:
             Cross validation score evaluated using
             the ROC AUC metrics
         """
-        opt_params = self.cast_model_params(opt_params)
+        opt_params = self.__cast_model_params(opt_params)
         params = {**self.model_params, **opt_params}
         self.model.set_params(**params)
         if self.training_columns is not None:
@@ -303,7 +303,9 @@ class ModelHandler:
             test set dataframe, test label array
 
         hyperparams_ranges: dict
-            Xgboost hyperparameter ranges(in tuples).
+            Hyperparameter ranges(in tuples).
+            Important: the type of the params must be preserved
+            when passing the ranges.
             For example:
             dict={
                 'max_depth':(10,100)
@@ -336,6 +338,11 @@ class ModelHandler:
             Number of CPUs to perform computation used in the score evaluation
             with cross-validation. Set to -1 to use all CPUs
         """
+        start_params = {}
+        for key in hyperparams_ranges:
+            start_params[key] = hyperparams_ranges[key][0]
+        self.set_model_params({**self.model_params, **start_params})
+
         # just an helper function
         def hyperparams_crossvalidation(**kwargs):
             return self.evaluate_hyperparams(data, kwargs, scoring, nfold, njobs)
@@ -352,12 +359,17 @@ class ModelHandler:
             max_params[key] = optimizer.max['params'][key]
         print(f"Best target: {optimizer.max['target']:.6f}")
         print(f'Best parameters: {max_params}')
-        self.set_model_params({**self.model_params, **self.cast_model_params(max_params)})
+        self.set_model_params({**self.model_params, **self.__cast_model_params(max_params)})
 
-    def cast_model_params(self, params):
+    def __cast_model_params(self, params):
         """
         Check if each model parameter is defined as integer
         and change the parameter dictionary consequently
+        Be careful: some libraries like XGBoost do not have
+        default parameters with the correct type, it is up to
+        the user of this function to make sure that the types
+        are correctly initiated in the model before casting
+        the params dictionary.
 
         Parameters
         -----------------------------------------------------
@@ -373,8 +385,9 @@ class ModelHandler:
             Hyperparameter values updated
         """
         for key in params.keys():
-            if isinstance(self.model.get_params()[key], int):
-                params[key] = int(round(params[key]))
+            if key in self.model.get_params():
+                params[key] = type(self.model.get_params()[key])(round(params[key]) \
+                    if isinstance(self.model.get_params()[key], int) else params[key])
         return params
 
     def dump_original_model(self, filename, xgb_format=False):
