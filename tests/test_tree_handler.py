@@ -97,7 +97,7 @@ def test_tree_handler():  # pylint: disable=too-many-statements
     copied_hndl = copy.deepcopy(data_hdlr)
     copied_hndl.shuffle_data_frame(size=10, random_state=5, inplace=True)
     assert copied_hndl.get_data_frame().equals(new_hndl.get_data_frame()), \
-        'Inplaced dataframe differs from the not inplaced one'
+        'Inplaced dataframe differs from the not inplaced one after shuffling'
 
     # apply preselections
     preselections_data = '(pt_cand > 1.30 and pt_cand < 42.00) and (inv_mass > 1.6690 and inv_mass < 2.0690)'
@@ -106,7 +106,7 @@ def test_tree_handler():  # pylint: disable=too-many-statements
     new_hndl = data_hdlr.apply_preselections(preselections_data, inplace=False)
     data_hdlr.apply_preselections(preselections_data)
     assert data_hdlr.get_data_frame().equals(new_hndl.get_data_frame()), \
-        'Inplaced dataframe differs from the not inplaced one'
+        'Inplaced dataframe differs from the not inplaced one after the preselections'
 
     prompt_hdlr.apply_preselections(preselections_prompt)
 
@@ -119,12 +119,13 @@ def test_tree_handler():  # pylint: disable=too-many-statements
     info_dict['prompt_preselections'] = prompt_hdlr.get_preselections()
 
     # apply dummy eval() on the underlying data frame
-    new_hndl = data_hdlr.eval_data_frame('d_len_z = sqrt(d_len**2 - d_len_xy**2)', inplace=False)
-    data_hdlr.eval_data_frame('d_len_z = sqrt(d_len**2 - d_len_xy**2)')
+    d_len_z_def = 'd_len_z = sqrt(d_len**2 - d_len_xy**2)'
+    new_hndl = data_hdlr.eval_data_frame(d_len_z_def, inplace=False)
+    data_hdlr.eval_data_frame(d_len_z_def)
     assert data_hdlr.get_data_frame().equals(new_hndl.get_data_frame()), \
-        'Inplaced dataframe differs from the not inplaced one'
+        'Inplaced dataframe differs from the not inplaced one after eval'
 
-    prompt_hdlr.eval_data_frame('d_len_z = sqrt(d_len**2 - d_len_xy**2)')
+    prompt_hdlr.eval_data_frame(d_len_z_def)
 
     # get the new variable list
     info_dict['data_new_var_list'] = prompt_hdlr.get_var_names()
