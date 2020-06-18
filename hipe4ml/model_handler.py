@@ -44,6 +44,8 @@ class ModelHandler:
 
             if self.model_params is None:
                 self.model_params = self.model.get_params()
+            else:
+                self.model.set_params(**self.model_params)
 
     def set_model_params(self, model_params):
         """
