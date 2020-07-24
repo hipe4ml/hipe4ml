@@ -1,6 +1,7 @@
 """
 Simple module with a class to manage the data used in the analysis
 """
+import os.path
 import copy
 import numpy as np
 import pandas as pd
@@ -409,16 +410,17 @@ class TreeHandler:
             bins are created
         """
         if self._full_data_frame is not None:
-            self._full_data_frame.to_parquet(
-                f"{path}{base_file_name}.parquet.gzip", compression="gzip")
+            name = os.path.join(path, f"{base_file_name}.parquet.gzip")
+            self._full_data_frame.to_parquet(name, compression="gzip")
         else:
             print("\nWarning: original DataFrame not available")
         if save_slices:
             if self._sliced_df_list is not None:
                 for ind, i_bin in enumerate(self._projection_binning):
-                    name = f"{path}{base_file_name}_{self._projection_variable}_{i_bin[0]}_{i_bin[1]}"
-                    self._sliced_df_list[ind].to_parquet(f"{name}.parquet.gzip",
-                                                         compression="gzip")
+                    name = os.path.join(
+                        path, f"{base_file_name}_{self._projection_variable}_{i_bin[0]}_{i_bin[1]}.parquet.gzip")
+                    self._sliced_df_list[ind].to_parquet(
+                        name, compression="gzip")
             else:
                 print("\nWarning: slices not available")
 
@@ -444,6 +446,7 @@ class TreeHandler:
                 columns_names = self._full_data_frame.columns
             for col_name in columns_names:
                 out_branches[col_name] = np.float32
+                name = os.path.join(path, f"{base_file_name}.root")
             with uproot.recreate(f"{path}{base_file_name}.root", compression=uproot.LZ4(4)) as out_file:
                 out_file[self._tree] = uproot.newtree(out_branches, compression=uproot.LZ4(4))
                 out_file[self._tree].extend(dict(self._full_data_frame[columns_names]))
@@ -452,8 +455,9 @@ class TreeHandler:
         if save_slices:
             if self._sliced_df_list is not None:
                 for ind, i_bin in enumerate(self._projection_binning):
-                    name = f"{path}{base_file_name}_{self._projection_variable}_{i_bin[0]}_{i_bin[1]}"
-                    with uproot.recreate(f"{name}.root", compression=uproot.LZ4(4)) as out_file:
+                    name = os.path.join(path,
+                                        f"{base_file_name}_{self._projection_variable}_{i_bin[0]}_{i_bin[1]}.root")
+                    with uproot.recreate(name, compression=uproot.LZ4(4)) as out_file:
                         out_file[self._tree] = uproot.newtree(out_branches, compression=uproot.LZ4(4))
                         out_file[self._tree].extend(dict(self._sliced_df_list[ind][columns_names]))
             else:
