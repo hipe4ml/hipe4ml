@@ -12,7 +12,7 @@ def test_param_conversion():
     """
     Test the model parameter type conversion funtionality
     """
-    objective_sp = 'multi:softprob' # let's make sonarcloud happy
+    objective_sp = 'multi:softprob'  # let's make sonarcloud happy
     init_dict = {'base_score': 0.5, 'booster': 'gbtree', 'colsample_bylevel': 1., 'colsample_bynode': 1.,
                  'colsample_bytree': 1., 'gamma': 1., 'learning_rate': 1., 'max_delta_step': 0, 'max_depth': 3,
                  'min_child_weight': 1, 'missing': np.nan, 'n_estimators': 100, 'n_jobs': 1,
