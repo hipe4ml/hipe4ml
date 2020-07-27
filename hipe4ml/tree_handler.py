@@ -431,13 +431,13 @@ class TreeHandler:
         Parameters
         ------------------------------------------------
         base_file_name: str
-            Base filename used to save the parquet files
+            Base filename used to save the root files
 
         path: str
-            Base path of the output files
+            Base path of the output root files
 
         save_slices: bool
-            If True and the slices are available, single parquet files for each
+            If True and the slices are available, single root files for each
             bins are created
         """
         out_branches = {}
