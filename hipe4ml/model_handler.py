@@ -340,6 +340,11 @@ class ModelHandler:
             Number of CPUs to perform computation used in the score evaluation
             with cross-validation. Set to -1 to use all CPUs
         """
+        n_classes = len(np.unique(data[1]))
+        self._n_classes = n_classes
+        if self.training_columns is None:
+            self.training_columns = list(data[0].columns)
+
         start_params = {}
         for key in hyperparams_ranges:
             start_params[key] = hyperparams_ranges[key][0]
