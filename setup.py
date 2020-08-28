@@ -85,7 +85,7 @@ SETUP = Setup(
     # installed. For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=["uproot>=3.11.1", "matplotlib>=3.2", "pandas>=1.0", "scikit-learn>=0.23",
-                      "xgboost>=1.0.2,<1.1", "shap>=0.35", "bayesian-optimization>=1.2", "pyarrow>=0.17"],
+                      "xgboost>=1.2", "shap>=0.36", "bayesian-optimization>=1.2", "pyarrow>=0.17"],
 
     python_requires=">=3.6",
 
