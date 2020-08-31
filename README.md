@@ -14,6 +14,11 @@ To install:
 pip install hipe4ml
 ```
 
+**Mac OS X users:** the latest XGBoost version will require OpenMP installed. One easy way of getting it is using brew:
+```bash
+brew install libomp
+```
+
 # Documentation
 
 https://hipe4ml.github.io/
