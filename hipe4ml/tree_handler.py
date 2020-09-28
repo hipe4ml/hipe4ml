@@ -446,8 +446,8 @@ class TreeHandler:
                 columns_names = self._full_data_frame.columns
             for col_name in columns_names:
                 out_branches[col_name] = np.float32
-                name = os.path.join(path, f"{base_file_name}.root")
-            with uproot.recreate(f"{path}{base_file_name}.root", compression=uproot.LZ4(4)) as out_file:
+            name = os.path.join(path, f"{base_file_name}.root")
+            with uproot.recreate(name, compression=uproot.LZ4(4)) as out_file:
                 out_file[self._tree] = uproot.newtree(out_branches, compression=uproot.LZ4(4))
                 out_file[self._tree].extend(dict(self._full_data_frame[columns_names]))
         else:
