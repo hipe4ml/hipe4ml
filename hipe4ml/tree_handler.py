@@ -193,7 +193,10 @@ class TreeHandler:
             If inplace == True return None is returned and the full DataFrame is replaced
         """
         if inplace:
-            self._preselections = preselections
+            if self._preselections:
+                self._preselections += " and " + preselections
+            else:
+                self._preselections = preselections
             self._full_data_frame.query(preselections, inplace=True, **kwds)
             return None
 
