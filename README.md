@@ -50,3 +50,5 @@ If you want to get familiar with hipe4ml, the following tutorials are available:
 | Type | Link |
 | -------------- | ------------- |
 | Binary classifier |  [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/hipe4ml/hipe4ml/blob/master/tutorials/hipe4ml_tutorial_binary.ipynb) |
+
+#change file
