@@ -1,3 +1,4 @@
+ipython>=6.0.0
 uproot==3.13.1
 matplotlib>=3.3.3
 pandas>=1.1.4
