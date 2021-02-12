@@ -1,13 +1,15 @@
 """
 Module containing the analysis utils.
 """
-
+from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pandas as pd
+import uproot
 from scipy.interpolate import InterpolatedUnivariateSpline
 from sklearn.preprocessing import label_binarize
 from sklearn.model_selection import train_test_split
-
+from hipe4ml.model_handler import ModelHandler
+from hipe4ml.tree_handler import TreeHandler
 
 def bdt_efficiency_array(y_truth, y_score, n_points=50, keep_lower=False):
     """
@@ -185,3 +187,75 @@ def train_test_generator(data_list, labels_list, sliced_df=False, **kwds):
         train_test[1], train_test[2] = train_test[2], train_test[1]
         train_test_slices.append(train_test)
     return train_test_slices
+
+
+def get_handler_from_large_file(file_name, tree_name, preselection=None, model_handler=None, score_cut=None, output_margin=True, max_workers=None):
+    """
+    Read a ROOT.TTree in different lazy chuncks. Chuncks are read sequentially or in parallel
+    and eventually pre-selections or ML selections are applied. This allows to preserve the
+    memory usage and speed-up the reading. Chuncks size is decided automatically
+
+    Parameters
+    -----------------------------------------------
+    file_name: str or list of str
+        Name of the input file where the data sit or list of input files
+
+    tree_name: str
+        Name of the tree within the input file, must be the same for all files
+
+    preselection: str
+        String containing the cuts to be applied as preselection on the data contained in the original
+        tree. The string syntax is the one required in the pandas.DataFrame.query() method.
+        You can refer to variables in the environment by prefixing them with an ‘@’ character like @a + b
+
+    model_handler: hipe4ml ModelHandler
+        Model handler to be applied as a preselection on the data contained in the original
+        tree. A column named model_output is added to the tree_handler
+
+    score_cut: int or float
+        Score to be applied as a starting preselection on the data contained in the original tree
+
+    output_margin: bool
+        Whether to predict the raw untransformed margin value. If False model
+        probabilities are returned
+
+    max_workers: int
+        Maximum number of workers employed to read the chuncks. If max_workers is None or not given,
+        it will default to the number of processors on the machine, multiplied by 5. More details in:
+        https://docs.python.org/3/library/concurrent.futures.html
+
+    Returns
+    -----------------------------------------------
+    out: hipe4ml TreeHandler
+        TreeHandler from the original files containing informations on the pre-selections applied
+        
+    
+
+    """
+    if score_cut:
+        assert isinstance(model_handler, ModelHandler), "Score provided but handler not"
+        
+    executor = ThreadPoolExecutor(max_workers) if max_workers is not -1 else None
+    iterator = uproot.pandas.iterate(file_name, tree_name, executor=executor)
+    df_applied = pd.DataFrame()
+    tree_handler = TreeHandler()
+    tree_handler._files = file_name
+    tree_handler._tree = tree_name
+
+    if preselection and score_cut:
+        selection = preselection + " and " + f"model_output>{score_cut}"
+    else:
+        selection = preselection if score_cut is None else score_cut
+
+    tree_handler._preselections = selection
+
+    result = []
+    for data in iterator:
+        if model_handler is not None:
+            data['model_output'] = model_handler.predict(data, output_margin=output_margin)
+        data = data.query(selection)
+        result.append(data)
+    
+    result = pd.concat(result)
+    tree_handler.set_data_frame(result)
+    return tree_handler

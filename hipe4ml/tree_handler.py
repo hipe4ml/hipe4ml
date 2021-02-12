@@ -14,7 +14,7 @@ class TreeHandler:
     or a pandas.DataFrame from a .parquet file
     """
 
-    def __init__(self, file_name, tree_name=None, columns_names=None, **kwds):
+    def __init__(self, file_name=None, tree_name=None, columns_names=None, **kwds):
         """
         Open the file in which the selected tree leaves are converted
         into pandas dataframe columns. If tree_name is not provided file_name is
@@ -38,16 +38,18 @@ class TreeHandler:
                 https://uproot.readthedocs.io/en/latest/opening-files.html#uproot-pandas-iterate
                 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_parquet.html#pandas.read_parquet
         """
-        self._files = file_name if isinstance(file_name, list) else [file_name]
         self._tree = tree_name
-        self._full_data_frame = pd.DataFrame()
-        for file in self._files:
-            if self._tree is not None:
-                self._full_data_frame = self._full_data_frame.append(
-                    uproot.open(file)[self._tree].pandas.df(branches=columns_names, **kwds), ignore_index=True)
-            else:
-                self._full_data_frame = self._full_data_frame.append(
-                    pd.read_parquet(file, columns=columns_names, **kwds), ignore_index=True)
+        self._full_data_frame = None
+        if file_name is not None:
+            self._full_data_frame = pd.DataFrame()
+            self._files = file_name if isinstance(file_name, list) else [file_name]
+            for file in self._files:
+                if self._tree is not None:
+                    self._full_data_frame = self._full_data_frame.append(
+                        uproot.open(file)[self._tree].pandas.df(branches=columns_names, **kwds), ignore_index=True)
+                else:
+                    self._full_data_frame = self._full_data_frame.append(
+                        pd.read_parquet(file, columns=columns_names, **kwds), ignore_index=True)
         self._preselections = None
         self._projection_variable = None
         self._projection_binning = None
@@ -72,6 +74,17 @@ class TreeHandler:
         Evaluate the number of entries in the full data frame
         """
         return len(self._full_data_frame)
+
+    def set_data_frame(self, df):
+        """
+        Set the pandas DataFrame in the TreeHandler
+
+        Parameters
+        ------------------------------------------------
+        df: pandas.DataFrame
+            DataFrame stored in the TreeHandler
+        """
+        self._full_data_frame = df
 
     def get_data_frame(self):
         """
