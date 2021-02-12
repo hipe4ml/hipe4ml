@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from hipe4ml.model_handler import ModelHandler
 from hipe4ml.tree_handler import TreeHandler
 
+
 def bdt_efficiency_array(y_truth, y_score, n_points=50, keep_lower=False):
     """
     Calculate the model efficiency as a function of the score
@@ -166,7 +167,8 @@ def train_test_generator(data_list, labels_list, sliced_df=False, **kwds):
         del data_list, data_frame
         df_tot_train_test = pd.concat(df_list, sort=True)
         del df_list
-        train_test = train_test_split(df_tot_train_test, np.array(labels_train_test), **kwds)
+        train_test = train_test_split(
+            df_tot_train_test, np.array(labels_train_test), **kwds)
         # swap for ModelHandler compatibility
         train_test[1], train_test[2] = train_test[2], train_test[1]
         return train_test
@@ -183,13 +185,15 @@ def train_test_generator(data_list, labels_list, sliced_df=False, **kwds):
         del data_frame
         df_tot_train_test = pd.concat(df_list, sort=True)
         del df_list
-        train_test = train_test_split(df_tot_train_test, np.array(labels_train_test), **kwds)
+        train_test = train_test_split(
+            df_tot_train_test, np.array(labels_train_test), **kwds)
         train_test[1], train_test[2] = train_test[2], train_test[1]
         train_test_slices.append(train_test)
     return train_test_slices
 
 
-def get_handler_from_large_file(file_name, tree_name, preselection=None, model_handler=None, score_cut=None, output_margin=True, max_workers=None):
+def get_handler_from_large_file(file_name, tree_name, preselection=None, model_handler=None,
+                                score_cut=None, output_margin=True, max_workers=None):
     """
     Read a ROOT.TTree in different lazy chuncks. Chuncks are read sequentially or in parallel
     and eventually pre-selections or ML selections are applied. This allows to preserve the
@@ -228,34 +232,37 @@ def get_handler_from_large_file(file_name, tree_name, preselection=None, model_h
     -----------------------------------------------
     out: hipe4ml TreeHandler
         TreeHandler from the original files containing informations on the pre-selections applied
-        
-    
+
+
 
     """
     if score_cut:
-        assert isinstance(model_handler, ModelHandler), "Score provided but handler not"
-        
-    executor = ThreadPoolExecutor(max_workers) if max_workers is not -1 else None
+        assert isinstance(
+            model_handler, ModelHandler), "Score provided but handler not"
+
+    executor = ThreadPoolExecutor(
+        max_workers) if max_workers is not -1 else None
     iterator = uproot.pandas.iterate(file_name, tree_name, executor=executor)
-    df_applied = pd.DataFrame()
+
     tree_handler = TreeHandler()
-    tree_handler._files = file_name
-    tree_handler._tree = tree_name
+    tree_handler._files = file_name     # pylint: disable=protected-access
+    tree_handler._tree = tree_name      # pylint: disable=protected-access
 
     if preselection and score_cut:
         selection = preselection + " and " + f"model_output>{score_cut}"
     else:
         selection = preselection if score_cut is None else score_cut
 
-    tree_handler._preselections = selection
+    tree_handler._preselections = selection     # pylint: disable=protected-access
 
     result = []
     for data in iterator:
         if model_handler is not None:
-            data['model_output'] = model_handler.predict(data, output_margin=output_margin)
+            data['model_output'] = model_handler.predict(
+                data, output_margin=output_margin)
         data = data.query(selection)
         result.append(data)
-    
+
     result = pd.concat(result)
     tree_handler.set_data_frame(result)
     return tree_handler

@@ -75,7 +75,7 @@ class TreeHandler:
         """
         return len(self._full_data_frame)
 
-    def set_data_frame(self, df):
+    def set_data_frame(self, df_orig):
         """
         Set the pandas DataFrame in the TreeHandler
 
@@ -84,7 +84,7 @@ class TreeHandler:
         df: pandas.DataFrame
             DataFrame stored in the TreeHandler
         """
-        self._full_data_frame = df
+        self._full_data_frame = df_orig
 
     def get_data_frame(self):
         """
