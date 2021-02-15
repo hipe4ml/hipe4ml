@@ -3,6 +3,7 @@ Simple module with a class to manage the data used in the analysis
 """
 import os.path
 import copy
+from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pandas as pd
 import uproot
@@ -74,6 +75,80 @@ class TreeHandler:
         Evaluate the number of entries in the full data frame
         """
         return len(self._full_data_frame)
+
+    def get_handler_from_large_file(self, file_name, tree_name, preselection=None, model_handler=None,
+                                    score_cut=None, output_margin=True, max_workers=None):
+        """
+        Read a ROOT.TTree in different lazy chuncks. Chuncks are read sequentially or in parallel
+        and eventually pre-selections or ML selections are applied. This allows to preserve the
+        memory usage and speed-up the reading. Chuncks size is decided automatically
+
+        Parameters
+        -----------------------------------------------
+        file_name: str or list of str
+            Name of the input file where the data sit or list of input files
+
+        tree_name: str
+            Name of the tree within the input file, must be the same for all files
+
+        preselection: str
+            String containing the cuts to be applied as preselection on the data contained in the original
+            tree. The string syntax is the one required in the pandas.DataFrame.query() method.
+            You can refer to variables in the environment by prefixing them with an ‘@’ character like @a + b
+
+        model_handler: hipe4ml ModelHandler
+            Model handler to be applied as a preselection on the data contained in the original
+            tree. A column named model_output is added to the tree_handler
+
+        score_cut: int or float
+            Score to be applied as a starting preselection on the data contained in the original tree
+
+        output_margin: bool
+            Whether to predict the raw untransformed margin value. If False model
+            probabilities are returned
+
+        max_workers: int
+            Maximum number of workers employed to read the chuncks. If max_workers is None or not given,
+            it will default to the number of processors on the machine, multiplied by 5. If max_workers==-1
+            the multi-threading computation is turned off.
+            More details in:
+            https://docs.python.org/3/library/concurrent.futures.html
+
+        Returns
+        -----------------------------------------------
+        out: hipe4ml TreeHandler
+            TreeHandler from the original files containing informations on the pre-selections applied
+
+
+
+        """
+        if score_cut:
+            assert model_handler is not None, "Score provided but handler not"
+
+        executor = ThreadPoolExecutor(
+            max_workers) if max_workers is not -1 else None
+        iterator = uproot.pandas.iterate(file_name, tree_name, executor=executor)
+
+        self._files = file_name
+        self._tree = tree_name
+
+        if preselection and score_cut:
+            selection = preselection + " and " + f"model_output>{score_cut}"
+        else:
+            selection = preselection if score_cut is None else score_cut
+
+        self._preselections = selection
+
+        result = []
+        for data in iterator:
+            if model_handler is not None:
+                data['model_output'] = model_handler.predict(
+                    data, output_margin=output_margin)
+            data = data.query(selection)
+            result.append(data)
+
+        result = pd.concat(result)
+        self._full_data_frame = result
 
     def set_data_frame(self, df_orig):
         """
