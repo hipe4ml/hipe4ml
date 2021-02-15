@@ -69,6 +69,7 @@ SETUP = Setup(
         "Intended Audience :: Developers",
         "Topic :: Scientific/Engineering :: Physics",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8"
     ],
@@ -84,15 +85,16 @@ SETUP = Setup(
     # installed. For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=["uproot==3.13.1", "matplotlib>=3.3.3", "pandas>=1.1.4", "scikit-learn>=0.23.2",
-                      "xgboost>=1.2.1", "shap>=0.37", "bayesian-optimization>=1.2", "pyarrow>=2.0"],
+                      "xgboost>=1.2.1", "shap>=0.38.1", "bayesian-optimization>=1.2", "pyarrow>=2.0",
+                      "ipython>=6.0.0"],
 
-    python_requires=">=3.7",
+    python_requires=">=3.6",
 
     # List additional groups of dependencies here (e.g. development dependencies). You can install
     # these using the following syntax, for example:
     # $ pip install -e .[dev,test]
     extras_require={
-        "dev": ["pylint>=2.4.4", "flake8>=3.7.9", "pytest>=5.3.4", "twine>=1.11.0", "setuptools>=38.6.0",
+        "dev": ["pylint>=2.4.4", "flake8>=3.7.9", "pytest>=5.3.4", "twine>=1.11.0", "setuptools>=53.0.0",
                 "wheel>=0.31.0"]
     },
 

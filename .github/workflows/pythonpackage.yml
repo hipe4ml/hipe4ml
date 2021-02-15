@@ -8,7 +8,7 @@ jobs:
     strategy:
       max-parallel: 6
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8]
         test-tool: [pylint, flake8, pytest]
 
     steps:
@@ -20,6 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
+          pip install --upgrade setuptools
           pip install -r requirements.txt
       - name: Test with ${{ matrix.test-tool }}
         run: |
@@ -39,7 +40,7 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.6, 3.7, 3.8]
         test-tool: [pylint, flake8, pytest]
 
     steps:
@@ -52,6 +53,7 @@ jobs:
         run: |
           brew install libomp
           python -m pip install --upgrade pip
+          pip install --upgrade setuptools
           pip install -r requirements.txt
       - name: Test with ${{ matrix.test-tool }}
         run: |
