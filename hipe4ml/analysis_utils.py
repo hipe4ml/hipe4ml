@@ -203,17 +203,17 @@ def apply_model_handler_to_pandas(data_frame, model_handler, output_margin=True,
       column_name: str
         Name of the new column with the model output
     """
-    n_class = model_handler.get_n_classes()
+    n_classes = model_handler.get_n_classes()
     if column_name is None:
-        if n_class > 2:
-            column_name = [f'model_output_{i_class}' for i_class in range(n_class)]
+        if n_classes > 2:
+            column_name = [f'model_output_{i_class}' for i_class in range(n_classes)]
         else:
             column_name = "model_output"
 
-    prediction = model_handler.predict(data_frame, output_margin)
-    if n_class > 2:
-        for i_class in range(n_class):
-            data_frame[column_name[i_class]] = prediction[:, i_class]
+    predictions = model_handler.predict(data_frame, output_margin)
+    if n_classes > 2:
+        for i_class in range(n_classes):
+            data_frame[column_name[i_class]] = predictions[:, i_class]
         return
 
-    data_frame[column_name] = prediction
+    data_frame[column_name] = predictions
