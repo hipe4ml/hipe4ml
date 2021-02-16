@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pandas as pd
 import uproot
-
+import hipe4ml.analysis_utils as au
 
 class TreeHandler:
     """
@@ -76,8 +76,8 @@ class TreeHandler:
         """
         return len(self._full_data_frame)
 
-    def get_handler_from_large_file(self, file_name, tree_name, preselection=None, model_handler=None,
-                                    score_cut=None, output_margin=True, max_workers=None):
+    def get_handler_from_large_file(self, file_name, tree_name, model_handler=None, preselection=None,
+                                    output_margin=True, max_workers=None):
         """
         Read a ROOT.TTree in different lazy chuncks. Chuncks are read sequentially or in parallel
         and eventually pre-selections or ML selections are applied. This allows to preserve the
@@ -91,17 +91,18 @@ class TreeHandler:
         tree_name: str
             Name of the tree within the input file, must be the same for all files
 
+        model_handler: hipe4ml ModelHandler
+            Model handler to be applied as a preselection on the data contained in the original
+            tree. A column named model_output is added to the tree_handler. In case of multi-classification
+            a new column is added for each class with name: model_output_{i}
+
         preselection: str
             String containing the cuts to be applied as preselection on the data contained in the original
             tree. The string syntax is the one required in the pandas.DataFrame.query() method.
-            You can refer to variables in the environment by prefixing them with an ‘@’ character like @a + b
-
-        model_handler: hipe4ml ModelHandler
-            Model handler to be applied as a preselection on the data contained in the original
-            tree. A column named model_output is added to the tree_handler
-
-        score_cut: int or float
-            Score to be applied as a starting preselection on the data contained in the original tree
+            You can refer to variables in the environment by prefixing them with an ‘@’ character like @a + b.
+            You can apply ML based preselections like in the example below:
+            - "model_output > @score_cut" # binary classification
+            - "model_output_0 > @score_cut[0] and model_output_1 <= @score_cut[1]" # multi-classification
 
         output_margin: bool
             Whether to predict the raw untransformed margin value. If False model
@@ -122,29 +123,20 @@ class TreeHandler:
 
 
         """
-        if score_cut:
-            assert model_handler is not None, "Score provided but handler not"
+        self._files = file_name
+        self._tree = tree_name
 
         executor = ThreadPoolExecutor(
             max_workers) if max_workers is not -1 else None
         iterator = uproot.pandas.iterate(file_name, tree_name, executor=executor)
 
-        self._files = file_name
-        self._tree = tree_name
-
-        if preselection and score_cut:
-            selection = preselection + " and " + f"model_output>{score_cut}"
-        else:
-            selection = preselection if score_cut is None else score_cut
-
-        self._preselections = selection
+        self._preselections = preselection
 
         result = []
         for data in iterator:
             if model_handler is not None:
-                data['model_output'] = model_handler.predict(
-                    data, output_margin=output_margin)
-            data = data.query(selection)
+                au.apply_model_handler_to_pandas(data, model_handler, output_margin=output_margin)
+            data = data.query(preselection)
             result.append(data)
 
         result = pd.concat(result)
