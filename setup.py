@@ -8,7 +8,7 @@ import os.path
 from setuptools import setup, find_packages
 
 
-class Setup(object):
+class Setup():
     """Convenience wrapper (for C.I. purposes) of the `setup()` call form `setuptools`.
     """
     def __init__(self, **kw):
