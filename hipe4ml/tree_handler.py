@@ -34,9 +34,7 @@ class TreeHandler:
             List of the names of the branches that one wants to analyse. If columns_names is
             not specified all the branches are converted
 
-        **kwds: extra arguments are passed on to the uproot.pandas.iterate or the pandas.read_parquet
-                methods:
-                https://uproot.readthedocs.io/en/latest/opening-files.html#uproot-pandas-iterate
+        **kwds: extra arguments are passed on to the pandas.read_parquet method:
                 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_parquet.html#pandas.read_parquet
         """
         self._tree = tree_name
@@ -48,7 +46,8 @@ class TreeHandler:
             for file in self._files:
                 if self._tree is not None:
                     self._full_data_frame = self._full_data_frame.append(
-                        uproot.open(file)[self._tree].pandas.df(branches=columns_names, **kwds), ignore_index=True)
+                        uproot.open(f'{file}:{self._tree}').arrays(filter_name=columns_names, library='pd'),
+                        ignore_index=True)
                 else:
                     self._full_data_frame = self._full_data_frame.append(
                         pd.read_parquet(file, columns=columns_names, **kwds), ignore_index=True)
@@ -127,10 +126,9 @@ class TreeHandler:
         self._files = file_name
         self._tree = tree_name
 
-        executor = ThreadPoolExecutor(
-            max_workers) if max_workers is not -1 else None
-        iterator = uproot.pandas.iterate(
-            file_name, tree_name, executor=executor)
+        executor = ThreadPoolExecutor(max_workers) if max_workers != -1 else None
+        iterator = uproot.iterate(f'{file_name}:{tree_name}', library='pd', decompression_executor=executor,
+                                  interpretation_executor=executor)
 
         self._preselections = preselection
 
