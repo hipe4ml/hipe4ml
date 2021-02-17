@@ -7,7 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pandas as pd
 import uproot
-import hipe4ml.analysis_utils as au
+
 
 class TreeHandler:
     """
@@ -43,7 +43,8 @@ class TreeHandler:
         self._full_data_frame = None
         if file_name is not None:
             self._full_data_frame = pd.DataFrame()
-            self._files = file_name if isinstance(file_name, list) else [file_name]
+            self._files = file_name if isinstance(
+                file_name, list) else [file_name]
             for file in self._files:
                 if self._tree is not None:
                     self._full_data_frame = self._full_data_frame.append(
@@ -128,14 +129,24 @@ class TreeHandler:
 
         executor = ThreadPoolExecutor(
             max_workers) if max_workers is not -1 else None
-        iterator = uproot.pandas.iterate(file_name, tree_name, executor=executor)
+        iterator = uproot.pandas.iterate(
+            file_name, tree_name, executor=executor)
 
         self._preselections = preselection
 
         result = []
         for data in iterator:
             if model_handler is not None:
-                au.apply_model_handler_to_pandas(data, model_handler, output_margin=output_margin)
+                predictions = model_handler.predict(data, output_margin)
+                n_classes = model_handler.get_n_classes()
+                if n_classes > 2:
+                    for i_class in range(n_classes):
+                        column_name = f'model_output_{i_class}'
+                        data[column_name[i_class]] = predictions[:, i_class]
+                else:
+                    column_name = "model_output"
+                    data[column_name] = predictions
+
             data = data.query(preselection)
             result.append(data)
 
@@ -310,7 +321,8 @@ class TreeHandler:
             n_class = model_handler.get_n_classes()
         if column_name is None:
             if n_class > 2:
-                column_name = [f'model_output_{i_class}' for i_class in range(n_class)]
+                column_name = [
+                    f'model_output_{i_class}' for i_class in range(n_class)]
             else:
                 column_name = "model_output"
 
@@ -319,15 +331,18 @@ class TreeHandler:
                 prediction = mod_handl.predict(sliced_df, output_margin)
                 if n_class > 2:
                     for i_class in range(n_class):
-                        sliced_df[column_name[i_class]] = prediction[:, i_class]
+                        sliced_df[column_name[i_class]
+                                  ] = prediction[:, i_class]
                 else:
                     sliced_df[column_name] = prediction
             return
 
-        prediction = model_handler.predict(self._full_data_frame, output_margin)
+        prediction = model_handler.predict(
+            self._full_data_frame, output_margin)
         if n_class > 2:
             for i_class in range(n_class):
-                self._full_data_frame[column_name[i_class]] = prediction[:, i_class]
+                self._full_data_frame[column_name[i_class]
+                                      ] = prediction[:, i_class]
             return
 
         self._full_data_frame[column_name] = prediction
@@ -366,7 +381,8 @@ class TreeHandler:
         if selections:
             subset.apply_preselections(selections, inplace=True)
         if frac or size:
-            subset.shuffle_data_frame(frac=frac, size=size, inplace=True, random_state=rndm_state)
+            subset.shuffle_data_frame(
+                frac=frac, size=size, inplace=True, random_state=rndm_state)
         return subset
 
     def slice_data_frame(self, projection_variable, projection_binning, delete_original_df=False):
@@ -427,7 +443,8 @@ class TreeHandler:
         """
 
         if inplace:
-            self._full_data_frame = self._full_data_frame.sample(size, frac, **kwds)
+            self._full_data_frame = self._full_data_frame.sample(
+                size, frac, **kwds)
             return None
 
         new_hndl = copy.deepcopy(self)
@@ -531,8 +548,10 @@ class TreeHandler:
                 out_branches[col_name] = np.float32
             name = os.path.join(path, f"{base_file_name}.root")
             with uproot.recreate(name, compression=uproot.LZ4(4)) as out_file:
-                out_file[self._tree] = uproot.newtree(out_branches, compression=uproot.LZ4(4))
-                out_file[self._tree].extend(dict(self._full_data_frame[columns_names]))
+                out_file[self._tree] = uproot.newtree(
+                    out_branches, compression=uproot.LZ4(4))
+                out_file[self._tree].extend(
+                    dict(self._full_data_frame[columns_names]))
         else:
             print("\nWarning: original DataFrame not available")
         if save_slices:
@@ -541,7 +560,9 @@ class TreeHandler:
                     name = os.path.join(path,
                                         f"{base_file_name}_{self._projection_variable}_{i_bin[0]}_{i_bin[1]}.root")
                     with uproot.recreate(name, compression=uproot.LZ4(4)) as out_file:
-                        out_file[self._tree] = uproot.newtree(out_branches, compression=uproot.LZ4(4))
-                        out_file[self._tree].extend(dict(self._sliced_df_list[ind][columns_names]))
+                        out_file[self._tree] = uproot.newtree(
+                            out_branches, compression=uproot.LZ4(4))
+                        out_file[self._tree].extend(
+                            dict(self._sliced_df_list[ind][columns_names]))
             else:
                 print("\nWarning: slices not available")

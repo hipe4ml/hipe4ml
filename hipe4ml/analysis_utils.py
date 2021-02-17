@@ -186,34 +186,3 @@ def train_test_generator(data_list, labels_list, sliced_df=False, **kwds):
         train_test[1], train_test[2] = train_test[2], train_test[1]
         train_test_slices.append(train_test)
     return train_test_slices
-
-def apply_model_handler_to_pandas(data_frame, model_handler, output_margin=True, column_name=None):
-    """
-    Apply the ML model to data: a new column is added to the DataFrame
-
-      Parameters
-    ------------------------------------------------
-    model_handler: list or hipe4ml model_handler
-        If a list of handlers(one for each bin) is provided, the ML
-        model is applied to the slices
-
-      output_margin: bool
-        Whether to output the raw untransformed margin value.
-
-      column_name: str
-        Name of the new column with the model output
-    """
-    n_classes = model_handler.get_n_classes()
-    if column_name is None:
-        if n_classes > 2:
-            column_name = [f'model_output_{i_class}' for i_class in range(n_classes)]
-        else:
-            column_name = "model_output"
-
-    predictions = model_handler.predict(data_frame, output_margin)
-    if n_classes > 2:
-        for i_class in range(n_classes):
-            data_frame[column_name[i_class]] = predictions[:, i_class]
-        return
-
-    data_frame[column_name] = predictions
