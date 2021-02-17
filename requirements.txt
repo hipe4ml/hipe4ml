@@ -7,3 +7,4 @@ shap==0.38.1
 bayesian-optimization==1.2.0
 pyarrow==3.0.0
 ipython==7.16.1
+jedi==0.17.2
