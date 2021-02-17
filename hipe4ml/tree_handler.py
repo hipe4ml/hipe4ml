@@ -3,6 +3,7 @@ Simple module with a class to manage the data used in the analysis
 """
 import os.path
 import copy
+from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import pandas as pd
 import uproot
@@ -14,7 +15,7 @@ class TreeHandler:
     or a pandas.DataFrame from a .parquet file
     """
 
-    def __init__(self, file_name, tree_name=None, columns_names=None, **kwds):
+    def __init__(self, file_name=None, tree_name=None, columns_names=None, **kwds):
         """
         Open the file in which the selected tree leaves are converted
         into pandas dataframe columns. If tree_name is not provided file_name is
@@ -38,16 +39,19 @@ class TreeHandler:
                 https://uproot.readthedocs.io/en/latest/opening-files.html#uproot-pandas-iterate
                 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_parquet.html#pandas.read_parquet
         """
-        self._files = file_name if isinstance(file_name, list) else [file_name]
         self._tree = tree_name
-        self._full_data_frame = pd.DataFrame()
-        for file in self._files:
-            if self._tree is not None:
-                self._full_data_frame = self._full_data_frame.append(
-                    uproot.open(file)[self._tree].pandas.df(branches=columns_names, **kwds), ignore_index=True)
-            else:
-                self._full_data_frame = self._full_data_frame.append(
-                    pd.read_parquet(file, columns=columns_names, **kwds), ignore_index=True)
+        self._full_data_frame = None
+        if file_name is not None:
+            self._full_data_frame = pd.DataFrame()
+            self._files = file_name if isinstance(
+                file_name, list) else [file_name]
+            for file in self._files:
+                if self._tree is not None:
+                    self._full_data_frame = self._full_data_frame.append(
+                        uproot.open(file)[self._tree].pandas.df(branches=columns_names, **kwds), ignore_index=True)
+                else:
+                    self._full_data_frame = self._full_data_frame.append(
+                        pd.read_parquet(file, columns=columns_names, **kwds), ignore_index=True)
         self._preselections = None
         self._projection_variable = None
         self._projection_binning = None
@@ -72,6 +76,93 @@ class TreeHandler:
         Evaluate the number of entries in the full data frame
         """
         return len(self._full_data_frame)
+
+    def get_handler_from_large_file(self, file_name, tree_name, model_handler=None, preselection=None,
+                                    output_margin=True, max_workers=None):
+        """
+        Read a ROOT.TTree in different lazy chuncks. Chuncks are read sequentially or in parallel
+        and eventually pre-selections or ML selections are applied. This allows to preserve the
+        memory usage and speed-up the reading. Chuncks size is decided automatically
+
+        Parameters
+        -----------------------------------------------
+        file_name: str or list of str
+            Name of the input file where the data sit or list of input files
+
+        tree_name: str
+            Name of the tree within the input file, must be the same for all files
+
+        model_handler: hipe4ml ModelHandler
+            Model handler to be applied as a preselection on the data contained in the original
+            tree. A column named model_output is added to the tree_handler. In case of multi-classification
+            a new column is added for each class with name: model_output_{i}
+
+        preselection: str
+            String containing the cuts to be applied as preselection on the data contained in the original
+            tree. The string syntax is the one required in the pandas.DataFrame.query() method.
+            You can refer to variables in the environment by prefixing them with an ‘@’ character like @a + b.
+            You can apply ML based preselections like in the example below:
+            - "model_output > @score_cut" # binary classification
+            - "model_output_0 > @score_cut[0] and model_output_1 <= @score_cut[1]" # multi-classification
+
+        output_margin: bool
+            Whether to predict the raw untransformed margin value. If False model
+            probabilities are returned
+
+        max_workers: int
+            Maximum number of workers employed to read the chuncks. If max_workers is None or not given,
+            it will default to the number of processors on the machine, multiplied by 5. If max_workers==-1
+            the multi-threading computation is turned off.
+            More details in:
+            https://docs.python.org/3/library/concurrent.futures.html
+
+        Returns
+        -----------------------------------------------
+        out: hipe4ml TreeHandler
+            TreeHandler from the original files containing informations on the pre-selections applied
+
+
+
+        """
+        self._files = file_name
+        self._tree = tree_name
+
+        executor = ThreadPoolExecutor(
+            max_workers) if max_workers is not -1 else None
+        iterator = uproot.pandas.iterate(
+            file_name, tree_name, executor=executor)
+
+        self._preselections = preselection
+
+        result = []
+        for data in iterator:
+            if model_handler is not None:
+                predictions = model_handler.predict(data, output_margin)
+                n_classes = model_handler.get_n_classes()
+                if n_classes > 2:
+                    for i_class in range(n_classes):
+                        column_name = f'model_output_{i_class}'
+                        data[column_name] = predictions[:, i_class]
+                else:
+                    column_name = "model_output"
+                    data[column_name] = predictions
+
+            data = data.query(preselection)
+            result.append(data)
+
+        result = pd.concat(result)
+        self._full_data_frame = result
+
+    def set_data_frame(self, df_orig):
+        """
+        Set the pandas DataFrame in the TreeHandler
+
+        Parameters
+        ------------------------------------------------
+        df: pandas.DataFrame
+            DataFrame stored in the TreeHandler
+        """
+        self._full_data_frame = df_orig
 
     def get_data_frame(self):
         """
