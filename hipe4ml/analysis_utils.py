@@ -163,8 +163,7 @@ def train_test_generator(data_list, labels_list, sliced_df=False, **kwds):
         del data_list, data_frame
         df_tot_train_test = pd.concat(df_list, sort=True)
         del df_list
-        train_test = train_test_split(
-            df_tot_train_test, np.array(labels_train_test), **kwds)
+        train_test = train_test_split(df_tot_train_test, np.array(labels_train_test), **kwds)
         # swap for ModelHandler compatibility
         train_test[1], train_test[2] = train_test[2], train_test[1]
         return train_test
