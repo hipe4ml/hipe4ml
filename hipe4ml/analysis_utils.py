@@ -1,7 +1,6 @@
 """
 Module containing the analysis utils.
 """
-
 import numpy as np
 import pandas as pd
 from scipy.interpolate import InterpolatedUnivariateSpline
