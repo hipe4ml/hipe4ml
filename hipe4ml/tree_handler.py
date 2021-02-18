@@ -34,21 +34,20 @@ class TreeHandler:
             List of the names of the branches that one wants to analyse. If columns_names is
             not specified all the branches are converted
 
-        **kwds: extra arguments are passed on to the uproot.pandas.iterate or the pandas.read_parquet
-                methods:
-                https://uproot.readthedocs.io/en/latest/opening-files.html#uproot-pandas-iterate
+        **kwds: extra arguments are passed on to the uproot.open or pandas.read_parquet methods:
+                https://uproot.readthedocs.io/en/latest/uproot.reading.open.html#uproot.reading.open
                 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_parquet.html#pandas.read_parquet
         """
         self._tree = tree_name
         self._full_data_frame = None
         if file_name is not None:
             self._full_data_frame = pd.DataFrame()
-            self._files = file_name if isinstance(
-                file_name, list) else [file_name]
+            self._files = file_name if isinstance(file_name, list) else [file_name]
             for file in self._files:
                 if self._tree is not None:
                     self._full_data_frame = self._full_data_frame.append(
-                        uproot.open(file)[self._tree].pandas.df(branches=columns_names, **kwds), ignore_index=True)
+                        uproot.open(f'{file}:{self._tree}', **kwds).arrays(filter_name=columns_names, library='pd'),
+                        ignore_index=True)
                 else:
                     self._full_data_frame = self._full_data_frame.append(
                         pd.read_parquet(file, columns=columns_names, **kwds), ignore_index=True)
@@ -77,7 +76,7 @@ class TreeHandler:
         """
         return len(self._full_data_frame)
 
-    def get_handler_from_large_file(self, file_name, tree_name, model_handler=None, preselection=None,
+    def get_handler_from_large_file(self, file_name, tree_name, model_handler=None, preselection='',
                                     output_margin=True, max_workers=None):
         """
         Read a ROOT.TTree in different lazy chuncks. Chuncks are read sequentially or in parallel
@@ -124,15 +123,14 @@ class TreeHandler:
 
 
         """
-        self._files = file_name
+        self._files = file_name if isinstance(file_name, list) else [file_name]
         self._tree = tree_name
-
-        executor = ThreadPoolExecutor(
-            max_workers) if max_workers is not -1 else None
-        iterator = uproot.pandas.iterate(
-            file_name, tree_name, executor=executor)
-
         self._preselections = preselection
+        inputs = [f'{file_name}:{tree_name}' for file_name in self._files]
+
+        executor = ThreadPoolExecutor(max_workers) if max_workers != -1 else None
+        iterator = uproot.iterate(inputs, library='pd', decompression_executor=executor,
+                                  interpretation_executor=executor)
 
         result = []
         for data in iterator:
@@ -147,7 +145,8 @@ class TreeHandler:
                     column_name = "model_output"
                     data[column_name] = predictions
 
-            data = data.query(preselection)
+            if preselection:
+                data = data.query(preselection)
             result.append(data)
 
         result = pd.concat(result)
@@ -515,44 +514,5 @@ class TreeHandler:
                         path, f"{base_file_name}_{self._projection_variable}_{i_bin[0]}_{i_bin[1]}.parquet.gzip")
                     self._sliced_df_list[ind].to_parquet(
                         name, compression="gzip")
-            else:
-                print("\nWarning: slices not available")
-
-    def write_df_to_root_files(self, base_file_name="TreeDataFrame", path="./", save_slices=False, columns_names=None):
-        """
-        Write the pandas dataframe to ROOT files in a tree
-
-        Parameters
-        ------------------------------------------------
-        base_file_name: str
-            Base filename used to save the root files
-
-        path: str
-            Base path of the output root files
-
-        save_slices: bool
-            If True and the slices are available, single root files for each
-            bins are created
-        """
-        out_branches = {}
-        if self._full_data_frame is not None:
-            if columns_names is None:
-                columns_names = self._full_data_frame.columns
-            for col_name in columns_names:
-                out_branches[col_name] = np.float32
-            name = os.path.join(path, f"{base_file_name}.root")
-            with uproot.recreate(name, compression=uproot.LZ4(4)) as out_file:
-                out_file[self._tree] = uproot.newtree(out_branches, compression=uproot.LZ4(4))
-                out_file[self._tree].extend(dict(self._full_data_frame[columns_names]))
-        else:
-            print("\nWarning: original DataFrame not available")
-        if save_slices:
-            if self._sliced_df_list is not None:
-                for ind, i_bin in enumerate(self._projection_binning):
-                    name = os.path.join(path,
-                                        f"{base_file_name}_{self._projection_variable}_{i_bin[0]}_{i_bin[1]}.root")
-                    with uproot.recreate(name, compression=uproot.LZ4(4)) as out_file:
-                        out_file[self._tree] = uproot.newtree(out_branches, compression=uproot.LZ4(4))
-                        out_file[self._tree].extend(dict(self._sliced_df_list[ind][columns_names]))
             else:
                 print("\nWarning: slices not available")
