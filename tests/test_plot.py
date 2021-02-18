@@ -24,7 +24,7 @@ DATA = [TRAIN_SET, Y_TRAIN, TEST_SET, Y_TEST]
 # --------------------------------------------
 
 # training and testing
-INPUT_MODEL = xgb.XGBClassifier()
+INPUT_MODEL = xgb.XGBClassifier(use_label_encoder=False)
 MODEL = ModelHandler(INPUT_MODEL)
 MODEL.train_test_model(DATA)
 Y_PRED = MODEL.predict(DATA[2])
