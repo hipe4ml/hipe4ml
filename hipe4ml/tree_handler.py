@@ -34,19 +34,19 @@ class TreeHandler:
             List of the names of the branches that one wants to analyse. If columns_names is
             not specified all the branches are converted
 
-        **kwds: extra arguments are passed on to the pandas.read_parquet method:
+        **kwds: extra arguments are passed on to the uproot.open or pandas.read_parquet methods:
+                https://uproot.readthedocs.io/en/latest/uproot.reading.open.html#uproot.reading.open
                 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_parquet.html#pandas.read_parquet
         """
         self._tree = tree_name
         self._full_data_frame = None
         if file_name is not None:
             self._full_data_frame = pd.DataFrame()
-            self._files = file_name if isinstance(
-                file_name, list) else [file_name]
+            self._files = file_name if isinstance(file_name, list) else [file_name]
             for file in self._files:
                 if self._tree is not None:
                     self._full_data_frame = self._full_data_frame.append(
-                        uproot.open(f'{file}:{self._tree}').arrays(filter_name=columns_names, library='pd'),
+                        uproot.open(f'{file}:{self._tree}', **kwds).arrays(filter_name=columns_names, library='pd'),
                         ignore_index=True)
                 else:
                     self._full_data_frame = self._full_data_frame.append(
@@ -76,7 +76,7 @@ class TreeHandler:
         """
         return len(self._full_data_frame)
 
-    def get_handler_from_large_file(self, file_name, tree_name, model_handler=None, preselection=None,
+    def get_handler_from_large_file(self, file_name, tree_name, model_handler=None, preselection='',
                                     output_margin=True, max_workers=None):
         """
         Read a ROOT.TTree in different lazy chuncks. Chuncks are read sequentially or in parallel
@@ -123,14 +123,14 @@ class TreeHandler:
 
 
         """
-        self._files = file_name
+        self._files = file_name if isinstance(file_name, list) else [file_name]
         self._tree = tree_name
+        self._preselections = preselection
+        inputs = [f'{file_name}:{tree_name}' for file_name in self._files]
 
         executor = ThreadPoolExecutor(max_workers) if max_workers != -1 else None
-        iterator = uproot.iterate(f'{file_name}:{tree_name}', library='pd', decompression_executor=executor,
+        iterator = uproot.iterate(inputs, library='pd', decompression_executor=executor,
                                   interpretation_executor=executor)
-
-        self._preselections = preselection
 
         result = []
         for data in iterator:
@@ -145,7 +145,8 @@ class TreeHandler:
                     column_name = "model_output"
                     data[column_name] = predictions
 
-            data = data.query(preselection)
+            if preselection:
+                data = data.query(preselection)
             result.append(data)
 
         result = pd.concat(result)

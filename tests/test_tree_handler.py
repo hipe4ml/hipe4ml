@@ -60,6 +60,10 @@ def test_tree_handler():  # pylint: disable=too-many-statements
     prompt_pq_hdlr = TreeHandler(test_data[3])
     mult_hdlr = TreeHandler(test_data[:2], 'treeMLDplus')
     mult_pq_hdlr = TreeHandler(test_data[2:])
+    data_hdlr_large_files = TreeHandler()
+    mult_hdlr_large_files = TreeHandler()
+    data_hdlr_large_files.get_handler_from_large_file(test_data[0], 'treeMLDplus')
+    mult_hdlr_large_files.get_handler_from_large_file(test_data[:2], 'treeMLDplus')
 
     # open refernces objects
     reference_data_slice_df = pd.read_pickle(references[0])
@@ -80,6 +84,12 @@ def test_tree_handler():  # pylint: disable=too-many-statements
     assert mult_hdlr.get_data_frame().equals(merged_df), 'loading of multiple root files not working!'
     merged_pq_df = pd.concat([data_pq_hdlr.get_data_frame(), prompt_pq_hdlr.get_data_frame()], ignore_index=True)
     assert mult_pq_hdlr.get_data_frame().equals(merged_pq_df), 'loading of multiple parquet files not working!'
+
+    # test loading using get_handler_from_large_file
+    assert data_hdlr_large_files.get_data_frame().equals(data_hdlr.get_data_frame()), \
+        'get_handler_from_large_file() not working for single file'
+    assert mult_hdlr_large_files.get_data_frame().equals(mult_hdlr.get_data_frame()), \
+        'get_handler_from_large_file() not working for multiple files'
 
     # define the info dict that will be compared with the reference
     info_dict = {}
