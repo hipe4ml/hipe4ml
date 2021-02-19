@@ -71,8 +71,6 @@ def test_tree_handler():  # pylint: disable=too-many-statements
     with open(references[2], 'rb') as handle:
         reference_dict = pickle.load(handle)
 
-    terminate_tree_handler_test_workspace(test_dir)
-
     # test that data is the same in root and parquet
     assert data_hdlr.get_data_frame().equals(data_pq_hdlr.get_data_frame()), \
         'data Dataframe from parquet file differs from the root file one!'
@@ -117,6 +115,12 @@ def test_tree_handler():  # pylint: disable=too-many-statements
     data_hdlr.apply_preselections(preselections_data)
     assert data_hdlr.get_data_frame().equals(new_hndl.get_data_frame()), \
         'Inplaced dataframe differs from the not inplaced one after the preselections'
+
+    data_hdlr_large_files.get_handler_from_large_file(test_data[0], 'treeMLDplus', preselection=preselections_data)
+    assert data_hdlr.get_data_frame().equals(data_hdlr_large_files.get_data_frame()), \
+        'get_handler_from_large_file() not working when applying preselections'
+
+    terminate_tree_handler_test_workspace(test_dir)
 
     prompt_hdlr.apply_preselections(preselections_prompt)
 
