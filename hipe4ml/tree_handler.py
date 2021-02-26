@@ -115,13 +115,6 @@ class TreeHandler:
             More details in:
             https://docs.python.org/3/library/concurrent.futures.html
 
-        Returns
-        -----------------------------------------------
-        out: hipe4ml TreeHandler
-            TreeHandler from the original files containing informations on the pre-selections applied
-
-
-
         """
         self._files = file_name if isinstance(file_name, list) else [file_name]
         self._tree = tree_name
