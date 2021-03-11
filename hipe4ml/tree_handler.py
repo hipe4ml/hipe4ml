@@ -34,8 +34,8 @@ class TreeHandler:
             List of the names of the branches that one wants to analyse. If columns_names is
             not specified all the branches are converted
 
-        **kwds: extra arguments are passed on to the uproot.open or pandas.read_parquet methods:
-                https://uproot.readthedocs.io/en/latest/uproot.reading.open.html#uproot.reading.open
+        **kwds: extra arguments are passed on to the uproot.TTree.arrays() or pandas.read_parquet() methods:
+                https://uproot.readthedocs.io/en/latest/uproot.behaviors.TTree.TTree.html#uproot.behaviors.TTree.TTree.arrays
                 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_parquet.html#pandas.read_parquet
         """
         self._tree = tree_name
@@ -46,7 +46,7 @@ class TreeHandler:
             for file in self._files:
                 if self._tree is not None:
                     self._full_data_frame = self._full_data_frame.append(
-                        uproot.open(f'{file}:{self._tree}', **kwds).arrays(filter_name=columns_names, library='pd'),
+                        uproot.open(f'{file}:{self._tree}').arrays(filter_name=columns_names, library='pd', **kwds),
                         ignore_index=True)
                 else:
                     self._full_data_frame = self._full_data_frame.append(
