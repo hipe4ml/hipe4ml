@@ -35,7 +35,7 @@ class TreeHandler:
             not specified all the branches are converted
 
         **kwds: extra arguments are passed on to the uproot.TTree.arrays() or pandas.read_parquet() methods:
-                https://uproot.readthedocs.io/en/latest/uproot.behaviors.TTree.TTree.html
+                https://uproot.readthedocs.io/en/latest/uproot.behaviors.TTree.TTree.html#uproot.behaviors.TTree.TTree.arrays
                 https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.read_parquet.html#pandas.read_parquet
         """
         self._tree = tree_name
