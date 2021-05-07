@@ -588,8 +588,7 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
     class_labels, class_counts = np.unique(y_truth, return_counts=True)
     n_classes = len(class_labels)
     for class_count in class_counts:
-        if n_sample > class_count:
-            n_sample = class_count
+        n_sample = min(n_sample, class_count)
 
     subs = []
     for class_lab in class_labels:
