@@ -412,7 +412,8 @@ class ModelHandler:
             If True saves the xgboost model into a .model file
         """
         if xgb_format is False:
-            pickle.dump(self.model, open(filename, "wb"))
+            with open(filename, "wb") as output_file:
+                pickle.dump(self.model, output_file)
         else:
             if self.model_string == 'xgboost':
                 self.model.save_model(filename)
@@ -428,7 +429,8 @@ class ModelHandler:
         filename: str
             Name of the file in which the model is saved
         """
-        pickle.dump(self, open(filename, "wb"))
+        with open(filename, "wb") as output_file:
+            pickle.dump(self.model, output_file)
 
     def load_model_handler(self, filename):
         """
@@ -439,10 +441,11 @@ class ModelHandler:
         filename: str
             Name of the file in which the model is saved
         """
-        loaded_model = pickle.load(open(filename, 'rb'))
-        self.model = loaded_model.get_original_model()
-        self.training_columns = loaded_model.get_training_columns()
-        self.model_params = loaded_model.get_model_params()
-        self.model.set_params(**self.model_params)
-        self.model_string = loaded_model.get_model_module()
-        self._n_classes = loaded_model.get_n_classes()
+        with open(filename, "rb") as input_file:
+            loaded_model = pickle.load(input_file)
+            self.model = loaded_model.get_original_model()
+            self.training_columns = loaded_model.get_training_columns()
+            self.model_params = loaded_model.get_model_params()
+            self.model.set_params(**self.model_params)
+            self.model_string = loaded_model.get_model_module()
+            self._n_classes = loaded_model.get_n_classes()

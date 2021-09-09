@@ -19,7 +19,7 @@ class Setup():
         assert "package_data" not in self.conf
         assert "include_package_data" not in self.conf
         package_data = {}
-        with open(os.path.join(self.work_dir, "MANIFEST.in")) as fp:
+        with open(os.path.join(self.work_dir, "MANIFEST.in"), encoding="utf-8") as fp:
             for line in fp.readlines():
                 line = line.strip()
                 m = re.search(r"include\s+(.+)/([^/]+)", line)
@@ -37,7 +37,7 @@ class Setup():
         # "badges".
         assert "long_description" not in self.conf
         assert "long_description_content_type" not in self.conf
-        with open(os.path.join(self.work_dir, "README.md")) as fp:
+        with open(os.path.join(self.work_dir, "README.md"), encoding="utf-8") as fp:
             ld = "\n".join([row for row in fp if not row.startswith("[![")])
         self.conf["long_description"] = ld
         self.conf["long_description_content_type"] = "text/markdown"
