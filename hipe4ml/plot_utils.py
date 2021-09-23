@@ -658,7 +658,7 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
             f'2-class Precision-Recall curve: AP={average_precision:0.2f}')
     else:
         cmap = plt.cm.get_cmap('tab10')
-        precision, recall = (dict() for i_dict in range(2))
+        precision, recall = ({} for i_dict in range(2))
         # convert multi-class labels to multi-labels to obtain a curve for each class
         y_truth_multi = label_binarize(y_truth, classes=range(n_classes))
         for clas, lab in enumerate(labels):
