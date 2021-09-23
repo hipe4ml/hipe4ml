@@ -509,3 +509,37 @@ class TreeHandler:
                         name, compression="gzip")
             else:
                 print("\nWarning: slices not available")
+
+    def write_df_to_root_files(self, base_file_name="TreeDataFrame", tree_name="df", path="./", save_slices=False):
+        """
+        Write the pandas dataframe to root files
+
+        Parameters
+        ------------------------------------------------
+        base_file_name: str
+            Base filename used to save the root files
+
+        path: str
+            Base path of the output files
+
+        save_slices: bool
+            If True and the slices are available, single root files for each
+            bins are created
+        """
+        if self._full_data_frame is not None:
+            name = os.path.join(path, f"{base_file_name}.root")
+            out_file = uproot.recreate(name)
+            out_file[tree_name] = self._full_data_frame
+            out_file.close()
+        else:
+            print("\nWarning: original DataFrame not available")
+        if save_slices:
+            if self._sliced_df_list is not None:
+                for ind, i_bin in enumerate(self._projection_binning):
+                    name = os.path.join(
+                        path, f"{base_file_name}_{self._projection_variable}_{i_bin[0]}_{i_bin[1]}.root")
+                    out_file = uproot.recreate(name)
+                    out_file[tree_name] = self._sliced_df_list[ind]
+                    out_file.close()
+            else:
+                print("\nWarning: slices not available")
