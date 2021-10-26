@@ -430,7 +430,7 @@ class ModelHandler:
             Name of the file in which the model is saved
         """
         with open(filename, "wb") as output_file:
-            pickle.dump(self.model, output_file)
+            pickle.dump(self, output_file)
 
     def load_model_handler(self, filename):
         """
