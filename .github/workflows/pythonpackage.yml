@@ -8,7 +8,7 @@ jobs:
     strategy:
       max-parallel: 6
       matrix:
-        python-version: [3.6, 3.7, 3.8]
+        python-version: [3.7, 3.8, 3.9]
         test-tool: [pylint, flake8, pytest]
 
     steps:
@@ -40,8 +40,8 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.6, 3.7, 3.8]
-        test-tool: [pylint, flake8, pytest]
+        python-version: [3.7, 3.8, 3.9]
+        test-tool: [pytest]
 
     steps:
       - uses: actions/checkout@v1

@@ -69,7 +69,6 @@ SETUP = Setup(
         "Intended Audience :: Developers",
         "Topic :: Scientific/Engineering :: Physics",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9"
@@ -89,7 +88,7 @@ SETUP = Setup(
                       "xgboost>=1.4.2", "shap==0.38.1", "bayesian-optimization==1.2.0", "pyarrow>=5.0.0",
                       "ipython>=7.16.1", "jedi==0.17.2"],
 
-    python_requires=">=3.6",
+    python_requires=">=3.7",
 
     # List additional groups of dependencies here (e.g. development dependencies). You can install
     # these using the following syntax, for example:
