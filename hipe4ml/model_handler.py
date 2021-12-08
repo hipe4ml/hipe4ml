@@ -448,20 +448,10 @@ class ModelHandler:
             params = {}
 
             for key in hyperparams_ranges:
-                if isinstance(hyperparams_ranges[key], str):
-                    params[key] = hyperparams_ranges[key]
-                elif isinstance(hyperparams_ranges[key], bool):
-                    params[key] = hyperparams_ranges[key]
-                elif isinstance(hyperparams_ranges[key], int):
-                    params[key] = hyperparams_ranges[key]
-                elif isinstance(hyperparams_ranges[key], float):
-                    params[key] = hyperparams_ranges[key]
-                elif isinstance(hyperparams_ranges[key][0], int):
+                if isinstance(hyperparams_ranges[key][0], int):
                     params[key] = trial.suggest_int(key, hyperparams_ranges[key][0], hyperparams_ranges[key][1])
                 elif isinstance(hyperparams_ranges[key][0], float):
                     params[key] = trial.suggest_uniform(key, hyperparams_ranges[key][0], hyperparams_ranges[key][1])
-                else:
-                    print('Type of ' + key + ' not supported.\n')
 
             return params
 
@@ -495,7 +485,7 @@ class ModelHandler:
         for key, value in best_trial.params.items():
             print(f"    {key}: {value}")
 
-        self.model = xgb.XGBClassifier(**best_trial.params)
+        self.set_model_params({**self.model_params, **self.__cast_model_params(best_trial.params)})
 
         return study
 
