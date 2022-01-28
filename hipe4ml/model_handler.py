@@ -9,6 +9,10 @@ import numpy as np
 from bayes_opt import BayesianOptimization
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
+import onnx
+import onnxmltools
+from onnxconverter_common.data_types import FloatTensorType
+from hummingbird import ml
 
 import hipe4ml.tree_handler
 
@@ -414,9 +418,11 @@ class ModelHandler:
         if xgb_format is False:
             with open(filename, "wb") as output_file:
                 pickle.dump(self.model, output_file)
+                print(f"File {filename} saved")
         else:
             if self.model_string == 'xgboost':
                 self.model.save_model(filename)
+                print(f"File {filename} saved")
             else:
                 print("File not saved: only xgboost models support the .model extension")
 
@@ -431,6 +437,86 @@ class ModelHandler:
         """
         with open(filename, "wb") as output_file:
             pickle.dump(self, output_file)
+        print(f"File {filename} saved")
+
+    def dump_model_onnx(self, filename, input_shape):
+        """
+        Convert the trained model to onnx format and save it
+
+        Parameters
+        -----------------------------------------------------
+        filename: str
+            Name of the file in which the model is saved
+
+        input_shape: int
+            The dimension of the sample for the application.
+            For more info see https://github.com/onnx/onnxmltools
+        """
+
+
+        n_features = len(self.training_columns)
+        feature_names = [f"f{i_feat}" for i_feat in range(n_features)]
+        self.model.get_booster().feature_names = feature_names
+
+        model = onnxmltools.convert.convert_xgboost(
+            self.model, initial_types=[("input", FloatTensorType(shape=[input_shape, n_features]))]
+        )
+        onnxmltools.utils.save_model(model, filename)
+        onnx.checker.check_model(model)
+
+        print(f"File {filename} saved")
+
+    def dump_model_hummingbird(self, filename, backend, x_test=None, input_shape=None):
+        """
+        Convert the trained model to a tensor format
+        and save it with hummingbird
+
+        Parameters
+        -----------------------------------------------------
+        filename: str
+            Name of the file in which the model is saved
+
+        backend: str
+            output backend: PyTorch, TorchScript, ONNX, and TVM are supported
+            For more information see https://github.com/microsoft/hummingbird
+
+        x_test: hipe4ml tree_handler, array-like, sparse matrix
+            The input test sample. Needed in case of onnx backend
+
+        input_shape: int
+            The dimension of the sample for the application. Needed in case of onnx backend
+            For more info see https://github.com/onnx/onnxmltools
+        """
+
+        if isinstance(x_test, hipe4ml.tree_handler.TreeHandler):
+            x_test = x_test.get_data_frame()
+
+        x_test = x_test[self.training_columns]
+
+        if backend not in ["pytorch", "torch", "onnx", "tvm"]:
+            print(f"backend {backend} not supported by hummingbird."
+                  "See documentation https://github.com/microsoft/hummingbird")
+            return
+
+        n_features = len(self.training_columns)
+        feature_names = [f"f{i_feat}" for i_feat in range(n_features)]
+        self.model.get_booster().feature_names = feature_names
+
+        if backend == "onnx":
+            if x_test is None or input_shape is None:
+                print("x_test and input_shape parameters are needed in case of onnx backend. Model not converted")
+                return
+            test_set_size = len(x_test)
+            if input_shape > test_set_size:
+                input_shape = test_set_size
+                print(f"Input shape {input_shape} is larger than "
+                    f"the input test set, setting it to {test_set_size}")
+            model = ml.convert(self.model, backend, x_test[0:input_shape].to_numpy())
+        else:
+            model = ml.convert(self.model, backend, extra_config={"n_features":n_features})
+
+        model.save(filename)
+        print(f"File {filename} saved")
 
     def load_model_handler(self, filename):
         """
