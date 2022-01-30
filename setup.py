@@ -86,8 +86,8 @@ SETUP = Setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=["uproot>=4.1.5", "matplotlib>=3.3.4", "pandas>=1.1.5", "scikit-learn>=0.24.1",
                       "xgboost>=1.4.2", "shap==0.38.1", "bayesian-optimization==1.2.0", "pyarrow>=5.0.0",
-                      "ipython>=7.16.1", "jedi==0.17.2", "torch>=1.6.0", "onnx==1.8.0", "onnxruntime==1.7.0",
-                      "hummingbird_ml[extra]>=0.4.2"],
+                      "ipython>=7.16.1", "jedi==0.17.2", "torch>=1.6.0", "onnx==1.8.0", "onnxmltools==1.7.0",
+                      "onnxruntime==1.7.0", "hummingbird_ml[extra]>=0.4.2"],
 
     python_requires=">=3.7",
 
