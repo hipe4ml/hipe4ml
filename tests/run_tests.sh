@@ -11,6 +11,7 @@ function perr() { echo -e "\033[31m${1}\033[m" >&2; }
 
 setup-hipe4ml() {
     pinfo "installing: hipe4ml"
+    pip3 install wheel
     pip3 install --upgrade --force-reinstall --no-deps -e .
 }
 
