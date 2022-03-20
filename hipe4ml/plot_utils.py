@@ -588,8 +588,7 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
     class_labels, class_counts = np.unique(y_truth, return_counts=True)
     n_classes = len(class_labels)
     for class_count in class_counts:
-        if n_sample > class_count:
-            n_sample = class_count
+        n_sample = min(n_sample, class_count)
 
     subs = []
     for class_lab in class_labels:
@@ -659,7 +658,7 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
             f'2-class Precision-Recall curve: AP={average_precision:0.2f}')
     else:
         cmap = plt.cm.get_cmap('tab10')
-        precision, recall = (dict() for i_dict in range(2))
+        precision, recall = ({}, {})
         # convert multi-class labels to multi-labels to obtain a curve for each class
         y_truth_multi = label_binarize(y_truth, classes=range(n_classes))
         for clas, lab in enumerate(labels):

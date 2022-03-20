@@ -19,7 +19,7 @@ class Setup():
         assert "package_data" not in self.conf
         assert "include_package_data" not in self.conf
         package_data = {}
-        with open(os.path.join(self.work_dir, "MANIFEST.in")) as fp:
+        with open(os.path.join(self.work_dir, "MANIFEST.in"), encoding="utf-8") as fp:
             for line in fp.readlines():
                 line = line.strip()
                 m = re.search(r"include\s+(.+)/([^/]+)", line)
@@ -37,7 +37,7 @@ class Setup():
         # "badges".
         assert "long_description" not in self.conf
         assert "long_description_content_type" not in self.conf
-        with open(os.path.join(self.work_dir, "README.md")) as fp:
+        with open(os.path.join(self.work_dir, "README.md"), encoding="utf-8") as fp:
             ld = "\n".join([row for row in fp if not row.startswith("[![")])
         self.conf["long_description"] = ld
         self.conf["long_description_content_type"] = "text/markdown"
@@ -53,7 +53,7 @@ SETUP = Setup(
     name="hipe4ml",
 
     # LAST-TAG is a placeholder. Automatically replaced at deploy time with the right tag
-    version="0.0.10",
+    version="0.0.12",
 
     description="Minimal heavy ion physics environment for Machine Learning",
 
@@ -69,9 +69,9 @@ SETUP = Setup(
         "Intended Audience :: Developers",
         "Topic :: Scientific/Engineering :: Physics",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8"
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9"
     ],
 
     # What does your project relate to?
@@ -84,17 +84,17 @@ SETUP = Setup(
     # List run-time dependencies here. These will be installed by pip when your project is
     # installed. For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=["uproot>=4.0.4", "matplotlib>=3.3.4", "pandas==1.1.5", "scikit-learn>=0.24.1",
-                      "xgboost==1.3.3", "shap==0.38.1", "bayesian-optimization==1.2.0", "pyarrow==3.0.0",
-                      "ipython==7.16.1", "jedi==0.17.2"],
+    install_requires=["uproot>=4.1.5", "matplotlib>=3.3.4", "pandas>=1.1.5", "scikit-learn>=0.24.1",
+                      "xgboost>=1.4.2", "shap==0.38.1", "bayesian-optimization==1.2.0", "pyarrow>=5.0.0",
+                      "ipython>=7.16.1", "jedi==0.17.2", "optuna>=2.10.0"],
 
-    python_requires=">=3.6",
+    python_requires=">=3.7",
 
     # List additional groups of dependencies here (e.g. development dependencies). You can install
     # these using the following syntax, for example:
     # $ pip install -e .[dev,test]
     extras_require={
-        "dev": ["pylint>=2.6.2", "flake8>=3.8.4", "pytest>=6.2.2", "twine>=3.3.0", "setuptools==53.0.0",
+        "dev": ["pylint>=2.6.2", "flake8>=3.8.4", "pytest>=6.2.2", "twine>=3.3.0", "setuptools>=53.0.0",
                 "wheel>=0.36.2"]
     },
 

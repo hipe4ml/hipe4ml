@@ -35,7 +35,12 @@ HYP_RANGES = {
     # 'learning_rate': (0.01, 0.3),  # learning rate
     'n_estimators': (5, 10),  # number of boosting trees
 }
-MODEL.optimize_params_bayes(DATA, HYP_RANGES, 'roc_auc')
+
+# hyperparams optimization with Optuna
+MODEL.optimize_params_optuna(DATA, HYP_RANGES, scoring='roc_auc', direction='maximize', n_trials = 10, save_study = False)
+
+# Bayesian hypermaprameter optimization
+MODEL.optimize_params_bayes(DATA, HYP_RANGES, 'roc_auc', init_points = 1, n_iter = 1)
 
 # train and test the model with the updated hyperparameters
 MODEL.train_test_model(DATA)

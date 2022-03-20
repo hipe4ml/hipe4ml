@@ -4,6 +4,8 @@ ML libraries to build a new model with common methods
 """
 import inspect
 import pickle
+import optuna
+import xgboost as xgb
 
 import numpy as np
 from bayes_opt import BayesianOptimization
@@ -367,6 +369,127 @@ class ModelHandler:
         print(f"Best target: {optimizer.max['target']:.6f}")
         print(f'Best parameters: {max_params}')
         self.set_model_params({**self.model_params, **self.__cast_model_params(max_params)})
+        
+        return optimizer
+
+    def optimize_params_optuna(self, data, hyperparams_ranges, scoring, direction, nfold=5,
+                               resume_study=False, save_study='study.pkl', **kwargs):
+        """
+        Perform hyperparameter optimization of XGBOOST using the Optuna module. The model hyperparameters are then
+        set as the ones that provided the best result during the optimization. A study can be saved and resumed.
+
+        Parameters
+        ------------------------------------------------------
+        data: list
+            Contains respectively: training
+            set dataframe, training label array,
+            test set dataframe, test label array
+
+        hyperparams_ranges: dict
+            Hyperparameter ranges(in tuples or list). If a parameter is not
+            in a tuple or a list it will be considered constant.
+            Important: the type of the params must be preserved
+            when passing the ranges.
+            For example:
+            dict={
+                'max_depth':(10,100)
+                'learning_rate': (0.01,0.03)
+                'n_jobs': 8
+            }
+
+        scoring: string, callable or None
+            A string (see sklearn model evaluation documentation:
+            https://scikit-learn.org/stable/modules/model_evaluation.html)
+            or a scorer callable object / function with signature scorer(estimator, X, y)
+            which should return only a single value.
+            In binary classification 'roc_auc' is suggested.
+            In multi-classification one between ‘roc_auc_ovr’, ‘roc_auc_ovo’,
+            ‘roc_auc_ovr_weighted’ and ‘roc_auc_ovo_weighted’ is suggested.
+            For more information see
+            https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
+
+        direction: str
+            The direction of optimization. Either 'maximize' or 'minimize'.
+            (e.g. for the metric 'roc_auc' the direction is 'maximize')
+
+        nfold: int
+            Number of folds to calculate the cross validation error
+
+        resume: bool
+            A flag that indicates if the study has to be resumed
+
+        resume_study_name: str
+            The name of the file wchich stores a saved study
+
+        save_study: bool
+            A flag that indicates if the current study will be saved at the end
+
+        save_name: str
+            The name of the file in which to save the study
+
+        **kwargs: dict
+            Optuna study parameters
+
+        Returns
+        ------------------------------------------------------
+
+        study: optuna.study.Study
+            The obtuna object which stores the whole study. See Optuna's documentation for more details:
+            https://optuna.readthedocs.io/en/stable/reference/generated/optuna.study.Study.html#optuna.study.Study
+        """
+
+        n_classes = len(np.unique(data[1]))
+        self._n_classes = n_classes
+        if self.training_columns is None:
+            self.training_columns = list(data[0].columns)
+
+        x_train, y_train, _, _ = data
+
+        def __get_int_or_uniform(hyperparams_ranges, trial):
+
+            params = {}
+
+            for key in hyperparams_ranges:
+                if isinstance(hyperparams_ranges[key][0], int):
+                    params[key] = trial.suggest_int(key, hyperparams_ranges[key][0], hyperparams_ranges[key][1])
+                elif isinstance(hyperparams_ranges[key][0], float):
+                    params[key] = trial.suggest_uniform(key, hyperparams_ranges[key][0], hyperparams_ranges[key][1])
+
+            return params
+
+        def objective(trial):
+
+            params = __get_int_or_uniform(hyperparams_ranges, trial)
+
+            model = xgb.XGBClassifier(use_label_encoder=False, **params)
+
+            return np.mean(cross_val_score(model, x_train[self.training_columns], y_train,
+                                           cv=nfold, scoring=scoring, n_jobs=1))
+
+        if resume_study:
+            with open(resume_study, 'rb') as resume_study_file:
+                study = pickle.load(resume_study_file)
+        else:
+            study = optuna.create_study(direction=direction)
+
+        study.optimize(objective, **kwargs)
+
+        if save_study:
+            with open(save_study, 'wb') as study_file:
+                pickle.dump(study, study_file)
+
+        print(f"Number of finished trials: {len(study.trials)}")
+        print("Best trial:")
+        best_trial = study.best_trial
+
+        print(f"  Value: {best_trial.value}")
+        print("  Params: ")
+        for key, value in best_trial.params.items():
+            print(f"    {key}: {value}")
+
+        self.set_model_params({**self.model_params, **best_trial.params})
+
+        return study
 
     def __cast_model_params(self, params):
         """
@@ -394,7 +517,9 @@ class ModelHandler:
         for key in params.keys():
             if key in self.model.get_params():
                 def_val = self.model.get_params()[key]
-                params[key] = type(def_val)(round(params[key]) if isinstance(def_val, int) else params[key])
+                if not isinstance(def_val, type(None)):
+                    params[key] = type(def_val)(round(params[key]) if isinstance(def_val, int) else params[key])
+
         return params
 
     def dump_original_model(self, filename, xgb_format=False):
@@ -412,7 +537,8 @@ class ModelHandler:
             If True saves the xgboost model into a .model file
         """
         if xgb_format is False:
-            pickle.dump(self.model, open(filename, "wb"))
+            with open(filename, "wb") as output_file:
+                pickle.dump(self.model, output_file)
         else:
             if self.model_string == 'xgboost':
                 self.model.save_model(filename)
@@ -428,7 +554,8 @@ class ModelHandler:
         filename: str
             Name of the file in which the model is saved
         """
-        pickle.dump(self, open(filename, "wb"))
+        with open(filename, "wb") as output_file:
+            pickle.dump(self, output_file)
 
     def load_model_handler(self, filename):
         """
@@ -439,10 +566,11 @@ class ModelHandler:
         filename: str
             Name of the file in which the model is saved
         """
-        loaded_model = pickle.load(open(filename, 'rb'))
-        self.model = loaded_model.get_original_model()
-        self.training_columns = loaded_model.get_training_columns()
-        self.model_params = loaded_model.get_model_params()
-        self.model.set_params(**self.model_params)
-        self.model_string = loaded_model.get_model_module()
-        self._n_classes = loaded_model.get_n_classes()
+        with open(filename, "rb") as input_file:
+            loaded_model = pickle.load(input_file)
+            self.model = loaded_model.get_original_model()
+            self.training_columns = loaded_model.get_training_columns()
+            self.model_params = loaded_model.get_model_params()
+            self.model.set_params(**self.model_params)
+            self.model_string = loaded_model.get_model_module()
+            self._n_classes = loaded_model.get_n_classes()
