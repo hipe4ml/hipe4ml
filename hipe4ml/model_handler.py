@@ -2,12 +2,12 @@
 Module containing the class used for wrapping the models from different
 ML libraries to build a new model with common methods
 """
+from copy import deepcopy
 import inspect
 import pickle
-import optuna
-import xgboost as xgb
 
 import numpy as np
+import optuna
 from bayes_opt import BayesianOptimization
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
@@ -293,7 +293,7 @@ class ModelHandler:
                                            cv=nfold, scoring=scoring, n_jobs=njobs))
         return np.mean(cross_val_score(self.model, data[0], data[1], cv=nfold, scoring=scoring, n_jobs=njobs))
 
-    def optimize_params_bayes(self, data, hyperparams_ranges, scoring, nfold=5, init_points=5,
+    def optimize_params_bayes(self, data, hyperparams_ranges, cross_val_scoring, nfold=5, init_points=5,
                               n_iter=5, njobs=None):
         """
         Perform Bayesian optimization and update the model hyper-parameters
@@ -316,7 +316,8 @@ class ModelHandler:
                 'learning_rate': (0.01,0.03)
             }
 
-        scoring: string, callable or None
+        cross_val_scoring: string, callable or None
+            Score metrics used for the cross-validation.
             A string (see sklearn model evaluation documentation:
             https://scikit-learn.org/stable/modules/model_evaluation.html)
             or a scorer callable object / function with signature scorer(estimator, X, y)
@@ -354,7 +355,7 @@ class ModelHandler:
 
         # just an helper function
         def hyperparams_crossvalidation(**kwargs):
-            return self.evaluate_hyperparams(data, kwargs, scoring, nfold, njobs)
+            return self.evaluate_hyperparams(data, kwargs, cross_val_scoring, nfold, njobs)
         print('')
 
         optimizer = BayesianOptimization(f=hyperparams_crossvalidation, pbounds=hyperparams_ranges,
@@ -369,11 +370,11 @@ class ModelHandler:
         print(f"Best target: {optimizer.max['target']:.6f}")
         print(f'Best parameters: {max_params}')
         self.set_model_params({**self.model_params, **self.__cast_model_params(max_params)})
-        
+
         return optimizer
 
-    def optimize_params_optuna(self, data, hyperparams_ranges, scoring, direction, nfold=5,
-                               resume_study=False, save_study='study.pkl', **kwargs):
+    def optimize_params_optuna(self, data, hyperparams_ranges, cross_val_scoring, direction, optuna_sampler=None, nfold=5,
+                               resume_study=None, save_study=None, **kwargs):
         """
         Perform hyperparameter optimization of XGBOOST using the Optuna module. The model hyperparameters are then
         set as the ones that provided the best result during the optimization. A study can be saved and resumed.
@@ -397,7 +398,8 @@ class ModelHandler:
                 'n_jobs': 8
             }
 
-        scoring: string, callable or None
+        cross_val_scoring: string, callable or None
+            Score metrics used for the cross-validation.
             A string (see sklearn model evaluation documentation:
             https://scikit-learn.org/stable/modules/model_evaluation.html)
             or a scorer callable object / function with signature scorer(estimator, X, y)
@@ -412,20 +414,21 @@ class ModelHandler:
             The direction of optimization. Either 'maximize' or 'minimize'.
             (e.g. for the metric 'roc_auc' the direction is 'maximize')
 
+        optuna_sampler: optuna.samplers.BaseSampler
+            Sampler to be used for the optuna (maxi-)minimisation.
+            If None, default TPESampler is used. For more information see:
+            https://optuna.readthedocs.io/en/stable/reference/samplers.html
+
         nfold: int
             Number of folds to calculate the cross validation error
 
-        resume: bool
-            A flag that indicates if the study has to be resumed
+        resume_study: str
+            A string indicating the filename of the study to be resumed.
+            If None, the study is not resumed.
 
-        resume_study_name: str
-            The name of the file wchich stores a saved study
-
-        save_study: bool
-            A flag that indicates if the current study will be saved at the end
-
-        save_name: str
-            The name of the file in which to save the study
+        save_study: str
+            A string indicating the filename of the study. If None,
+            the study is not saved into a file.
 
         **kwargs: dict
             Optuna study parameters
@@ -460,17 +463,16 @@ class ModelHandler:
         def objective(trial):
 
             params = __get_int_or_uniform(hyperparams_ranges, trial)
-
-            model = xgb.XGBClassifier(use_label_encoder=False, **params)
-
-            return np.mean(cross_val_score(model, x_train[self.training_columns], y_train,
-                                           cv=nfold, scoring=scoring, n_jobs=1))
-
+            # model = xgb.XGBClassifier(use_label_encoder=False, **params)
+            model_copy = deepcopy(self.model)
+            model_copy.set_params(**{**self.model_params, **params})
+            return np.mean(cross_val_score(model_copy, x_train[self.training_columns], y_train,
+                                           cv=nfold, scoring=cross_val_scoring, n_jobs=1))
         if resume_study:
             with open(resume_study, 'rb') as resume_study_file:
                 study = pickle.load(resume_study_file)
         else:
-            study = optuna.create_study(direction=direction)
+            study = optuna.create_study(direction=direction, sampler=optuna_sampler)
 
         study.optimize(objective, **kwargs)
 
@@ -482,8 +484,8 @@ class ModelHandler:
         print("Best trial:")
         best_trial = study.best_trial
 
-        print(f"  Value: {best_trial.value}")
-        print("  Params: ")
+        print(f"Value: {best_trial.value}")
+        print("Params: ")
         for key, value in best_trial.params.items():
             print(f"    {key}: {value}")
 

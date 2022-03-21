@@ -1,6 +1,6 @@
 [FORMAT]
 indent-string='    '
-max-line-length=120
+max-line-length=180
 
 [BASIC]
 function-naming-style=snake_case
