@@ -8,4 +8,3 @@ bayesian-optimization==1.2.0
 pyarrow>=5.0.0
 ipython>=7.16.1
 jedi==0.17.2
-optuna>=2.10.0
