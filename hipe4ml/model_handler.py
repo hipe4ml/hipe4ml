@@ -465,7 +465,6 @@ class ModelHandler:
         def objective(trial):
 
             params = __get_int_or_uniform(hyperparams_ranges, trial)
-            # model = xgb.XGBClassifier(use_label_encoder=False, **params)
             model_copy = deepcopy(self.model)
             model_copy.set_params(**{**self.model_params, **params})
             return np.mean(cross_val_score(model_copy, x_train[self.training_columns], y_train,
