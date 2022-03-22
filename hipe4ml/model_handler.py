@@ -308,7 +308,7 @@ class ModelHandler:
             test set dataframe, test label array
 
         hyperparams_ranges: dict
-            Hyperparameter ranges(in tuples).
+            Hyperparameter ranges (in tuples).
             Important: the type of the params must be preserved
             when passing the ranges.
             For example:
@@ -374,8 +374,8 @@ class ModelHandler:
 
         return optimizer
 
-    def optimize_params_optuna(self, data, hyperparams_ranges, cross_val_scoring, direction, optuna_sampler=None, nfold=5,
-                               resume_study=None, save_study=None, **kwargs):
+    def optimize_params_optuna(self, data, hyperparams_ranges, cross_val_scoring, nfold=5, direction='maximize',
+                               optuna_sampler=None, resume_study=None, save_study=None, **kwargs):
         """
         Perform hyperparameter optimization of ModelHandler using the Optuna module.
         The model hyperparameters are automatically set as the ones that provided the
@@ -389,7 +389,7 @@ class ModelHandler:
             test set dataframe, test label array
 
         hyperparams_ranges: dict
-            Hyperparameter ranges(in tuples or list). If a parameter is not
+            Hyperparameter ranges (in tuples or list). If a parameter is not
             in a tuple or a list it will be considered constant.
             Important: the type of the params must be preserved
             when passing the ranges.
@@ -462,7 +462,7 @@ class ModelHandler:
 
             return params
 
-        def objective(trial):
+        def __objective(trial):
 
             params = __get_int_or_uniform(hyperparams_ranges, trial)
             model_copy = deepcopy(self.model)
@@ -475,7 +475,7 @@ class ModelHandler:
         else:
             study = optuna.create_study(direction=direction, sampler=optuna_sampler)
 
-        study.optimize(objective, **kwargs)
+        study.optimize(__objective, **kwargs)
 
         if save_study:
             with open(save_study, 'wb') as study_file:
