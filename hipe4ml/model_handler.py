@@ -296,9 +296,8 @@ class ModelHandler:
     def optimize_params_bayes(self, data, hyperparams_ranges, cross_val_scoring, nfold=5, init_points=5,
                               n_iter=5, njobs=None):
         """
-        Perform hyperparameter optimization of ModelHandler using a Bayesian grid search.
-        The model hyperparameters are automatically set as the ones that provided the
-        best result during the optimization.
+        Perform Bayesian optimization and update the model hyper-parameters
+        with the best ones
 
         Parameters
         ------------------------------------------------------
@@ -377,9 +376,8 @@ class ModelHandler:
     def optimize_params_optuna(self, data, hyperparams_ranges, cross_val_scoring, direction, optuna_sampler=None, nfold=5,
                                resume_study=None, save_study=None, **kwargs):
         """
-        Perform hyperparameter optimization of ModelHandler using the Optuna module.
-        The model hyperparameters are automatically set as the ones that provided the
-        best result during the optimization.
+        Perform hyperparameter optimization of XGBOOST using the Optuna module. The model hyperparameters are then
+        set as the ones that provided the best result during the optimization. A study can be saved and resumed.
 
         Parameters
         ------------------------------------------------------
