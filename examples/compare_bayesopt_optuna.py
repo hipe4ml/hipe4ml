@@ -58,8 +58,9 @@ hyper_pars_ranges = {'n_estimators': (20, 300), 'max_depth': (
 
 print("Starting optuna optimisation w/ TPEsampler")
 start = time.time()
-optuna_study = model_hdl.optimize_params_optuna(
-    train_test_data, hyper_pars_ranges, cross_val_scoring='roc_auc', timeout=60, n_jobs=10, n_trials=100, direction='maximize')
+optuna_study = model_hdl.optimize_params_optuna(train_test_data, hyper_pars_ranges,
+                                                cross_val_scoring='roc_auc', timeout=60, n_jobs=10,
+                                                n_trials=100, direction='maximize')
 optune_time = time.time() - start
 trials_optuna = optuna_study.trials
 trials_array_optuna = np.array([t.values[0] for t in trials_optuna])
@@ -68,7 +69,8 @@ print("Starting bayesian optimisation w/ Bayes-opt")
 INIT_POINTS = 15
 start = time.time()
 bayes_study = model_hdl.optimize_params_bayes(train_test_data, hyper_pars_ranges, cross_val_scoring='roc_auc',
-                                              nfold=5, init_points=INIT_POINTS, n_iter=len(trials_optuna) - INIT_POINTS, njobs=10)
+                                              nfold=5, init_points=INIT_POINTS, n_iter=len(trials_optuna) - INIT_POINTS,
+                                              njobs=10)
 bayes_time = time.time() - start
 trials_bayes = [trial['target'] for trial in bayes_study.res]
 
