@@ -369,11 +369,9 @@ class ModelHandler:
         print(f"Best target: {optimizer.max['target']:.6f}")
         print(f'Best parameters: {max_params}')
         self.set_model_params({**self.model_params, **self.__cast_model_params(max_params)})
-        
-        return optimizer
 
-    def optimize_params_optuna(self, data, hyperparams_ranges, scoring, direction, nfold=5,
-                               resume_study=False, save_study='study.pkl', **kwargs):
+    def optimize_params_optuna(self, data, hyperparams_ranges, scoring, direction, nfold=5, resume=False,
+                               resume_study_name='study.pkl', save_study=True, save_name='study.pkl', **kwargs):
         """
         Perform hyperparameter optimization of XGBOOST using the Optuna module. The model hyperparameters are then
         set as the ones that provided the best result during the optimization. A study can be saved and resumed.
@@ -466,16 +464,16 @@ class ModelHandler:
             return np.mean(cross_val_score(model, x_train[self.training_columns], y_train,
                                            cv=nfold, scoring=scoring, n_jobs=1))
 
-        if resume_study:
-            with open(resume_study, 'rb') as resume_study_file:
-                study = pickle.load(resume_study_file)
+        if resume:
+            with open(resume_study_name, 'rb') as study_file:
+                study = pickle.load(study_file)
         else:
             study = optuna.create_study(direction=direction)
 
-        study.optimize(objective, **kwargs)
+        study.optimize(objective, kwargs)
 
         if save_study:
-            with open(save_study, 'wb') as study_file:
+            with open(save_name, 'wb') as study_file:
                 pickle.dump(study, study_file)
 
         print(f"Number of finished trials: {len(study.trials)}")
@@ -487,7 +485,7 @@ class ModelHandler:
         for key, value in best_trial.params.items():
             print(f"    {key}: {value}")
 
-        self.set_model_params({**self.model_params, **best_trial.params})
+        self.set_model_params({**self.model_params, **self.__cast_model_params(best_trial.params)})
 
         return study
 
@@ -517,9 +515,7 @@ class ModelHandler:
         for key in params.keys():
             if key in self.model.get_params():
                 def_val = self.model.get_params()[key]
-                if not isinstance(def_val, type(None)):
-                    params[key] = type(def_val)(round(params[key]) if isinstance(def_val, int) else params[key])
-
+                params[key] = type(def_val)(round(params[key]) if isinstance(def_val, int) else params[key])
         return params
 
     def dump_original_model(self, filename, xgb_format=False):
