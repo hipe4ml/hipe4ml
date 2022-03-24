@@ -155,7 +155,7 @@ class ModelHandler:
 
         self.model.fit(x_train[self.training_columns], y_train, **kwargs)
 
-    def predict(self, x_test, output_margin=True):
+    def predict(self, x_test, output_margin=True, **kwargs):
         """
         Return model prediction for the array x_test
 
@@ -167,6 +167,12 @@ class ModelHandler:
         output_margin: bool
             Whether to output the raw untransformed margin value. If False model
             probabilities are returned
+
+        **kwargs:
+            Extra kwargs passed on to the model prediction function:
+            - predict() (xgboost) or decision_function() (sklearn) if output_margin==True
+            - predict_proba() if output_margin==False
+
 
         Returns
         ---------------------------------------
@@ -180,11 +186,11 @@ class ModelHandler:
 
         if output_margin:
             if self.model_string == 'xgboost':
-                pred = self.model.predict(x_test, True)
+                pred = self.model.predict(x_test, True, **kwargs)
             if self.model_string == 'sklearn':
-                pred = self.model.decision_function(x_test).ravel()
+                pred = self.model.decision_function(x_test, **kwargs).ravel()
         else:
-            pred = self.model.predict_proba(x_test)
+            pred = self.model.predict_proba(x_test, **kwargs)
             # in case of binary classification return only the scores of
             # the signal class
             if pred.shape[1] <= 2:
