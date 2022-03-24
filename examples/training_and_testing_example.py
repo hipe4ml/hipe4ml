@@ -27,17 +27,6 @@ DATA = [TRAIN_SET, Y_TRAIN, TEST_SET, Y_TEST]
 # --------------------------------------------
 INPUT_MODEL = xgb.XGBClassifier()
 MODEL = ModelHandler(INPUT_MODEL)
-
-# hyperparams optimization
-HYP_RANGES = {
-    # # defines the maximum depth of a single tree (regularization)
-    'max_depth': (5, 15),
-    # 'learning_rate': (0.01, 0.3),  # learning rate
-    'n_estimators': (5, 10),  # number of boosting trees
-}
-MODEL.optimize_params_bayes(DATA, HYP_RANGES, 'roc_auc')
-
-# train and test the model with the updated hyperparameters
 MODEL.train_test_model(DATA)
 Y_PRED = MODEL.predict(DATA[2])
 
