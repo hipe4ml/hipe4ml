@@ -8,7 +8,6 @@ import pickle
 
 import numpy as np
 import optuna
-from bayes_opt import BayesianOptimization
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import cross_val_score
 
@@ -134,7 +133,7 @@ class ModelHandler:
         """
         return self._n_classes
 
-    def fit(self, x_train, y_train):
+    def fit(self, x_train, y_train, **kwargs):
         """
         Fit Model
 
@@ -145,13 +144,16 @@ class ModelHandler:
 
         y_train: array-like, sparse matrix
             Target data
+
+        **kwargs:
+            Extra kwargs passed on to model.fit() method
         """
         n_classes = len(np.unique(y_train))
         self._n_classes = n_classes
         if self.training_columns is None:
             self.training_columns = list(x_train.columns)
 
-        self.model.fit(x_train[self.training_columns], y_train)
+        self.model.fit(x_train[self.training_columns], y_train, **kwargs)
 
     def predict(self, x_test, output_margin=True):
         """
@@ -191,7 +193,7 @@ class ModelHandler:
         return pred
 
     def train_test_model(self, data, return_prediction=False, output_margin=False, average='macro',
-                         multi_class_opt='raise'):
+                         multi_class_opt='raise', **kwargs):
         """
         Perform the training and the testing of the model. The model performance is estimated
         using the ROC AUC metric
@@ -220,6 +222,9 @@ class ModelHandler:
             Option to compute ROC AUC scores used only in case of multi-classification.
             The one-vs-one 'ovo' and one-vs-rest 'ovr' approaches are available
 
+        **kwargs: dict
+            Extra kwargs passed on to the model fit method
+
         Returns
         ---------------------------------------
         out: numpy array or None
@@ -235,7 +240,7 @@ class ModelHandler:
 
         # final training with the optimized hyperparams
         print('Training the final model: ...', end='\r')
-        self.fit(data[0], data[1])
+        self.fit(data[0], data[1], **kwargs)
         print('Training the final model: Done!')
         print('Testing the model: ...', end='\r')
         y_pred = self.predict(data[2], output_margin=output_margin)
@@ -248,131 +253,6 @@ class ModelHandler:
         if return_prediction:
             return y_pred
         return None
-
-    def evaluate_hyperparams(self, data, opt_params, scoring, nfold=5, njobs=None):
-        """
-        Calculate the cross-validation score for a set of hyper-parameters
-
-        Parameters
-        ------------------------------------------
-        data: list
-            Contains respectively: training
-            set dataframe, training label array,
-            test set dataframe, test label array
-
-        opt_params: dict
-            Hyperparameters to be optimized. For
-            example: max_depth, learning_rate,
-            n_estimators, gamma, min_child_weight,
-            subsample, colsample_bytree
-
-        scoring: string, callable or None
-            A string (see sklearn model evaluation documentation:
-            https://scikit-learn.org/stable/modules/model_evaluation.html)
-            or a scorer callable object / function with signature scorer(estimator, X, y)
-            which should return only a single value
-
-        nfold: int
-            Number of folds to perform the cross validation
-
-        njobs: int or None
-            Number of CPUs to use to perform computation.
-            Set to -1 to use all CPUs
-
-        Returns
-        ---------------------------------------------------------
-        out: float
-            Cross validation score evaluated using
-            the ROC AUC metrics
-        """
-        opt_params = self.__cast_model_params(opt_params)
-        params = {**self.model_params, **opt_params}
-        self.model.set_params(**params)
-        if self.training_columns is not None:
-            return np.mean(cross_val_score(self.model, data[0][self.training_columns], data[1],
-                                           cv=nfold, scoring=scoring, n_jobs=njobs))
-        return np.mean(cross_val_score(self.model, data[0], data[1], cv=nfold, scoring=scoring, n_jobs=njobs))
-
-    def optimize_params_bayes(self, data, hyperparams_ranges, cross_val_scoring, nfold=5, init_points=5,
-                              n_iter=5, njobs=None):
-        """
-        Perform hyperparameter optimization of ModelHandler using a Bayesian grid search.
-        The model hyperparameters are automatically set as the ones that provided the
-        best result during the optimization.
-
-        Parameters
-        ------------------------------------------------------
-        data: list
-            Contains respectively: training
-            set dataframe, training label array,
-            test set dataframe, test label array
-
-        hyperparams_ranges: dict
-            Hyperparameter ranges (in tuples).
-            Important: the type of the params must be preserved
-            when passing the ranges.
-            For example:
-            dict={
-                'max_depth':(10,100)
-                'learning_rate': (0.01,0.03)
-            }
-
-        cross_val_scoring: string, callable or None
-            Score metrics used for the cross-validation.
-            A string (see sklearn model evaluation documentation:
-            https://scikit-learn.org/stable/modules/model_evaluation.html)
-            or a scorer callable object / function with signature scorer(estimator, X, y)
-            which should return only a single value.
-            In binary classification 'roc_auc' is suggested.
-            In multi-classification one between ‘roc_auc_ovr’, ‘roc_auc_ovo’,
-            ‘roc_auc_ovr_weighted’ and ‘roc_auc_ovo_weighted’ is suggested.
-            For more information see
-            https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
-
-        nfold: int
-            Number of folds to calculate the cross validation error
-
-        init_points: int
-            How many steps of random exploration you want to perform.
-            Random exploration can help by diversifying the exploration space
-
-        n_iter: int
-            How many steps for bayesian optimization of the target function.
-            Bigger n_iter results in better description of thetarget function
-
-        njobs: int or None
-            Number of CPUs to perform computation used in the score evaluation
-            with cross-validation. Set to -1 to use all CPUs
-        """
-        n_classes = len(np.unique(data[1]))
-        self._n_classes = n_classes
-        if self.training_columns is None:
-            self.training_columns = list(data[0].columns)
-
-        start_params = {}
-        for key in hyperparams_ranges:
-            start_params[key] = hyperparams_ranges[key][0]
-        self.set_model_params({**self.model_params, **start_params})
-
-        # just an helper function
-        def hyperparams_crossvalidation(**kwargs):
-            return self.evaluate_hyperparams(data, kwargs, cross_val_scoring, nfold, njobs)
-        print('')
-
-        optimizer = BayesianOptimization(f=hyperparams_crossvalidation, pbounds=hyperparams_ranges,
-                                         verbose=2, random_state=42)
-        optimizer.maximize(init_points=init_points, n_iter=n_iter, acq='poi')
-        print('')
-
-        # extract and show the results of the optimization
-        max_params = {key: None for key in hyperparams_ranges.keys()}
-        for key in max_params.keys():
-            max_params[key] = optimizer.max['params'][key]
-        print(f"Best target: {optimizer.max['target']:.6f}")
-        print(f'Best parameters: {max_params}')
-        self.set_model_params({**self.model_params, **self.__cast_model_params(max_params)})
-
-        return optimizer
 
     def optimize_params_optuna(self, data, hyperparams_ranges, cross_val_scoring, nfold=5, direction='maximize',
                                optuna_sampler=None, resume_study=None, save_study=None, **kwargs):
@@ -493,37 +373,6 @@ class ModelHandler:
         self.set_model_params({**self.model_params, **best_trial.params})
 
         return study
-
-    def __cast_model_params(self, params):
-        """
-        Check if each model parameter is defined as integer
-        and change the parameter dictionary consequently
-        Be careful: some libraries like XGBoost do not have
-        default parameters with the correct type, it is up to
-        the user of this function to make sure that the types
-        are correctly initiated in the model before casting
-        the params dictionary.
-
-        Parameters
-        -----------------------------------------------------
-        params: dict
-            Hyperparameter values. For
-            example: max_depth, learning_rate,
-            n_estimators, gamma, min_child_weight,
-            subsample, colsample_bytree
-
-        Returns
-        -----------------------------------------------------
-        out: dict
-            Hyperparameter values updated
-        """
-        for key in params.keys():
-            if key in self.model.get_params():
-                def_val = self.model.get_params()[key]
-                if not isinstance(def_val, type(None)):
-                    params[key] = type(def_val)(round(params[key]) if isinstance(def_val, int) else params[key])
-
-        return params
 
     def dump_original_model(self, filename, xgb_format=False):
         """
