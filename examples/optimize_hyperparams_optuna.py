@@ -1,6 +1,6 @@
 
 """
-Example for optimizing hypeparams with optuna and evaluate the performance of different samplers
+Example for optimizing hyperparameters with optuna and evaluating the performance of different samplers
 """
 import os
 import time
@@ -31,7 +31,7 @@ if not os.path.exists('downloads/data.root'):
 if not os.path.exists('downloads/prompt.root'):
     os.system('curl -L https://cernbox.cern.ch/index.php/s/98tSXndX0VhUMbi/download --output downloads/prompt.root')
 
-N_JOBS = 40  # set number of jobs to be executed in parallel
+N_JOBS = 4  # set number of jobs to be executed in parallel
 
 promptH = TreeHandler('downloads/prompt.root', 'treeMLDplus')
 dataH = TreeHandler('downloads/data.root', 'treeMLDplus')

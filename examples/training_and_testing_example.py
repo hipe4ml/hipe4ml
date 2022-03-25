@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 from hipe4ml import analysis_utils, plot_utils
 from hipe4ml.model_handler import ModelHandler
 
+N_JOBS = 4  # set number of jobs to be executed in parallel
+
+
 # DATA PREPARATION (load data from sklearn digits dataset)
 # --------------------------------------------
 SKLEARN_DATA = datasets.load_digits(n_class=2)
@@ -27,6 +30,15 @@ DATA = [TRAIN_SET, Y_TRAIN, TEST_SET, Y_TEST]
 # --------------------------------------------
 INPUT_MODEL = xgb.XGBClassifier()
 MODEL = ModelHandler(INPUT_MODEL)
+
+print("Starting optuna optimisation w/ Random Sampler ... ")
+hyper_pars_ranges = {'n_estimators': (20, 300), 'max_depth': (
+    2, 6), 'learning_rate': (0.01, 0.1)}
+
+rnd_study = MODEL.optimize_params_optuna(DATA, hyper_pars_ranges, cross_val_scoring='roc_auc',
+                                         timeout=60, n_jobs=N_JOBS, n_trials=100, direction='maximize')
+print("Training the final model ...")
+
 MODEL.train_test_model(DATA)
 Y_PRED = MODEL.predict(DATA[2])
 
@@ -40,7 +52,8 @@ EFFICIENCY, THRESHOLD = analysis_utils.bdt_efficiency_array(
 # --------------------------------------------
 FEATURES_DISTRIBUTIONS_PLOT = plot_utils.plot_distr(
     [SIG_DF, BKG_DF], SIG_DF.columns)
-CORRELATION_MATRIX_PLOT = plot_utils.plot_corr([SIG_DF, BKG_DF], SIG_DF.columns)
+CORRELATION_MATRIX_PLOT = plot_utils.plot_corr(
+    [SIG_DF, BKG_DF], SIG_DF.columns)
 BDT_OUTPUT_PLOT = plot_utils.plot_output_train_test(MODEL, DATA)
 ROC_CURVE_PLOT = plot_utils.plot_roc(DATA[3], Y_PRED)
 PRECISION_RECALL_PLOT = plot_utils.plot_precision_recall(DATA[3], Y_PRED)
