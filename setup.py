@@ -53,7 +53,7 @@ SETUP = Setup(
     name="hipe4ml",
 
     # LAST-TAG is a placeholder. Automatically replaced at deploy time with the right tag
-    version="0.0.13",
+    version="0.0.12",
 
     description="Minimal heavy ion physics environment for Machine Learning",
 
@@ -85,7 +85,7 @@ SETUP = Setup(
     # installed. For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=["uproot>=4.1.5", "matplotlib>=3.3.4", "pandas>=1.1.5", "scikit-learn>=0.24.1",
-                      "xgboost>=1.4.2", "shap==0.38.1", "pyarrow>=5.0.0",
+                      "xgboost>=1.4.2", "lightgbm>=3.3.2", "shap==0.38.1", "pyarrow>=5.0.0",
                       "ipython>=7.16.1", "jedi==0.17.2", "optuna>=2.10.0"],
 
     python_requires=">=3.7",

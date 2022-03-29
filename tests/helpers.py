@@ -1,5 +1,5 @@
 """
-module with helper functions used in the tests
+Module with helper functions used in the tests
 """
 import urllib.request
 from pathlib import Path
@@ -64,22 +64,27 @@ def download_test_data(path):
     """
     data_url = 'https://raw.github.com/hipe4ml/hipe4ml_tests/master/Dplus7TeV/Bkg_Dpluspp7TeV_pT_1_50.root'
     prompt_url = 'https://raw.github.com/hipe4ml/hipe4ml_tests/master/Dplus7TeV/Prompt_Dpluspp7TeV_pT_1_50.root'
+    feed_down_url = 'https://raw.github.com/hipe4ml/hipe4ml_tests/master/Dplus7TeV/FD_Dpluspp7TeV_pT_1_50.root'
+
     data_pq_url = ('https://raw.github.com/hipe4ml/hipe4ml_tests/master/Dplus7TeV/'
                    'Bkg_Dpluspp7TeV_pT_1_50.parquet.gzip')
     prompt_pq_url = ('https://raw.github.com/hipe4ml/hipe4ml_tests/master/Dplus7TeV/'
                      'Prompt_Dpluspp7TeV_pT_1_50.parquet.gzip')
+    feed_down_pq_url = ('https://raw.github.com/hipe4ml/hipe4ml_tests/master/Dplus7TeV/'
+                        'FD_Dpluspp7TeV_pT_1_50.parquet.gzip ')
 
-    urls = [data_url, prompt_url, data_pq_url, prompt_pq_url]
+    urls = [data_url, prompt_url, feed_down_url,
+            data_pq_url, prompt_pq_url, feed_down_pq_url]
+    download_from_url_list(urls, path)
 
     return download_from_url_list(urls, path)
 
 
-def download_test_references(path):
+def download_tree_handler_references(path):
     """
     Download .pickle files used as reference for the tests in dedicated
     directory.
     """
-
     data_slice_url = 'https://github.com/hipe4ml/hipe4ml_tests/raw/master/references/data_slice.pickle'
     promp_slice_url = 'https://github.com/hipe4ml/hipe4ml_tests/raw/master/references/prompt_slice.pickle'
     reference_dict_url = 'https://github.com/hipe4ml/hipe4ml_tests/raw/master/references/reference_dict.pickle'
@@ -87,3 +92,49 @@ def download_test_references(path):
     urls = [data_slice_url, promp_slice_url, reference_dict_url]
 
     return download_from_url_list(urls, path)
+
+
+def download_model_handler_references(path):
+    """
+    Download .pickle files used as reference for the tests in dedicated
+    directory.
+    """
+    binary_class_url = 'https://github.com/hipe4ml/hipe4ml_tests/raw/master/references/bin_class_ref.pkl'
+    multi_class_url = 'https://github.com/hipe4ml/hipe4ml_tests/raw/master/references/multi_class_ref.pkl'
+    regression_url = 'https://github.com/hipe4ml/hipe4ml_tests/raw/master/references/regr_ref.pkl'
+
+    urls = [binary_class_url, multi_class_url, regression_url]
+
+    return download_from_url_list(urls, path)
+
+
+def init_handlers_test_workspace(path, handler='model_handler'):
+    """
+    Prepare the handlers test workspace. Create the correct directory
+    structure and downloads data and references needed in the tests.
+    """
+    print('Clean test workspace ...', end='\r')
+    clean_dir_path(path.joinpath('tmp_test'))
+    print('Clean test workspace: done!')
+
+    print('Create test directory hierarchy: ...', end='\r')
+    _, data_dir, reference_dir = create_test_dir_tree(path)
+    print('Create test directory hierarchy: done!')
+
+    test_data_path = download_test_data(data_dir)
+    if handler == 'model_handler':
+        references_path = download_model_handler_references(reference_dir)
+    else:
+        references_path = download_tree_handler_references(reference_dir)
+
+    return test_data_path, references_path
+
+
+def terminate_handlers_test_workspace(path):
+    """
+    Clean the handlers test workspace removing all the files
+    and directories used in the test.
+    """
+    print('Terminate test workspace: ...', end='\r')
+    clean_dir_path(path.joinpath('tmp_test'))
+    print('Terminate test workspace: done!')
