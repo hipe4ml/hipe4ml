@@ -32,6 +32,9 @@ class ModelHandler:
         Model hyper-parameter values. For
         example (XGBoost): max_depth, learning_rate,
         n_estimators, gamma, min_child_weight, ...
+
+    task_type: str
+        Task type of the model: 'classification' or 'regression'
     """
 
     def __init__(self, input_model=None, training_columns=None, model_params=None, task_type='classification'):
@@ -182,13 +185,16 @@ class ModelHandler:
         --------------------------------------
         x_test: hipe4ml tree_handler, array-like, sparse matrix
             The input sample.
+
         output_margin: bool
             Whether to output the raw untransformed margin value. If False model
             probabilities are returned. Not used when task_type is 'regression'.
+
         **kwargs:
             Extra kwargs passed on to the model prediction function:
             - predict() (XGBoost and LGBM) or decision_function() (sklearn) if output_margin==True
             - predict_proba() if output_margin==False
+
         Returns
         ---------------------------------------
         out: numpy array
