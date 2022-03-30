@@ -106,7 +106,7 @@ def test_binary_classification():
         prediction_list.append(pred)
     assert len(bin_classification_reference) == len(prediction_list)
     for reference, prediction in zip(bin_classification_reference, prediction_list):
-        assert np.array_equal(reference, prediction)
+        assert np.allclose(reference, prediction, rtol=1e-5)
 
 
 def test_multi_classification():
@@ -125,7 +125,7 @@ def test_multi_classification():
         prediction_list.append(pred)
     assert len(multi_classification_reference) == len(prediction_list)
     for reference, prediction in zip(multi_classification_reference, prediction_list):
-        assert np.array_equal(reference, prediction)
+        assert np.allclose(reference, prediction, rtol=1e-5)
 
 
 def test_regression():
@@ -145,7 +145,7 @@ def test_regression():
         prediction_list.append(pred)
     assert len(regression_reference) == len(prediction_list)
     for reference, prediction in zip(regression_reference, prediction_list):
-        assert np.array_equal(reference, prediction)
+        assert np.allclose(reference, prediction, rtol=1e-5)
 
 
 def test_hyperparams_optimization():
