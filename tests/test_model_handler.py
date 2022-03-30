@@ -168,4 +168,49 @@ def test_hyperparams_optimization():
     assert model_hdlr.get_model_params()['max_depth'] == max_depth_ref
 
 
-hp.terminate_handlers_test_workspace(Path(__file__).resolve().parent)
+def test_handler_dump_load():
+    """
+    Test model handler dump and load
+    """
+    base_dir = Path(__file__).resolve().parent
+    data_path = base_dir.joinpath('tmp_test/data/')
+    model_hdlr = ModelHandler(XGBClassifier(), task_type='classification')
+    model_hdlr.set_training_columns(training_columns)
+    model_hdlr.set_model_params({'n_estimators': 3, 'random_state': SEED})
+    native_pred = model_hdlr.train_test_model(train_test_data, return_prediction=True)
+    model_hdlr.dump_model_handler(f'{data_path}/model_handler.pkl')
+    loaded_model_hdlr = ModelHandler()
+    loaded_model_hdlr.load_model_handler(f'{data_path}/model_handler.pkl')
+    loaded_pred = loaded_model_hdlr.predict(train_test_data[2], output_margin=False)
+    assert np.allclose(native_pred, loaded_pred, rtol=1e-5)
+    assert model_hdlr.get_task_type() == loaded_model_hdlr.get_task_type()
+    assert model_hdlr.get_model_module() == loaded_model_hdlr.get_model_module()
+    assert model_hdlr.get_training_columns() == loaded_model_hdlr.get_training_columns()
+    assert model_hdlr.get_n_classes() == loaded_model_hdlr.get_n_classes()
+
+
+def test_xgb_dump_load():
+    """
+    Test xgb model dump and load
+    """
+    base_dir = Path(__file__).resolve().parent
+    data_path = base_dir.joinpath('tmp_test/data/')
+
+    model_hdlr = ModelHandler(XGBClassifier(), task_type='classification')
+    model_hdlr.set_training_columns(training_columns)
+    model_hdlr.set_model_params({'n_estimators': 3, 'random_state': SEED})
+    native_pred = model_hdlr.train_test_model(train_test_data, return_prediction=True)
+    model_hdlr.dump_original_model(f'{data_path}/xgb_model.model', xgb_format=True)
+    model_hdlr.dump_original_model(f'{data_path}/xgb_model.pkl', xgb_format=False)
+
+    loaded_model_xgb = XGBClassifier()
+    loaded_model_xgb.load_model(f'{data_path}/xgb_model.model')
+    loaded_pred_xgb = loaded_model_xgb.predict_proba(train_test_data[2][training_columns])[:, 1]
+    assert np.allclose(native_pred, loaded_pred_xgb, rtol=1e-5)
+
+    with open(f'{data_path}/xgb_model.pkl', 'rb') as model_file:
+        loaded_model_pkl = pickle.load(model_file)
+    loaded_pred_pkl = loaded_model_pkl.predict_proba(train_test_data[2][training_columns])[:, 1]
+    assert np.allclose(native_pred, loaded_pred_pkl, rtol=1e-5)
+
+    hp.terminate_handlers_test_workspace(Path(__file__).resolve().parent)
