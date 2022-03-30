@@ -17,12 +17,12 @@ import hipe4ml.tree_handler
 class ModelHandler:
     """
     Class used for wrapping the models from different ML libraries to
-    build a new model with common methods. Currently LGBM, XGBoost
+    build a new model with common methods. Currently LightGBM, XGBoost
     (through their sklearn interface) and sklearn models are supported.
 
     Parameters
     -------------------------------------------------
-    input_model: XGBoost, LGBM or sklearn model
+    input_model: XGBoost, LightGBM or sklearn model
 
     training_columns: list
         Contains the name of the features used for the training.
@@ -212,8 +212,12 @@ class ModelHandler:
                 elif self.model_string == 'lightgbm':
                     pred = self.model.predict(x_test, raw_score=True, **kwargs)
                 elif self.model_string == 'sklearn':
-                    pred = self.model.decision_function(
-                        x_test, **kwargs).ravel()
+                    if hasattr(self.model, 'decision_function'):
+                        pred = self.model.decision_function(
+                            x_test, **kwargs).ravel()
+                    else:
+                        raise Exception(
+                            "This Model does not support a decision_function(): use output_margin=False")
             else:
                 pred = self.model.predict_proba(x_test, **kwargs)
                 # in case of binary classification return only the scores of
