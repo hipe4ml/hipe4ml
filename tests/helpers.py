@@ -75,7 +75,6 @@ def download_test_data(path):
 
     urls = [data_url, prompt_url, feed_down_url,
             data_pq_url, prompt_pq_url, feed_down_pq_url]
-    download_from_url_list(urls, path)
 
     return download_from_url_list(urls, path)
 

@@ -43,8 +43,9 @@ class ModelHandler:
         self.model_params = model_params
         self._n_classes = None
         self._task_type = task_type
-        assert self._task_type in [
-            'classification', 'regression'], "Task type must be either 'classification' or 'regression'"
+        if self._task_type not in ['classification', 'regression']:
+            raise ValueError(
+                "Task type must be either 'classification' or 'regression'")
 
         if self.model is not None:
             self.model_string = inspect.getmodule(
@@ -191,9 +192,12 @@ class ModelHandler:
             probabilities are returned. Not used when task_type is 'regression'.
 
         **kwargs:
-            Extra kwargs passed on to the model prediction function:
+            Extra kwargs passed on to the following model prediction function:
+            if (task_type == 'classification')
             - predict() (XGBoost and LGBM) or decision_function() (sklearn) if output_margin==True
             - predict_proba() if output_margin==False
+            if (task_type == 'regression')
+            - predict()
 
         Returns
         ---------------------------------------
@@ -289,8 +293,8 @@ class ModelHandler:
                 data[3], y_pred, average=average, multi_class=multi_class_opt)
             print(f'ROC_AUC_score: {roc_score:.6f}')
         else:
-            rms_score = mean_squared_error(data[3], y_pred)
-            print(f'Mean squared error: {rms_score:.6f}')
+            mse_score = mean_squared_error(data[3], y_pred)
+            print(f'Mean squared error: {mse_score:.6f}')
         print('Testing the model: Done!')
         print('==============================')
         if return_prediction:
