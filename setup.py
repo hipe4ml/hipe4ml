@@ -86,7 +86,7 @@ SETUP = Setup(
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=["uproot>=4.2.2", "matplotlib>=3.5.1", "pandas>=1.3.5", "scikit-learn>=1.0.2",
                       "xgboost>=1.5.2", "lightgbm>=3.3.2", "shap==0.40.0", "pyarrow>=7.0.0",
-                      "ipython>=8.2.0", "optuna>=2.10.0"],
+                      "ipython>=7.32.0", "optuna>=2.10.0"],
 
     python_requires=">=3.7",
 
