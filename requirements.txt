@@ -1,6 +1,6 @@
 uproot>=4.2.2
 matplotlib>=3.5.1
-pandas>=1.4.1
+pandas>=1.3.5
 scikit-learn>=1.0.2
 xgboost>=1.5.2
 lightgbm>=3.3.2
