@@ -95,7 +95,11 @@ def test_binary_classification():
     Test binary classification model training and prediction
     """
     classification_model_list = [
+<<<<<<< HEAD
         XGBClassifier(use_label_encoder=False), LGBMClassifier(), AdaBoostClassifier()]
+=======
+        XGBClassifier(), LGBMClassifier(), AdaBoostClassifier()]
+>>>>>>> d48ac5a (Support Regressors and LGBM + tests for ModelHandler (finally) (#149))
     prediction_list = []
     for model in classification_model_list:
         model_hdlr = ModelHandler(model, task_type='classification')
@@ -114,7 +118,11 @@ def test_multi_classification():
     Test multi classification model training and prediction
     """
     classification_model_list = [
+<<<<<<< HEAD
         XGBClassifier(use_label_encoder=False), LGBMClassifier(), AdaBoostClassifier()]
+=======
+        XGBClassifier(), LGBMClassifier(), AdaBoostClassifier()]
+>>>>>>> d48ac5a (Support Regressors and LGBM + tests for ModelHandler (finally) (#149))
     prediction_list = []
     for model in classification_model_list:
         model_hdlr = ModelHandler(model, task_type='classification')
@@ -174,7 +182,11 @@ def test_handler_dump_load():
     """
     base_dir = Path(__file__).resolve().parent
     data_path = base_dir.joinpath('tmp_test/data/')
+<<<<<<< HEAD
     model_hdlr = ModelHandler(XGBClassifier(use_label_encoder=False), task_type='classification')
+=======
+    model_hdlr = ModelHandler(XGBClassifier(), task_type='classification')
+>>>>>>> d48ac5a (Support Regressors and LGBM + tests for ModelHandler (finally) (#149))
     model_hdlr.set_training_columns(training_columns)
     model_hdlr.set_model_params({'n_estimators': 3, 'random_state': SEED})
     native_pred = model_hdlr.train_test_model(train_test_data, return_prediction=True)
@@ -196,14 +208,22 @@ def test_xgb_dump_load():
     base_dir = Path(__file__).resolve().parent
     data_path = base_dir.joinpath('tmp_test/data/')
 
+<<<<<<< HEAD
     model_hdlr = ModelHandler(XGBClassifier(use_label_encoder=False), task_type='classification')
+=======
+    model_hdlr = ModelHandler(XGBClassifier(), task_type='classification')
+>>>>>>> d48ac5a (Support Regressors and LGBM + tests for ModelHandler (finally) (#149))
     model_hdlr.set_training_columns(training_columns)
     model_hdlr.set_model_params({'n_estimators': 3, 'random_state': SEED})
     native_pred = model_hdlr.train_test_model(train_test_data, return_prediction=True)
     model_hdlr.dump_original_model(f'{data_path}/xgb_model.model', xgb_format=True)
     model_hdlr.dump_original_model(f'{data_path}/xgb_model.pkl', xgb_format=False)
 
+<<<<<<< HEAD
     loaded_model_xgb = XGBClassifier(use_label_encoder=False)
+=======
+    loaded_model_xgb = XGBClassifier()
+>>>>>>> d48ac5a (Support Regressors and LGBM + tests for ModelHandler (finally) (#149))
     loaded_model_xgb.load_model(f'{data_path}/xgb_model.model')
     loaded_pred_xgb = loaded_model_xgb.predict_proba(train_test_data[2][training_columns])[:, 1]
     assert np.allclose(native_pred, loaded_pred_xgb, rtol=1e-5)

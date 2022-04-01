@@ -84,9 +84,9 @@ SETUP = Setup(
     # List run-time dependencies here. These will be installed by pip when your project is
     # installed. For an analysis of "install_requires" vs pip's requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
-    install_requires=["uproot>=4.2.2", "matplotlib>=3.5.1", "pandas>=1.3.5", "scikit-learn>=1.0.2",
-                      "xgboost>=1.5.2", "lightgbm>=3.3.2", "shap==0.40.0", "pyarrow>=7.0.0",
-                      "ipython>=7.32.0", "optuna>=2.10.0"],
+    install_requires=["uproot>=4.1.5", "matplotlib>=3.3.4", "pandas>=1.1.5", "scikit-learn>=0.24.1",
+                      "xgboost>=1.4.2", "lightgbm>=3.3.2", "shap==0.38.1", "pyarrow>=5.0.0",
+                      "ipython>=7.16.1", "jedi==0.17.2", "optuna>=2.10.0"],
 
     python_requires=">=3.7",
 
