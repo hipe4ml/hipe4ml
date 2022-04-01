@@ -6,5 +6,5 @@ xgboost>=1.5.2
 lightgbm>=3.3.2
 shap==0.40.0
 pyarrow>=7.0.0
-ipython>=8.2.0
+ipython>=7.32.0
 optuna>=2.10.0
