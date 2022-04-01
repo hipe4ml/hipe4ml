@@ -45,12 +45,14 @@ class TreeHandler:
             self._files = file_name if isinstance(file_name, list) else [file_name]
             for file in self._files:
                 if self._tree is not None:
-                    self._full_data_frame = self._full_data_frame.append(
-                        uproot.open(f'{file}:{self._tree}').arrays(filter_name=columns_names, library='pd', **kwds),
-                        ignore_index=True)
+                    self._full_data_frame = pd.concat(
+                        [self._full_data_frame,
+                         uproot.open(f'{file}:{self._tree}').arrays(filter_name=columns_names, library='pd', **kwds)],
+                        ignore_index=True, copy=False)
                 else:
-                    self._full_data_frame = self._full_data_frame.append(
-                        pd.read_parquet(file, columns=columns_names, **kwds), ignore_index=True)
+                    self._full_data_frame = pd.concat(
+                        [self._full_data_frame, pd.read_parquet(file, columns=columns_names, **kwds)],
+                        ignore_index=True, copy=False)
         self._preselections = None
         self._projection_variable = None
         self._projection_binning = None
