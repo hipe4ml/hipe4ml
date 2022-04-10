@@ -211,27 +211,22 @@ class ModelHandler:
         if self._task_type == 'classification':
             if output_margin:
                 if self.model_string == 'xgboost':
-                    pred = self.model.predict(
-                        x_test, output_margin=True, **kwargs)
-                elif self.model_string == 'lightgbm':
-                    pred = self.model.predict(x_test, raw_score=True, **kwargs)
-                elif self.model_string == 'sklearn':
-                    if hasattr(self.model, 'decision_function'):
-                        pred = self.model.decision_function(
-                            x_test, **kwargs).ravel()
-                    else:
-                        raise Exception(
+                    return self.model.predict(x_test, output_margin=True, **kwargs)
+                if self.model_string == 'lightgbm':
+                    return self.model.predict(x_test, raw_score=True, **kwargs)
+                if self.model_string == 'sklearn':
+                    if not hasattr(self.model, 'decision_function'):
+                        raise ValueError(
                             "This Model does not support a decision_function(): use output_margin=False")
-            else:
-                pred = self.model.predict_proba(x_test, **kwargs)
-                # in case of binary classification return only the scores of
-                # the signal class
-                if pred.shape[1] <= 2:
-                    pred = pred[:, 1]
-        else:
-            pred = self.model.predict(x_test, **kwargs)
+                    return self.model.decision_function(x_test, **kwargs).ravel()
+            pred = self.model.predict_proba(x_test, **kwargs)
+            # in case of binary classification return only the scores of
+            # the signal class
+            if pred.shape[1] <= 2:
+                pred = pred[:, 1]
+            return pred
 
-        return pred
+        return self.model.predict(x_test, **kwargs)
 
     def train_test_model(self, data, return_prediction=False, output_margin=False, average='macro',
                          multi_class_opt='raise', **kwargs):
