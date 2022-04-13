@@ -1,5 +1,5 @@
 """
-Minimal example to run the package methods
+Minimal example to run the binary classification methods
 """
 import pandas as pd
 import xgboost as xgb

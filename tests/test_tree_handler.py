@@ -14,35 +14,6 @@ from hipe4ml.tree_handler import TreeHandler
 SEED = 42
 
 
-def init_tree_handler_test_workspace(path):
-    """
-    Prepare the TreeHandler test workspace. Create the correct directory
-    structure and downloads data and references needed in the tests.
-    """
-    print('Clean test workspace ...', end='\r')
-    hp.clean_dir_path(path.joinpath('tmp_test'))
-    print('Clean test workspace: done!')
-
-    print('Create test directory hierarchy: ...', end='\r')
-    _, data_dir, reference_dir = hp.create_test_dir_tree(path)
-    print('Create test directory hierarchy: done!')
-
-    test_data = hp.download_test_data(data_dir)
-    references = hp.download_test_references(reference_dir)
-
-    return test_data, references
-
-
-def terminate_tree_handler_test_workspace(path):
-    """
-    Clean the TreeHandler test workspace removing all the files
-    and directories used in the test.
-    """
-    print('Terminate test worksapce: ...', end='\r')
-    hp.clean_dir_path(path.joinpath('tmp_test'))
-    print('Terminate test worksapce: done!')
-
-
 def test_tree_handler():  # pylint: disable=too-many-statements
     """
     Test the TreeHandler class functionalities.
@@ -51,21 +22,21 @@ def test_tree_handler():  # pylint: disable=too-many-statements
     test_dir = Path(__file__).resolve().parent
 
     # initialize TreeHandler test
-    test_data, references = init_tree_handler_test_workspace(test_dir)
+    test_data, references = hp.init_handlers_test_workspace(test_dir, 'tree_handler')
 
     # instantiate tree handler objects
     data_hdlr = TreeHandler(test_data[0], 'treeMLDplus')
     prompt_hdlr = TreeHandler(test_data[1], 'treeMLDplus')
-    data_pq_hdlr = TreeHandler(test_data[2])
-    prompt_pq_hdlr = TreeHandler(test_data[3])
+    data_pq_hdlr = TreeHandler(test_data[3])
+    prompt_pq_hdlr = TreeHandler(test_data[4])
     mult_hdlr = TreeHandler(test_data[:2], 'treeMLDplus')
-    mult_pq_hdlr = TreeHandler(test_data[2:])
+    mult_pq_hdlr = TreeHandler(test_data[3:5])
     data_hdlr_large_files = TreeHandler()
     mult_hdlr_large_files = TreeHandler()
     data_hdlr_large_files.get_handler_from_large_file(test_data[0], 'treeMLDplus')
     mult_hdlr_large_files.get_handler_from_large_file(test_data[:2], 'treeMLDplus')
 
-    # open refernces objects
+    # open references objects
     reference_data_slice_df = pd.read_pickle(references[0])
     reference_prompt_slice_df = pd.read_pickle(references[1])
     with open(references[2], 'rb') as handle:
@@ -120,7 +91,7 @@ def test_tree_handler():  # pylint: disable=too-many-statements
     assert data_hdlr.get_data_frame().equals(data_hdlr_large_files.get_data_frame()), \
         'get_handler_from_large_file() not working when applying preselections'
 
-    terminate_tree_handler_test_workspace(test_dir)
+    hp.terminate_handlers_test_workspace(test_dir)
 
     prompt_hdlr.apply_preselections(preselections_prompt)
 
