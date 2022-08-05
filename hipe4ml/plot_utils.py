@@ -13,6 +13,7 @@ from scipy.special import softmax
 from sklearn.metrics import (auc, average_precision_score, mean_squared_error,
                              precision_recall_curve, roc_auc_score, roc_curve)
 from sklearn.preprocessing import label_binarize
+import optuna
 
 import hipe4ml.tree_handler
 
@@ -615,6 +616,33 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
         18, 9), class_names=labels, show=False)
 
     return res
+
+
+def plot_optuna_results(study):
+    """
+    Plot optimization reusults of the optuna study
+
+    Parameters
+    -------------------------------------------
+    study: optuna.study.Study
+        Optuna study object
+
+    Returns
+    -------------------------------------------
+    out: list of matplotlib.figure.Figure and titles
+    """
+    fig = []
+    titles = []
+    fig.append(optuna.visualization.plot_optimization_history(study))
+    titles.append('Optuna_History')
+    fig.append(optuna.visualization.plot_param_importances(study))
+    titles.append('Optuna_Hyperpars_Importances')
+    fig.append(optuna.visualization.plot_parallel_coordinate(study))
+    titles.append('Optuna_Parallel_Coordinates')
+    fig.append(optuna.visualization.plot_contour(study))
+    titles.append('Optuna_Contour')
+
+    return fig, titles
 
 
 def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
