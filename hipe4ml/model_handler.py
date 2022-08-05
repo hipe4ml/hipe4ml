@@ -358,6 +358,11 @@ class ModelHandler:
             A string indicating the filename of the study. If None,
             the study is not saved into a file.
 
+        early_stopping: int
+            Minimum improvement to continue the optimization. The
+            study will be stopped if no improvement is observed
+            within 10 iterations.
+
         **kwargs: dict
             Optuna study parameters
 
