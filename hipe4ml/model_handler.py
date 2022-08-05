@@ -301,7 +301,7 @@ class ModelHandler:
         return None
 
     def optimize_params_optuna(self, data, hyperparams_ranges, cross_val_scoring, nfold=5, direction='maximize',
-                               optuna_sampler=None, resume_study=None, save_study=None, **kwargs):
+                               optuna_sampler=None, resume_study=None, save_study=None, early_stopping=None, **kwargs):
         """
         Perform hyperparameter optimization of ModelHandler using the Optuna module.
         The model hyperparameters are automatically set as the ones that provided the
@@ -404,7 +404,22 @@ class ModelHandler:
             study = optuna.create_study(
                 direction=direction, sampler=optuna_sampler)
 
-        study.optimize(__objective, **kwargs)
+        def __callbacks(study, trial):
+
+            if direction == 'maximize':
+                if (study.best_trial.value - trial.value > early_stopping) and \
+                    (np.abs(trial.number - study.best_trial.number > 10)):
+                    study.stop()
+            if direction == 'minimize':
+                if (trial.value - study.best_trial.value > early_stopping) and \
+                    (np.abs(trial.number - study.best_trial.number > 10)):
+                    study.stop()
+
+        if early_stopping:
+            print('Early stopping enabled')
+            study.optimize(__objective, callbacks=[__callbacks], **kwargs)
+        else:
+            study.optimize(__objective, **kwargs)
 
         if save_study:
             with open(save_study, 'wb') as study_file:
