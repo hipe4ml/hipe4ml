@@ -618,31 +618,52 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
     return res
 
 
-def plot_optuna_results(study):
+def plot_optuna_results(study, params=None, target_name='Objective value', outfile_names=None):
     """
-    Plot optimization reusults of the optuna study
+    Visualize optuna optimization: history, hyperparameters importance,
+                                   parallel coordinates, hyperparameters contour plot
 
     Parameters
     -------------------------------------------
     study: optuna.study.Study
         Optuna study object
 
+    params: list
+        List of parameters to be plotted.
+        If None all the parameters are plotted.
+
+    target_name: string
+        Name to display on the axis label and the legend
+
+    outfile_names: list
+        List of strings containing the names of the output files.
+        If None, the files are named with default names.
+
     Returns
     -------------------------------------------
     out: list of matplotlib.figure.Figure and titles
     """
     fig = []
-    titles = []
-    fig.append(optuna.visualization.plot_optimization_history(study))
-    titles.append('Optuna_History')
-    fig.append(optuna.visualization.plot_param_importances(study))
-    titles.append('Optuna_Hyperpars_Importances')
-    fig.append(optuna.visualization.plot_parallel_coordinate(study))
-    titles.append('Optuna_Parallel_Coordinates')
-    fig.append(optuna.visualization.plot_contour(study))
-    titles.append('Optuna_Contour')
+    if outfile_names is None:
+        outfile_names = ['Optimization_History', 'Optuna_Hyperpars_Importances',
+                         'Optuna_Parallel_Coordinates', 'Optuna_Contour']
+    else:
+        outfile_names = [outfile_names[0], outfile_names[1], outfile_names[2], outfile_names[3]]
 
-    return fig, titles
+    fig.append(optuna.visualization.plot_optimization_history(study, target_name=target_name))
+    fig.append(optuna.visualization.plot_param_importances(study, params=params, target_name=target_name))
+    fig.append(optuna.visualization.plot_parallel_coordinate(study, params=params, target_name=target_name))
+    fig.append(optuna.visualization.plot_contour(study, params=params, target_name=target_name))
+    if params:
+        for _, parx in enumerate(params):
+            for _, pary in enumerate(params):
+                if parx == pary:
+                    continue
+                fig.append(optuna.visualization.plot_contour(study, params=[f"{parx}", f"{pary}"],
+                                                             target_name=target_name))
+                outfile_names.append(f"{outfile_names[3]}_{parx}_{pary}")
+
+    return fig, outfile_names
 
 
 def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
