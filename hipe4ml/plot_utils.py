@@ -647,8 +647,6 @@ def plot_optuna_results(study, params=None, target_name='Objective value', outfi
     if outfile_names is None:
         outfile_names = ['Optimization_History', 'Optuna_Hyperpars_Importances',
                          'Optuna_Parallel_Coordinates', 'Optuna_Contour']
-    else:
-        outfile_names = [outfile_names[0], outfile_names[1], outfile_names[2], outfile_names[3]]
 
     fig.append(optuna.visualization.plot_optimization_history(study, target_name=target_name))
     fig.append(optuna.visualization.plot_param_importances(study, params=params, target_name=target_name))
