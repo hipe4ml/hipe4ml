@@ -15,7 +15,7 @@ class TreeHandler:
     or a pandas.DataFrame from a .parquet file
     """
 
-    def __init__(self, file_name=None, tree_name=None, columns_names=None, **kwds):
+    def __init__(self, file_name=None, tree_name=None, column_names=None, folder_name=None, **kwds):
         """
         Open the file in which the selected tree leaves are converted
         into pandas dataframe columns. If tree_name is not provided file_name is
@@ -30,9 +30,14 @@ class TreeHandler:
             Name of the tree within the input file, must be the same for all files.
             If None the method pandas.read_parquet is called
 
-        columns_name: list
-            List of the names of the branches that one wants to analyse. If columns_names is
+        column_names: list
+            List of the names of the branches that one wants to analyse. If column_names is
             not specified all the branches are converted
+        
+        folder_name: str
+            Name of the folder/folders within the input file. All the folders containing the folder_name string are read
+            and merged into a single dataframe. Example: folder_name = "DF" will read all the folders containing
+            the string "DF" and merge them into a single dataframe.
 
         **kwds: extra arguments are passed on to the uproot.TTree.arrays() or pandas.read_parquet() methods:
                 https://uproot.readthedocs.io/en/latest/uproot.behaviors.TTree.TTree.html#uproot.behaviors.TTree.TTree.arrays
@@ -40,23 +45,39 @@ class TreeHandler:
         """
         self._tree = tree_name
         self._full_data_frame = None
-        if file_name is not None:
-            self._full_data_frame = pd.DataFrame()
-            self._files = file_name if isinstance(file_name, list) else [file_name]
-            for file in self._files:
-                if self._tree is not None:
-                    self._full_data_frame = pd.concat(
-                        [self._full_data_frame,
-                         uproot.open(f'{file}:{self._tree}').arrays(filter_name=columns_names, library='pd', **kwds)],
-                        ignore_index=True, copy=False)
-                else:
-                    self._full_data_frame = pd.concat(
-                        [self._full_data_frame, pd.read_parquet(file, columns=columns_names, **kwds)],
-                        ignore_index=True, copy=False)
         self._preselections = None
         self._projection_variable = None
         self._projection_binning = None
         self._sliced_df_list = None
+        if file_name is None:
+            return
+
+        self._full_data_frame = pd.DataFrame()
+        self._files = file_name if isinstance(file_name, list) else [file_name]
+        for file in self._files:
+            if self._tree is None: ## read from a parquet file
+                self._full_data_frame = pd.concat(
+                [self._full_data_frame, pd.read_parquet(file, columns=column_names, **kwds)],
+                ignore_index=True, copy=False)
+                continue
+
+            if folder_name is None:
+                self._full_data_frame = pd.concat(
+                    [self._full_data_frame,
+                        uproot.open(f'{file}:{self._tree}').arrays(filter_name=column_names,
+                        library='pd', **kwds)], ignore_index=True, copy=False)
+                continue
+
+            file_folders = uproot.open(file).keys()
+            for folder in file_folders:
+                if folder_name in folder:
+                    if self._tree in folder:
+                        continue
+                    print(f"Reading {file}:{folder}/{self._tree}")
+                    self._full_data_frame = pd.concat(
+                        [self._full_data_frame,
+                            uproot.open(f'{file}:{folder}/{self._tree}').arrays(filter_name=column_names,
+                            library='pd', **kwds)], ignore_index=True, copy=False)
 
     def __getitem__(self, column):
         """
