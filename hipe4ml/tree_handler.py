@@ -33,11 +33,12 @@ class TreeHandler:
         column_names: list
             List of the names of the branches that one wants to analyse. If column_names is
             not specified all the branches are converted
-        
+
         folder_name: str
-            Name of the folder/folders within the input file. All the folders containing the folder_name string are read
-            and merged into a single dataframe. Example: folder_name = "DF" will read all the folders containing
-            the string "DF" and merge them into a single dataframe.
+            Name of the folder/folders within the input file. If the folder_name ends with a '*' all the folders
+            containing the string folder_name are read and merged into a single dataframe.
+            Example: folder_name = "DF*" will read all the folders containing the string "DF" and
+            merge them into a single dataframe.
 
         **kwds: extra arguments are passed on to the uproot.TTree.arrays() or pandas.read_parquet() methods:
                 https://uproot.readthedocs.io/en/latest/uproot.behaviors.TTree.TTree.html#uproot.behaviors.TTree.TTree.arrays
@@ -55,7 +56,7 @@ class TreeHandler:
         self._full_data_frame = pd.DataFrame()
         self._files = file_name if isinstance(file_name, list) else [file_name]
         for file in self._files:
-            if self._tree is None: ## read from a parquet file
+            if self._tree is None:  # read from a parquet file
                 self._full_data_frame = pd.concat(
                 [self._full_data_frame, pd.read_parquet(file, columns=column_names, **kwds)],
                 ignore_index=True, copy=False)
@@ -68,9 +69,16 @@ class TreeHandler:
                         library='pd', **kwds)], ignore_index=True, copy=False)
                 continue
 
+            if folder_name[-1] != '*':
+                self._full_data_frame = pd.concat(
+                    [self._full_data_frame,
+                        uproot.open(f'{file}:{folder_name}/{self._tree}').arrays(filter_name=column_names,
+                        library='pd', **kwds)], ignore_index=True, copy=False)
+                continue
+
             file_folders = uproot.open(file).keys()
             for folder in file_folders:
-                if folder_name in folder:
+                if folder_name[:-1] in folder:
                     if self._tree in folder:
                         continue
                     print(f"Reading {file}:{folder}/{self._tree}")
