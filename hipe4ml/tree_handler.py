@@ -77,15 +77,17 @@ class TreeHandler:
                 continue
 
             file_folders = uproot.open(file).keys()
+            tree_path_list = []
             for folder in file_folders:
-                if folder_name[:-1] in folder:
-                    if self._tree in folder:
-                        continue
-                    print(f"Reading {file}:{folder}/{self._tree}")
-                    self._full_data_frame = pd.concat(
-                        [self._full_data_frame,
-                            uproot.open(f'{file}:{folder}/{self._tree}').arrays(filter_name=column_names,
-                            library='pd', **kwds)], ignore_index=True, copy=False)
+                if folder_name[:-1] in folder and self._tree in folder:
+                    tree_path_list.append(folder)
+
+            for tree_path in tree_path_list:
+                print(f"Reading {file}:{tree_path}")
+                self._full_data_frame = pd.concat(
+                    [self._full_data_frame,
+                        uproot.open(f'{file}:{tree_path}').arrays(filter_name=column_names,
+                        library='pd', **kwds)], ignore_index=True, copy=False)
 
     def __getitem__(self, column):
         """
