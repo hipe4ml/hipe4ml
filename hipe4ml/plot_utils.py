@@ -116,7 +116,7 @@ def plot_output_train_test(model, data, bins=80, output_margin=True, labels=None
         res = []
         labels = [
             f'class{class_lab}' for class_lab in class_labels] if labels is None else labels
-        cmap = plt.cm.get_cmap('tab10')
+        cmap = plt.get_cmap('tab10')
         colors = [cmap(i_class) for i_class in range(len(labels))]
         for output, out_label in zip(class_labels, labels):
             res.append(plt.figure())
@@ -328,7 +328,7 @@ def _plot_roc_ovr(y_truth, y_score, n_classes, labels, average):
     Utility function for plot_roc in the multi-class case. Calculate and plot the
     ROC curves with the one-vs-rest approach
     """
-    cmap = plt.cm.get_cmap('tab10')
+    cmap = plt.get_cmap('tab10')
     # convert multi-class labels to multi-labels to obtain roc curves
     y_truth_multi = label_binarize(y_truth, classes=range(n_classes))
     for i_class, lab in enumerate(labels):
@@ -347,7 +347,7 @@ def _plot_roc_ovo(y_truth, y_score, n_classes, labels, average):
     Utility function for plot_roc in the multi-class case. Calculate and plot the
     ROC curves with the one-vs-one approach
     """
-    cmap = plt.cm.get_cmap('tab10')
+    cmap = plt.get_cmap('tab10')
     for i_comb, (aaa, bbb) in enumerate(combinations(range(n_classes), 2)):
         a_mask = y_truth == aaa
         b_mask = y_truth == bbb
@@ -657,7 +657,7 @@ def plot_precision_recall(y_truth, y_score, labels=None, pos_label=None):
         plt.title(
             f'2-class Precision-Recall curve: AP={average_precision:0.2f}')
     else:
-        cmap = plt.cm.get_cmap('tab10')
+        cmap = plt.get_cmap('tab10')
         precision, recall = ({}, {})
         # convert multi-class labels to multi-labels to obtain a curve for each class
         y_truth_multi = label_binarize(y_truth, classes=range(n_classes))
