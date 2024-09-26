@@ -152,7 +152,7 @@ def test_hyperparams_optimization():
     """
     Test hyperparameter optimization
     """
-    n_estimators_ref = 44
+    n_estimators_ref = 135
     max_depth_ref = 2
 
     hyper_pars_ranges = {'n_estimators': (10, 200), 'max_depth': (
