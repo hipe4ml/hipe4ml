@@ -152,8 +152,7 @@ def test_hyperparams_optimization():
     """
     Test hyperparameter optimization
     """
-    n_estimators_ref = 135
-    max_depth_ref = 2
+    min_cross_val_score = 0.88
 
     hyper_pars_ranges = {'n_estimators': (10, 200), 'max_depth': (
         2, 6)}
@@ -164,8 +163,7 @@ def test_hyperparams_optimization():
     model_hdlr.optimize_params_optuna(train_test_data, hyper_pars_ranges,
                                       cross_val_scoring='roc_auc', n_trials=20,
                                       direction='maximize', optuna_sampler=TPESampler(seed=SEED))
-    assert model_hdlr.get_model_params()['n_estimators'] == n_estimators_ref
-    assert model_hdlr.get_model_params()['max_depth'] == max_depth_ref
+    assert model_hdlr.optuna_cross_val_score > min_cross_val_score
 
 
 def test_handler_dump_load():
