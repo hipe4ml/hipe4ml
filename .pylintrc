@@ -14,5 +14,6 @@ class-naming-style=PascalCase
 disable=useless-object-inheritance
 
 [DESIGN]
+max-positional-arguments=10
 max-args=10
 max-locals=40

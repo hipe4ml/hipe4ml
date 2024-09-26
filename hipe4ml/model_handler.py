@@ -42,6 +42,7 @@ class ModelHandler:
         self.training_columns = training_columns
         self.model_params = model_params
         self._n_classes = None
+        self.optuna_cross_val_score = None
         self._task_type = task_type
         if self._task_type not in ['classification', 'regression']:
             raise ValueError(
@@ -420,6 +421,7 @@ class ModelHandler:
             print(f"    {key}: {value}")
 
         self.set_model_params({**self.model_params, **best_trial.params})
+        self.optuna_cross_val_score = best_trial.value
 
         return study
 
