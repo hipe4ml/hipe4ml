@@ -87,7 +87,7 @@ SETUP = Setup(
                       "xgboost>=1.5.2,<2.0", "lightgbm>=3.3.2", "shap>=0.45", "pyarrow>=7.0.0",
                       "ipython>=7.32.0", "optuna>=2.10.0", "numpy>=1.26"],
 
-    python_requires=">=3.10",
+    python_requires=">=3.10.x",
 
     # List additional groups of dependencies here (e.g. development dependencies). You can install
     # these using the following syntax, for example:
