@@ -53,7 +53,7 @@ SETUP = Setup(
     name="hipe4ml",
 
     # LAST-TAG is a placeholder. Automatically replaced at deploy time with the right tag
-    version="0.0.17",
+    version="0.0.18",
 
     description="Minimal heavy ion physics environment for Machine Learning",
 
@@ -69,8 +69,6 @@ SETUP = Setup(
         "Intended Audience :: Developers",
         "Topic :: Scientific/Engineering :: Physics",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11"
     ],
@@ -89,7 +87,7 @@ SETUP = Setup(
                       "xgboost>=1.5.2,<2.0", "lightgbm>=3.3.2", "shap>=0.45", "pyarrow>=7.0.0",
                       "ipython>=7.32.0", "optuna>=2.10.0", "numpy>=1.26"],
 
-    python_requires=">=3.8",
+    python_requires=">=3.9",
 
     # List additional groups of dependencies here (e.g. development dependencies). You can install
     # these using the following syntax, for example:
