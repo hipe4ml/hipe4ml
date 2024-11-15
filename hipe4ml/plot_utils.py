@@ -600,19 +600,20 @@ def plot_feature_imp(df_in, y_truth, model, labels=None, n_sample=10000, approxi
     shap_values = explainer.shap_values(df_subs, approximate=approximate)
     res = []
 
+    shap_values_transposed = shap_values
     if n_classes <= 2:
         res.append(plt.figure(figsize=(18, 9)))
-        shap.summary_plot(shap_values, df_subs, plot_size=(
+        shap.summary_plot(shap_values_transposed, df_subs, plot_size=(
             18, 9), class_names=labels, show=False)
     else:
+        shap_values_transposed = shap_values.transpose(2, 0, 1)
         for i_class in range(n_classes):
             res.append(plt.figure(figsize=(18, 9)))
-            shap_values_transposed = shap_values.transpose(1, 0, 2)
             shap.summary_plot(shap_values_transposed[i_class], df_subs, plot_size=(
                 18, 9), class_names=labels, show=False)
 
     res.append(plt.figure(figsize=(18, 9)))
-    shap.summary_plot(shap_values, df_subs, plot_type='bar', plot_size=(
+    shap.summary_plot(list(shap_values_transposed), df_subs, plot_type='bar', plot_size=(
         18, 9), class_names=labels, show=False)
 
     return res
