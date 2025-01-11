@@ -77,6 +77,13 @@ class TreeHandler:
                 continue
 
             file_folders = uproot.open(file).keys()
+            # check if there are multiple cycles of the same tree, keep only last one
+            # first we sort to have as first one the last cycle
+            file_folders.sort(reverse=True)
+            for ifolder, folder in enumerate(file_folders[1:]):
+                obj_nocycle = folder.split(";")[0]
+                if obj_nocycle in file_folders[ifolder]:
+                    file_folders.remove(folder)
             tree_path_list = []
             for folder in file_folders:
                 if folder_name[:-1] in folder and self._tree in folder:
