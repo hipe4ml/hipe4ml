@@ -53,7 +53,7 @@ SETUP = Setup(
     name="hipe4ml",
 
     # LAST-TAG is a placeholder. Automatically replaced at deploy time with the right tag
-    version="0.0.18",
+    version="0.0.19",
 
     description="Minimal heavy ion physics environment for Machine Learning",
 
