@@ -2,6 +2,7 @@
 Simple module with a class to manage the data used in the analysis
 """
 import os.path
+import re
 import copy
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
@@ -80,17 +81,22 @@ class TreeHandler:
             # check if there are multiple cycles of the same tree, keep only last one
             # first we sort to have as first one the last cycle
             file_folders.sort(reverse=True)
-            file_folders_to_remove = []
-            for ifolder, folder in enumerate(file_folders[1:]):
-                obj_nocycle = folder.split(";")[0]
-                if obj_nocycle in file_folders[ifolder]:
-                    file_folders_to_remove.append(folder)
-            for folder_to_remove in file_folders_to_remove:
-                file_folders.remove(folder_to_remove)
+            checked_folder = ""
             tree_path_list = []
-            for folder in file_folders:
-                if folder_name[:-1] in folder and self._tree in folder:
-                    tree_path_list.append(folder)
+
+            for path in file_folders:
+                # split with / or ;
+                splitted_path = re.split(r'[/;]', path)
+                if len(splitted_path) < 2:
+                    continue
+
+                curr_tree = splitted_path[1]
+                curr_folder = splitted_path[0]
+                if folder_name[:-1] not in curr_folder or self._tree != curr_tree or curr_folder == checked_folder:
+                    continue
+
+                tree_path_list.append(path)
+                checked_folder = curr_folder
 
             for tree_path in tree_path_list:
                 print(f"Reading {file}:{tree_path}")
