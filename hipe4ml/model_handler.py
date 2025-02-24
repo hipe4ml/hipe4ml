@@ -377,7 +377,7 @@ class ModelHandler:
 
         x_train, y_train, _, _ = data
 
-        def __get_int_or_uniform(hyperparams_ranges, trial):
+        def __get_int_or_float(hyperparams_ranges, trial):
 
             params = {}
 
@@ -386,14 +386,14 @@ class ModelHandler:
                     params[key] = trial.suggest_int(
                         key, hyperparams_ranges[key][0], hyperparams_ranges[key][1])
                 elif isinstance(hyperparams_ranges[key][0], float):
-                    params[key] = trial.suggest_uniform(
+                    params[key] = trial.suggest_float(
                         key, hyperparams_ranges[key][0], hyperparams_ranges[key][1])
 
             return params
 
         def __objective(trial):
 
-            params = __get_int_or_uniform(hyperparams_ranges, trial)
+            params = __get_int_or_float(hyperparams_ranges, trial)
             model_copy = deepcopy(self.model)
             model_copy.set_params(**{**self.model_params, **params})
             return np.mean(cross_val_score(model_copy, x_train[self.training_columns], y_train,
