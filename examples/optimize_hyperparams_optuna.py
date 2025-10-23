@@ -33,17 +33,17 @@ if not os.path.exists('downloads/prompt.root'):
 
 N_JOBS = 4  # set number of jobs to be executed in parallel
 
-promptH = TreeHandler('downloads/prompt.root', 'treeMLDplus')
-dataH = TreeHandler('downloads/data.root', 'treeMLDplus')
-bkgH = dataH.get_subset(
-    'inv_mass < 1.82 or 1.92 < inv_mass < 2.00', size=promptH.get_n_cand()*3)
+PROMPTH = TreeHandler('downloads/prompt.root', 'treeMLDplus')
+DATAH = TreeHandler('downloads/data.root', 'treeMLDplus')
+bkgH = DATAH.get_subset(
+    'inv_mass < 1.82 or 1.92 < inv_mass < 2.00', size=PROMPTH.get_n_cand()*3)
 
 
 train_test_data = train_test_generator(
-    [promptH, bkgH], [1, 0], test_size=0.5, random_state=42)
+    [PROMPTH, bkgH], [1, 0], test_size=0.5, random_state=42)
 
 
-features = promptH.get_var_names()
+features = PROMPTH.get_var_names()
 features_for_train = features.copy()
 features_for_train.remove('inv_mass')
 features_for_train.remove('pt_cand')
