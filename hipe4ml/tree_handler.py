@@ -36,9 +36,9 @@ class TreeHandler:
             not specified all the branches are converted
 
         folder_name: str
-            Name of the folder/folders within the input file. If the folder_name ends with a '*' all the folders
+            Name of the folder/folders within the input file. If the folder_name ends with a `"*"` all the folders
             containing the string folder_name are read and merged into a single dataframe.
-            Example: folder_name = "DF*" will read all the folders containing the string "DF" and
+            Example: `folder_name = "DF*"` will read all the folders containing the string `"DF"` and
             merge them into a single dataframe.
 
         **kwds: extra arguments are passed on to the uproot.TTree.arrays() or pandas.read_parquet() methods:
